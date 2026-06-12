@@ -13,7 +13,7 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>18.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{96503187-985c-44b5-ace3-eb2827007a03}</ProjectGuid>
+    <ProjectGuid>{69F5D007-0621-A6AF-2359-D77ECAA2F25A}</ProjectGuid>
     <RootNamespace>EbichaEngine</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
