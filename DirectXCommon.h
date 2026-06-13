@@ -59,6 +59,8 @@ public: // メンバ関数
 	ID3D12GraphicsCommandList* GetCommandList() const { return commandList_.Get(); }
 
 private: // メンバ変数
+	// ウィンドウズアプリケーション管理
+	WinApp* winApp_;
 
 	// Direct3D関連
 	Microsoft::WRL::ComPtr<IDXGIFactory7> dxgiFactory_;
@@ -69,8 +71,6 @@ private: // メンバ変数
 	Microsoft::WRL::ComPtr<IDXGISwapChain4> swapChain_;
 	//std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> backBuffers_;
 	//Microsoft::WRL::ComPtr<ID3D12Resource> depthBuffer_;
-	//Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvHeap_;
-	//Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvHeap_;
 	Microsoft::WRL::ComPtr<ID3D12Fence> fence_;
 	//std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> resourcesForTransfer;
 	UINT64 fenceVal_ = 0;
@@ -93,6 +93,12 @@ private: // メンバ変数
 	D3D12_VIEWPORT viewport{};
 	// シザー矩形
 	D3D12_RECT scissorRect{};
+public:
+	DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
+	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvHeap_;
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvHeap_;
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvHeap_;
 
 private: // メンバ関数
 
@@ -149,3 +155,5 @@ Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(
 	Microsoft::WRL::ComPtr<IDxcIncludeHandler>& includeHandler);
 
 Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(const Microsoft::WRL::ComPtr<ID3D12Device>& device, size_t sizeInBytes);
+ID3D12DescriptorHeap* CreateDescriptorHeap(
+	ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible);
