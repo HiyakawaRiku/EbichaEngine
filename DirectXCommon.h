@@ -10,6 +10,9 @@
 #pragma comment(lib,"d3d12.lib")
 #pragma comment(lib,"dxgi.lib")
 
+#include<dxcapi.h>
+#pragma comment(lib, "dxcompiler.lib")
+
 #include <wrl.h>
 
 /// <summary>
@@ -34,9 +37,26 @@ public: // メンバ関数
 	void PreDraw();
 
 	/// <summary>
+	/// 描画
+	/// </summary>
+	void Draw();
+
+	/// <summary>
 	/// 描画後処理
 	/// </summary>
 	void PostDraw();
+
+	/// <summary>
+	/// デバイスの取得
+	/// </summary>
+	/// <returns>デバイス</returns>
+	ID3D12Device* GetDevice() const { return device_.Get(); }
+
+	/// <summary>
+	/// 描画コマンドリストの取得
+	/// </summary>
+	/// <returns>描画コマンドリスト</returns>
+	ID3D12GraphicsCommandList* GetCommandList() const { return commandList_.Get(); }
 
 private: // メンバ変数
 
@@ -54,6 +74,8 @@ private: // メンバ変数
 	Microsoft::WRL::ComPtr<ID3D12Fence> fence_;
 	//std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> resourcesForTransfer;
 	UINT64 fenceVal_ = 0;
+	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature_;
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState_;
 	//int32_t backBufferWidth_ = 0;
 	//int32_t backBufferHeight_ = 0;
 	//HANDLE frameLatencyWaitableObject_;
@@ -67,6 +89,10 @@ private: // メンバ変数
 	// TransitionBarrierの設定
 	D3D12_RESOURCE_BARRIER barrier{};
 	HANDLE fenceEvent;
+	// ビューポート
+	D3D12_VIEWPORT viewport{};
+	// シザー矩形
+	D3D12_RECT scissorRect{};
 
 private: // メンバ関数
 
@@ -99,4 +125,25 @@ private: // メンバ関数
 	/// フェンス生成
 	/// </summary>
 	void CreateFence();
+
+	/// <summary>
+	/// パイプライン生成
+	/// </summary>
+	void InitializePSO();
+
+	/// <summary>
+	/// 
+	/// </summary>
+	void InitializeViewport();
+
 };
+
+IDxcBlob* CompileShader(
+	// CompilerするShaderファイルへのパス
+	const std::wstring& filePath,
+	// Compilerに使用するProfile
+	const wchar_t* profile,
+	// 初期化で生成したものを3つ
+	IDxcUtils* dxcUtils,
+	IDxcCompiler3* dxcCompiler,
+	IDxcIncludeHandler* includeHandler);
