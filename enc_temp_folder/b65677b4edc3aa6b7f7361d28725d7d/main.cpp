@@ -19,6 +19,11 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int){
 	DirectXCommon* dxCommon = DirectXCommon::GetInstance();
 	dxCommon->Initialize();
 
+	
+
+
+	
+
 
 	// 頂点リソース用のヒープの設定
 	D3D12_HEAP_PROPERTIES uploadHeapProperties{};
