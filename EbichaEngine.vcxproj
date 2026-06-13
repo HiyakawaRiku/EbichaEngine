@@ -100,11 +100,13 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
   <ItemGroup>
     <ClCompile Include="DirectXCommon.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Matrix.cpp" />
     <ClCompile Include="WinApp.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DebugManager.h" />
     <ClInclude Include="DirectXCommon.h" />
+    <ClInclude Include="Matrix.h" />
     <ClInclude Include="WinApp.h" />
   </ItemGroup>
   <ItemGroup>
