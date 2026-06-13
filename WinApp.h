@@ -1,6 +1,7 @@
 #pragma once
 #include <Windows.h>
 #include <cstdint>
+#include <string>
 
 /// <summary>
 /// ウィンドウズアプリケーション
@@ -52,8 +53,6 @@ private: // メンバ変数
 	// Window関連
 	HWND hwnd = nullptr;   // ウィンドウハンドル
 	WNDCLASS wc{}; // ウィンドウクラス
-	UINT windowStyle_;
-	bool isFullscreen_ = false;
 	RECT wrc;
 };
 
