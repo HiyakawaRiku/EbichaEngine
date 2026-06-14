@@ -193,3 +193,5 @@ inline ID3D12Resource* UploadTextureData(ID3D12Resource* texture, const DirectX:
 	commandList->ResourceBarrier(1, &barrier);
 	return intermediateResource;
 }
+
+ID3D12Resource* CreateDepthStencilTextureResource(ID3D12Device* device, int32_t width, int32_t height);
