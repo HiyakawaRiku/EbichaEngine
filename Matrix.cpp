@@ -315,3 +315,20 @@ Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip
 
 	return result;
 }
+
+Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearZ, float farZ) {
+	Matrix4x4 result = MakeIdentity4x4(); // 単位行列で初期化
+
+	// X軸・Y軸・Z軸のスケール成分
+	result.m[0][0] = 2.0f / (right - left);
+	result.m[1][1] = 2.0f / (top - bottom); // 上が0、下がHeightになるように反転
+	result.m[2][2] = 1.0f / (farZ - nearZ);
+
+	// 平行移動成分（画面の左上を原点 (0,0) に合わせるための補正）
+	result.m[3][0] = (left + right) / (left - right);
+	result.m[3][1] = (top + bottom) / (bottom - top);
+	result.m[3][2] = -nearZ / (farZ - nearZ);
+	result.m[3][3] = 1.0f;
+
+	return result;
+}

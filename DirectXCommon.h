@@ -43,11 +43,6 @@ public: // メンバ関数
 	void PreDraw();
 
 	/// <summary>
-	/// 描画
-	/// </summary>
-	void Draw();
-
-	/// <summary>
 	/// 描画後処理
 	/// </summary>
 	void PostDraw();
@@ -132,11 +127,6 @@ private: // メンバ関数
 	/// </summary>
 	void CreateFinalRenderTargets();
 
-	///// <summary>
-	///// 深度バッファ生成
-	///// </summary>
-	//void CreateDepthBuffer();
-
 	/// <summary>
 	/// フェンス生成
 	/// </summary>
@@ -151,6 +141,11 @@ private: // メンバ関数
 	/// 
 	/// </summary>
 	void InitializeViewport();
+
+	/// <summary>
+	/// 
+	/// </summary>
+	void InitializeImgui();
 
 };
 
