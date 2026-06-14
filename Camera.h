@@ -1,12 +1,13 @@
 #pragma once
 #include "Matrix.h"
 #include "WinApp.h"
+#include "Mesh.h"
 
 class Camera
 {
 public:
-	Matrix4x4 DrawObject3d(Transform transform);
-	Matrix4x4 DrawObject2d(Transform transform);
+	TransformationMatrix DrawObject3d(Transform transform);
+	TransformationMatrix DrawObject2d(Transform transform);
 
 private:
 	WinApp* app_ = WinApp::GetInstance();

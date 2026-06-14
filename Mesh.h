@@ -13,6 +13,23 @@ struct Vector4 {
 struct VertexData {
 	Vector4 position;
 	Vector2 texcoord;
+	Vector3 normal;
+};
+
+struct Material {
+	Vector4 color;
+	int32_t enableLighting;
+};
+
+struct TransformationMatrix {
+	Matrix4x4 WVP;
+	Matrix4x4 World;
+};
+
+struct DirectionalLight {
+	Vector4 color;
+	Vector3 direction;
+	float intensity;
 };
 
 enum Texture {
@@ -34,14 +51,16 @@ public:
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
 	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource;
 	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource;
+	ID3D12Resource* directionalLightResource;
 
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferViewSphere{};
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceSphere;
 
 	// マテリアルにデータを書き込む
-	Vector4* materialData = nullptr;
+	Material* materialData = nullptr;
 	// データを書き込む
-	Matrix4x4* wvpData = nullptr;
+	TransformationMatrix* wvpData = nullptr;
+
 
 private:
 	void CreateVertexResource();
@@ -50,4 +69,5 @@ private:
 	void CreateVertexDataSphere(uint32_t kSubdivision);
 	void CreateMaterialResource();
 	void CreateWvpResource();
+	void CreateDirectionalLight();
 };
