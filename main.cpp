@@ -40,6 +40,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int){
 	// CPUで動かす用のTransformを作る
 	Transform transformSprite{ {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
 
+	bool useMonsterBall = true;
 
 	MSG msg{};
 	//ウィンドウのxボタンが押されるまでループ
@@ -71,7 +72,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int){
 			ImGui::NewFrame();
 
 			// 開発用UIの処理。実際に開発用のUIを出す場合はここをゲーム固有の処理に置き換える
-			ImGui::ShowDemoWindow();
+			//ImGui::ShowDemoWindow();
+
+			ImGui::Checkbox("useMonsterBall", &useMonsterBall);
 
 			// ImGuiの内部コマンドを生成する
 			ImGui::Render();
@@ -79,7 +82,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int){
 
 			mesh->Draw(6);
 			sprite->Draw(6);
-			sphere->DrawSphere(kSubdivision);
+			sphere->DrawSphere(kSubdivision,useMonsterBall);
 
 			// 実際のcommandListのImGuiの描画コマンドを積む
 #ifdef USE_IMGUI

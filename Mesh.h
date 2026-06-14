@@ -15,12 +15,17 @@ struct VertexData {
 	Vector2 texcoord;
 };
 
+enum Texture {
+	uvChecker,
+	monsterBall
+};
+
 class Mesh {
 public:
 	void Initialize();
 	void InitializeSphere(uint32_t kSubdivision);
 	void Draw(UINT vertexCountPerInstance);
-	void DrawSphere(UINT vertexCountPerInstance);
+	void DrawSphere(UINT vertexCountPerInstance, bool useMonsterBall);
 private:
 	DirectXCommon* dxCommon_=DirectXCommon::GetInstance();
 public:

@@ -3,8 +3,7 @@
 #include "Matrix.h"
 #include "Mesh.h"
 
-class Sprite
-{
+class Sprite{
 public:
 	void Initialize();
 	void Draw(UINT vertexCountPerInstance);
