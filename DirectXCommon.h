@@ -13,6 +13,9 @@
 #include<dxcapi.h>
 #pragma comment(lib, "dxcompiler.lib")
 
+#include "externals/DirectXTex/DirectXTex.h"
+#include "externals/DirectXTex/d3dx12.h"
+
 #include <wrl.h>
 
 /// <summary>
@@ -96,9 +99,13 @@ private: // メンバ変数
 public:
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
 	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvHeap_;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvHeap_;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvHeap_;
+
+	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU;
+	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU;
 
 private: // メンバ関数
 
@@ -157,3 +164,9 @@ Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(
 Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(const Microsoft::WRL::ComPtr<ID3D12Device>& device, size_t sizeInBytes);
 ID3D12DescriptorHeap* CreateDescriptorHeap(
 	ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible);
+
+DirectX::ScratchImage LoadTexture(const std::string& filePath);
+
+ID3D12Resource* CreateTextureResource(ID3D12Device* device, const DirectX::TexMetadata& metadata);
+
+void UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages);
