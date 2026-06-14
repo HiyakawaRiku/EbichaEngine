@@ -7,7 +7,7 @@ class Sprite
 {
 public:
 	void Initialize();
-	void Draw();
+	void Draw(UINT vertexCountPerInstance);
 private:
 	DirectXCommon* dxCommon_ = DirectXCommon::GetInstance();
 public:

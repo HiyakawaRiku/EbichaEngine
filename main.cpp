@@ -28,25 +28,12 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int){
 	Sprite* sprite = new Sprite;
 	sprite->Initialize();
 
+	Mesh* sphere = new Mesh;
+	uint32_t kSubdivision = 16;
+	sphere->InitializeSphere(kSubdivision);
+
 	Camera* camera = new Camera;
 
-
-	// ImGuiの初期化。詳細はさして重要ではないので解説は省略する。
-	// こういうもんである
-#ifdef USE_IMGUI
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGui::StyleColorsDark();
-	ImGui_ImplWin32_Init(app->GetHwnd());
-	ImGui_ImplDX12_Init(dxCommon->GetDevice(),
-		dxCommon->swapChainDesc.BufferCount,
-		dxCommon->rtvDesc.Format,
-		dxCommon->srvHeap_.Get(),
-		dxCommon->srvHeap_->GetCPUDescriptorHandleForHeapStart(),
-		dxCommon->srvHeap_->GetGPUDescriptorHandleForHeapStart());
-	ImGuiIO& io = ImGui::GetIO();
-	io.Fonts->Build();
-#endif
 
 	// Transform変数を作る
 	Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
@@ -68,8 +55,6 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int){
 
 			// Transformを更新（例：Y軸回転）
 			transform.rotate.y += 0.03f;
-
-			// アフィン行列を作成
 			
 			// GPU上のリソース（定数バッファ）の中身を書き換える
 			*mesh->wvpData = camera->DrawObject3d(transform);
@@ -77,6 +62,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int){
 			
 			*sprite->transformationMatrixData = camera->DrawObject2d(transformSprite);
 			*sprite->materialData = { 1.0f,0.0f,1.0f,0.0f };
+
+			*sphere->wvpData = camera->DrawObject3d(transform);
 
 #ifdef USE_IMGUI
 			ImGui_ImplDX12_NewFrame();
@@ -89,9 +76,10 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int){
 			// ImGuiの内部コマンドを生成する
 			ImGui::Render();
 #endif
-			mesh->Draw();
-			sprite->Draw();
 
+			mesh->Draw(6);
+			sprite->Draw(6);
+			sphere->DrawSphere(kSubdivision);
 
 			// 実際のcommandListのImGuiの描画コマンドを積む
 #ifdef USE_IMGUI

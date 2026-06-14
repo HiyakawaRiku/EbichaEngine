@@ -127,11 +127,6 @@ private: // メンバ関数
 	/// </summary>
 	void CreateFinalRenderTargets();
 
-	///// <summary>
-	///// 深度バッファ生成
-	///// </summary>
-	//void CreateDepthBuffer();
-
 	/// <summary>
 	/// フェンス生成
 	/// </summary>
@@ -146,6 +141,11 @@ private: // メンバ関数
 	/// 
 	/// </summary>
 	void InitializeViewport();
+
+	/// <summary>
+	/// 
+	/// </summary>
+	void InitializeImgui();
 
 };
 

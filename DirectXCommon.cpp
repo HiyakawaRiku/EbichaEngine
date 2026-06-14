@@ -15,6 +15,7 @@ void DirectXCommon::Initialize()
 	CreateFence();
 	InitializePSO();
 	InitializeViewport();
+	InitializeImgui();
 }
 
 void DirectXCommon::PreDraw()
@@ -474,6 +475,26 @@ void DirectXCommon::InitializeViewport()
 	scissorRect.right = winApp_->kWindowWidth;
 	scissorRect.top = 0;
 	scissorRect.bottom = winApp_->kWindowHeight;
+}
+
+void DirectXCommon::InitializeImgui()
+{
+	// ImGuiの初期化。詳細はさして重要ではないので解説は省略する。
+// こういうもんである
+#ifdef USE_IMGUI
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGui::StyleColorsDark();
+	ImGui_ImplWin32_Init(WinApp::GetInstance()->GetHwnd());
+	ImGui_ImplDX12_Init(device_.Get(),
+		swapChainDesc.BufferCount,
+		rtvDesc.Format,
+		srvHeap_.Get(),
+		srvHeap_->GetCPUDescriptorHandleForHeapStart(),
+		srvHeap_->GetGPUDescriptorHandleForHeapStart());
+	ImGuiIO& io = ImGui::GetIO();
+	io.Fonts->Build();
+#endif
 }
 
 

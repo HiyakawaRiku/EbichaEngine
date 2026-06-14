@@ -8,7 +8,7 @@ void Sprite::Initialize()
 	CreateTransformationMatrix();
 }
 
-void Sprite::Draw()
+void Sprite::Draw(UINT vertexCountPerInstance)
 {
 	// Spriteの描画。変更が必要なものだけ変更する
 	dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);    // VBVを設定
@@ -21,7 +21,7 @@ void Sprite::Draw()
 	// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]である。
 	dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, dxCommon_->textureSrvHandleGPU);
 	// 描画！（DrawCall/ドローコール）
-	dxCommon_->GetCommandList()->DrawInstanced(6, 1, 0, 0);
+	dxCommon_->GetCommandList()->DrawInstanced(vertexCountPerInstance, 1, 0, 0);
 }
 
 void Sprite::CreateVertexResource()
