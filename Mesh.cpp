@@ -31,7 +31,7 @@ void Mesh::Draw(UINT vertexCountPerInstance)
 	dxCommon_->GetCommandList()->DrawInstanced(vertexCountPerInstance, 1, 0, 0);
 }
 
-void Mesh::DrawSphere(UINT vertexCountPerInstance)
+void Mesh::DrawSphere(UINT vertexCountPerInstance,bool useMonsterBall)
 {
 	uint32_t vertexCount = vertexCountPerInstance * vertexCountPerInstance * 6; // 緯度×経度×6頂点（2三角形）
 

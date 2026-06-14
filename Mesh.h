@@ -20,7 +20,7 @@ public:
 	void Initialize();
 	void InitializeSphere(uint32_t kSubdivision);
 	void Draw(UINT vertexCountPerInstance);
-	void DrawSphere(UINT vertexCountPerInstance);
+	void DrawSphere(UINT vertexCountPerInstance, bool useMonsterBall);
 private:
 	DirectXCommon* dxCommon_=DirectXCommon::GetInstance();
 public:
@@ -37,8 +37,6 @@ public:
 	Vector4* materialData = nullptr;
 	// データを書き込む
 	Matrix4x4* wvpData = nullptr;
-
-	bool useMonsterBall = true;
 
 private:
 	void CreateVertexResource();
