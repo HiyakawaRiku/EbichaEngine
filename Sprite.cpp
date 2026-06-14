@@ -6,6 +6,7 @@ void Sprite::Initialize()
 	CreateVertexData();
 	CreateMaterialResource();
 	CreateTransformationMatrix();
+	CreateDirectionalLight();
 }
 
 void Sprite::Draw(UINT vertexCountPerInstance)
@@ -20,6 +21,7 @@ void Sprite::Draw(UINT vertexCountPerInstance)
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource->GetGPUVirtualAddress());
 	// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]である。
 	dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, dxCommon_->textureSrvHandleGPU[Texture::monsterBall]);
+	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 	// 描画！（DrawCall/ドローコール）
 	dxCommon_->GetCommandList()->DrawInstanced(vertexCountPerInstance, 1, 0, 0);
 }
@@ -45,37 +47,57 @@ void Sprite::CreateVertexData()
 	// 1枚目の三角形
 	vertexData[0].position = { 0.0f, 360.0f, 0.0f, 1.0f }; // 左下
 	vertexData[0].texcoord = { 0.0f, 1.0f };
+	vertexData[0].normal = { 0.0f, 0.0f,-1.0f };
 	vertexData[1].position = { 0.0f, 0.0f, 0.0f, 1.0f };   // 左上
 	vertexData[1].texcoord = { 0.0f, 0.0f };
+	vertexData[1].normal = { 0.0f, 0.0f,-1.0f };
 	vertexData[2].position = { 640.0f, 360.0f, 0.0f, 1.0f }; // 右下
 	vertexData[2].texcoord = { 1.0f, 1.0f };
+	vertexData[2].normal = { 0.0f, 0.0f,-1.0f };
 	// 2枚目の三角形
 	vertexData[3].position = { 0.0f, 0.0f, 0.0f, 1.0f };   // 左上
 	vertexData[3].texcoord = { 0.0f, 0.0f };
+	vertexData[3].normal = { 0.0f, 0.0f,-1.0f };
 	vertexData[4].position = { 640.0f, 0.0f, 0.0f, 1.0f };  // 右上
 	vertexData[4].texcoord = { 1.0f, 0.0f };
+	vertexData[4].normal = { 0.0f, 0.0f,-1.0f };
 	vertexData[5].position = { 640.0f, 360.0f, 0.0f, 1.0f }; // 右下
 	vertexData[5].texcoord = { 1.0f, 1.0f };
+	vertexData[5].normal = { 0.0f, 0.0f,-1.0f };
 
 }
 
 void Sprite::CreateMaterialResource()
 {
 	// マテリアル用のリソースを作る。今回はcolor1つ分のサイズを用意する
-	materialResource = CreateBufferResource(dxCommon_->GetDevice(), sizeof(Vector4));
+	materialResource = CreateBufferResource(dxCommon_->GetDevice(), sizeof(Material));
 	// 書き込むためのアドレスを取得
 	materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
 	// 今回は赤を書き込んでみる
-	*materialData = { 1.0f,1.0f,1.0f,1.0f };
+	materialData->color = { 1.0f,1.0f,1.0f,1.0f };
 }
 
 void Sprite::CreateTransformationMatrix()
 {
 	// Sprite用のTransformationMatrix用のリソースを作る。Matrix4x4 1つ分のサイズを用意する
-	transformationMatrixResource = CreateBufferResource(dxCommon_->GetDevice(), sizeof(Matrix4x4));
+	transformationMatrixResource = CreateBufferResource(dxCommon_->GetDevice(), sizeof(TransformationMatrix));
 	// 書き込むためのアドレスを取得
 	transformationMatrixResource->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixData));
 	// 単位行列を書きこんでおく
-	*transformationMatrixData = MakeIdentity4x4();
+	transformationMatrixData->WVP = MakeIdentity4x4();
 
+}
+
+void Sprite::CreateDirectionalLight()
+{
+	// マテリアル用のリソースを作る。今回はcolor1つ分のサイズを用意する
+	directionalLightResource = CreateBufferResource(dxCommon_->GetDevice(), sizeof(DirectionalLight));
+	// マテリアルにデータを書き込む
+	DirectionalLight* directionalLightData = nullptr;
+	// 書き込むためのアドレスを取得
+	directionalLightResource->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
+	// 今回は赤を書き込んでみる
+	directionalLightData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
+	directionalLightData->direction = { 0.0f, -1.0f, 0.0f };
+	directionalLightData->intensity = 1.0f;
 }

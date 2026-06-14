@@ -59,7 +59,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int){
 			
 			// GPU上のリソース（定数バッファ）の中身を書き換える
 			*mesh->wvpData = camera->DrawObject3d(transform);
-			*mesh->materialData = { 0.0f,0.0f,0.0f,1.0f };
+			mesh->materialData->color = { 0.0f,0.0f,0.0f,1.0f };
 			
 			*sprite->transformationMatrixData = camera->DrawObject2d(transformSprite);
 			*sprite->materialData = { 1.0f,0.0f,1.0f,0.0f };

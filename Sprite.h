@@ -16,15 +16,17 @@ public:
 	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource;
 	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource;
 	Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResource;
-	
+	ID3D12Resource* directionalLightResource;
+
 	// マテリアルにデータを書き込む
-	Vector4* materialData = nullptr;
+	Material* materialData = nullptr;
 	// データを書き込む
-	Matrix4x4* transformationMatrixData = nullptr;
+	TransformationMatrix* transformationMatrixData = nullptr;
 
 private:
 	void CreateVertexResource();
 	void CreateVertexData();
 	void CreateMaterialResource();
 	void CreateTransformationMatrix();
+	void CreateDirectionalLight();
 };

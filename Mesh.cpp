@@ -6,6 +6,7 @@ void Mesh::Initialize()
 	CreateVertexData();
 	CreateMaterialResource();
 	CreateWvpResource();
+	CreateDirectionalLight();
 }
 
 void Mesh::InitializeSphere(uint32_t kSubdivision)
@@ -14,6 +15,7 @@ void Mesh::InitializeSphere(uint32_t kSubdivision)
 	CreateVertexDataSphere(kSubdivision);
 	CreateMaterialResource();
 	CreateWvpResource();
+	CreateDirectionalLight();
 }
 
 void Mesh::Draw(UINT vertexCountPerInstance)
@@ -27,6 +29,7 @@ void Mesh::Draw(UINT vertexCountPerInstance)
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
 	// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]である。
 	dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, dxCommon_->textureSrvHandleGPU[Texture::monsterBall]);
+	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 	// 描画！（DrawCall/ドローコール）。3頂点で1つのインスタンス。インスタンスについては今後
 	dxCommon_->GetCommandList()->DrawInstanced(vertexCountPerInstance, 1, 0, 0);
 }
@@ -44,6 +47,7 @@ void Mesh::DrawSphere(UINT vertexCountPerInstance,bool useMonsterBall)
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
 	// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]である。
 	dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, useMonsterBall?dxCommon_->textureSrvHandleGPU[Texture::uvChecker] : dxCommon_->textureSrvHandleGPU[Texture::monsterBall]);
+	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 	// 描画！（DrawCall/ドローコール）。3頂点で1つのインスタンス。インスタンスについては今後
 	dxCommon_->GetCommandList()->DrawInstanced(vertexCount, 1, 0, 0);
 }
@@ -87,21 +91,27 @@ void Mesh::CreateVertexData()
 	// 左下
 	vertexData[0].position = { -0.5f, -0.5f, 0.0f, 1.0f };
 	vertexData[0].texcoord = { 0.0f, 1.0f };
+	vertexData[0].normal = { 0.0f, 0.0f,-1.0f };
 	// 上
 	vertexData[1].position = { 0.0f, 0.5f, 0.0f, 1.0f };
 	vertexData[1].texcoord = { 0.5f, 0.0f };
+	vertexData[1].normal = { 0.0f, 0.0f,-1.0f };
 	// 右下
 	vertexData[2].position = { 0.5f, -0.5f, 0.0f, 1.0f };
 	vertexData[2].texcoord = { 1.0f, 1.0f };
+	vertexData[2].normal = { 0.0f, 0.0f,-1.0f };
 	// 左下
 	vertexData[3].position = { -0.5f, -0.5f, 0.5f, 1.0f };
 	vertexData[3].texcoord = { 0.0f, 1.0f };
+	vertexData[3].normal = { 0.0f, 0.0f,-1.0f };
 	// 上
 	vertexData[4].position = { 0.0f, 0.0f, 0.0f, 1.0f };
 	vertexData[4].texcoord = { 0.5f, 0.0f };
+	vertexData[4].normal = { 0.0f, 0.0f,-1.0f };
 	// 右下
 	vertexData[5].position = { 0.5f, -0.5f, -0.5f, 1.0f };
 	vertexData[5].texcoord = { 1.0f, 1.0f };
+	vertexData[5].normal = { 0.0f, 0.0f,-1.0f };
 }
 
 void Mesh::CreateVertexDataSphere(uint32_t kSubdivision)
@@ -142,23 +152,45 @@ void Mesh::CreateVertexDataSphere(uint32_t kSubdivision)
 			// 0: 左上 (lat, lon)
 			vertexData[start + 0].position = calcPos(lat, lon);
 			vertexData[start + 0].texcoord = { u, v };
+			vertexData[start + 0].normal.x = vertexData[start + 0].position.x;
+			vertexData[start + 0].normal.y = vertexData[start + 0].position.y;
+			vertexData[start + 0].normal.z = vertexData[start + 0].position.z;
 			// 1: 左下 (lat+1, lon)
 			vertexData[start + 1].position = calcPos(lat + kLatEvery, lon);
 			vertexData[start + 1].texcoord = { u, vNext };
+			vertexData[start + 1].normal.x = vertexData[start + 1].position.x;
+			vertexData[start + 1].normal.y = vertexData[start + 1].position.y;
+			vertexData[start + 1].normal.z = vertexData[start + 1].position.z;
+
 			// 2: 右下 (lat+1, lon+1)
 			vertexData[start + 2].position = calcPos(lat + kLatEvery, lon + kLonEvery);
 			vertexData[start + 2].texcoord = { uNext, vNext };
+			vertexData[start + 2].normal.x = vertexData[start + 2].position.x;
+			vertexData[start + 2].normal.y = vertexData[start + 2].position.y;
+			vertexData[start + 2].normal.z = vertexData[start + 2].position.z;
 
 			// 三角形2
 			// 3: 左上 (lat, lon)
 			vertexData[start + 3].position = calcPos(lat, lon);
 			vertexData[start + 3].texcoord = { u, v };
+			vertexData[start + 3].normal.x = vertexData[start + 3].position.x;
+			vertexData[start + 3].normal.y = vertexData[start + 3].position.y;
+			vertexData[start + 3].normal.z = vertexData[start + 3].position.z;
+
 			// 4: 右下 (lat+1, lon+1)
 			vertexData[start + 4].position = calcPos(lat + kLatEvery, lon + kLonEvery);
 			vertexData[start + 4].texcoord = { uNext, vNext };
+			vertexData[start + 4].normal.x = vertexData[start + 4].position.x;
+			vertexData[start + 4].normal.y = vertexData[start + 4].position.y;
+			vertexData[start + 4].normal.z = vertexData[start + 4].position.z;
+
 			// 5: 右上 (lat, lon+1)
 			vertexData[start + 5].position = calcPos(lat, lon + kLonEvery);
 			vertexData[start + 5].texcoord = { uNext, v };
+			vertexData[start + 5].normal.x = vertexData[start + 5].position.x;
+			vertexData[start + 5].normal.y = vertexData[start + 5].position.y;
+			vertexData[start + 5].normal.z = vertexData[start + 5].position.z;
+
 		}
 	}
 }
@@ -166,19 +198,34 @@ void Mesh::CreateVertexDataSphere(uint32_t kSubdivision)
 void Mesh::CreateMaterialResource()
 {
 	// マテリアル用のリソースを作る。今回はcolor1つ分のサイズを用意する
-	materialResource = CreateBufferResource(dxCommon_->GetDevice(), sizeof(Vector4));
+	materialResource = CreateBufferResource(dxCommon_->GetDevice(), sizeof(Material));
 	// 書き込むためのアドレスを取得
 	materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
 	// 今回は赤を書き込んでみる
-	*materialData = { 1.0f,1.0f,1.0f,1.0f };
+	materialData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
+	materialData->enableLighting = true;
 }
 
 void Mesh::CreateWvpResource()
 {
 	// WVP用のリソースを作る。Matrix4x4 1つ分のサイズを用意する
-	wvpResource = CreateBufferResource(dxCommon_->GetDevice(), sizeof(Matrix4x4));
+	wvpResource = CreateBufferResource(dxCommon_->GetDevice(), sizeof(TransformationMatrix));
 	// 書き込むためのアドレスを取得
 	wvpResource->Map(0, nullptr, reinterpret_cast<void**>(&wvpData));
 	// 単位行列を書き込んでおく
-	*wvpData = MakeIdentity4x4();
+	wvpData->WVP = MakeIdentity4x4();
+}
+
+void Mesh::CreateDirectionalLight()
+{
+	// マテリアル用のリソースを作る。今回はcolor1つ分のサイズを用意する
+	directionalLightResource = CreateBufferResource(dxCommon_->GetDevice(), sizeof(DirectionalLight));
+	// マテリアルにデータを書き込む
+	DirectionalLight* directionalLightData = nullptr;
+	// 書き込むためのアドレスを取得
+	directionalLightResource->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
+	// 今回は赤を書き込んでみる
+	directionalLightData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
+	directionalLightData->direction = { 0.0f, -1.0f, 0.0f };
+	directionalLightData->intensity = 1.0f;
 }
