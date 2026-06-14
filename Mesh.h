@@ -38,6 +38,8 @@ public:
 	// データを書き込む
 	Matrix4x4* wvpData = nullptr;
 
+	bool useMonsterBall = true;
+
 private:
 	void CreateVertexResource();
 	void CreateVertexResourceSphere(uint32_t kSubdivision);

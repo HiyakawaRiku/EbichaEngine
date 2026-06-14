@@ -71,7 +71,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int){
 			ImGui::NewFrame();
 
 			// 開発用UIの処理。実際に開発用のUIを出す場合はここをゲーム固有の処理に置き換える
-			ImGui::ShowDemoWindow();
+			//ImGui::ShowDemoWindow();
+
+			ImGui::Checkbox("useMonsterBall", &mesh->useMonsterBall);
 
 			// ImGuiの内部コマンドを生成する
 			ImGui::Render();
