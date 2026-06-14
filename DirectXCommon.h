@@ -98,16 +98,12 @@ public:
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
 	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc2{};
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvHeap_;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvHeap_;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvHeap_;
 
-	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU;
-	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU;
-
-	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU2;
-	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU2;
+	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU[2];
+	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU[2];
 
 private: // メンバ関数
 
@@ -151,6 +147,7 @@ private: // メンバ関数
 	/// </summary>
 	void InitializeImgui();
 
+	void InitializeTexture(const std::string& filePath, uint32_t index);
 };
 
 Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(

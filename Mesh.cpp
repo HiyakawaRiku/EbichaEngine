@@ -26,7 +26,7 @@ void Mesh::Draw(UINT vertexCountPerInstance)
 	// WVP用CBufferの場所を設定
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
 	// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]である。
-	dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, dxCommon_->textureSrvHandleGPU);
+	dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, dxCommon_->textureSrvHandleGPU[0]);
 	// 描画！（DrawCall/ドローコール）。3頂点で1つのインスタンス。インスタンスについては今後
 	dxCommon_->GetCommandList()->DrawInstanced(vertexCountPerInstance, 1, 0, 0);
 }
@@ -43,7 +43,7 @@ void Mesh::DrawSphere(UINT vertexCountPerInstance,bool useMonsterBall)
 	// WVP用CBufferの場所を設定
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
 	// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]である。
-	dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, useMonsterBall?dxCommon_->textureSrvHandleGPU: dxCommon_->textureSrvHandleGPU2);
+	dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, useMonsterBall?dxCommon_->textureSrvHandleGPU[0] : dxCommon_->textureSrvHandleGPU[1]);
 	// 描画！（DrawCall/ドローコール）。3頂点で1つのインスタンス。インスタンスについては今後
 	dxCommon_->GetCommandList()->DrawInstanced(vertexCount, 1, 0, 0);
 }
