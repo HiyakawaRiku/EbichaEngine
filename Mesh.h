@@ -27,8 +27,12 @@ public:
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
 	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource;
 	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource;
+
+	// マテリアルにデータを書き込む
+	Vector4* materialData = nullptr;
 	// データを書き込む
 	Matrix4x4* wvpData = nullptr;
+
 private:
 	void CreateVertexResource();
 	void CreateVertexData();

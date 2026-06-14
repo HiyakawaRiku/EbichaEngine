@@ -2,6 +2,7 @@
 #include "Matrix.h"
 #include "Mesh.h"
 #include "Sprite.h"
+#include "Camera.h"
 
 //Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int){
@@ -27,6 +28,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int){
 	Sprite* sprite = new Sprite;
 	sprite->Initialize();
 
+	Camera* camera = new Camera;
+
+
 	// ImGuiの初期化。詳細はさして重要ではないので解説は省略する。
 	// こういうもんである
 #ifdef USE_IMGUI
@@ -46,7 +50,6 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int){
 
 	// Transform変数を作る
 	Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
-	Transform cameraTransform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-5.0f} };
 	// CPUで動かす用のTransformを作る
 	Transform transformSprite{ {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
 
@@ -67,20 +70,13 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int){
 			transform.rotate.y += 0.03f;
 
 			// アフィン行列を作成
-			Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
-			Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
-			Matrix4x4 viewMatrix = Inverse(cameraMatrix);
-			Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(app->kWindowWidth) / float(app->kWindowHeight), 0.1f, 100.0f);
-			Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
-			// GPU上のリソース（定数バッファ）の中身を書き換える
-			*mesh->wvpData = worldViewProjectionMatrix;
 			
-			Matrix4x4 worldMatrixSprite = MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
-			Matrix4x4 viewMatrixSprite = MakeIdentity4x4();
-			Matrix4x4 projectionMatrixSprite = MakeOrthographicMatrix(0.0f, 0.0f, float(app->kWindowWidth), float(app->kWindowHeight), 0.0f, 100.0f);
-			Matrix4x4 worldViewProjectionMatrixSprite = Multiply(worldMatrixSprite, Multiply(viewMatrixSprite, projectionMatrixSprite));
-			*sprite->transformationMatrixData = worldViewProjectionMatrixSprite;
-
+			// GPU上のリソース（定数バッファ）の中身を書き換える
+			*mesh->wvpData = camera->DrawObject3d(transform);
+			*mesh->materialData = { 0.0f,0.0f,0.0f,1.0f };
+			
+			*sprite->transformationMatrixData = camera->DrawObject2d(transformSprite);
+			*sprite->materialData = { 1.0f,0.0f,1.0f,0.0f };
 
 #ifdef USE_IMGUI
 			ImGui_ImplDX12_NewFrame();
@@ -93,9 +89,6 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int){
 			// ImGuiの内部コマンドを生成する
 			ImGui::Render();
 #endif
-
-			dxCommon->Draw();
-
 			mesh->Draw();
 			sprite->Draw();
 

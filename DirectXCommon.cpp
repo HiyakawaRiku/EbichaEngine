@@ -49,15 +49,12 @@ void DirectXCommon::PreDraw()
 	ID3D12DescriptorHeap* descriptorHeaps[] = { srvHeap_.Get()};
 	commandList_->SetDescriptorHeaps(1, descriptorHeaps);
 
-}
-
-void DirectXCommon::Draw()
-{
 	commandList_->RSSetViewports(1, &viewport);  // Viewportを設定
 	commandList_->RSSetScissorRects(1, &scissorRect);    // Scissorを設定
 	// RootSignatureを設定。PSOに設定しているけど別途設定が必要
 	commandList_->SetGraphicsRootSignature(rootSignature_.Get());
 	commandList_->SetPipelineState(graphicsPipelineState_.Get());    // PSOを設定
+
 }
 
 void DirectXCommon::PostDraw()

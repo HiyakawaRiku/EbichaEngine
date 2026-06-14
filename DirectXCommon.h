@@ -43,11 +43,6 @@ public: // メンバ関数
 	void PreDraw();
 
 	/// <summary>
-	/// 描画
-	/// </summary>
-	void Draw();
-
-	/// <summary>
 	/// 描画後処理
 	/// </summary>
 	void PostDraw();

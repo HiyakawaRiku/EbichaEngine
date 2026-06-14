@@ -63,12 +63,10 @@ void Sprite::CreateMaterialResource()
 {
 	// マテリアル用のリソースを作る。今回はcolor1つ分のサイズを用意する
 	materialResource = CreateBufferResource(dxCommon_->GetDevice(), sizeof(Vector4));
-	// マテリアルにデータを書き込む
-	Vector4* materialData = nullptr;
 	// 書き込むためのアドレスを取得
 	materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
 	// 今回は赤を書き込んでみる
-	*materialData = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	*materialData = { 1.0f,1.0f,1.0f,1.0f };
 }
 
 void Sprite::CreateTransformationMatrix()
