@@ -49,9 +49,11 @@ public:
 	// 頂点バッファビューを作成する
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
+	//D3D12_INDEX_BUFFER_VIEW indexBufferView{};
+	//Microsoft::WRL::ComPtr<ID3D12Resource> indexResource;
 	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource;
 	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource;
-	ID3D12Resource* directionalLightResource;
+	Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource;
 
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferViewSphere{};
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceSphere;
@@ -64,9 +66,11 @@ public:
 
 private:
 	void CreateVertexResource();
-	void CreateVertexResourceSphere(uint32_t kSubdivision);
 	void CreateVertexData();
+	void CreateVertexResourceSphere(uint32_t kSubdivision);
 	void CreateVertexDataSphere(uint32_t kSubdivision);
+	//void CreateIndexResource();
+	//void CreateIndexData();
 	void CreateMaterialResource();
 	void CreateWvpResource();
 	void CreateDirectionalLight();

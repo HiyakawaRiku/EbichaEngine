@@ -195,6 +195,33 @@ void Mesh::CreateVertexDataSphere(uint32_t kSubdivision)
 	}
 }
 
+//void Mesh::CreateIndexResource()
+//{
+//	// Sprite用の頂点リソースを作る
+//	indexResource = CreateBufferResource(dxCommon_->GetDevice(), sizeof(uint32_t) * 6);
+//
+//
+//	// リソースの先頭のアドレスから使う
+//	indexBufferView.BufferLocation = indexResource->GetGPUVirtualAddress();
+//	// 使用するリソースのサイズは頂点6つ分のサイズ
+//	indexBufferView.SizeInBytes = sizeof(uint32_t) * 6;
+//	// 1頂点あたりのサイズ
+//	indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+//}
+//void Mesh::CreateIndexData()
+//{
+//	uint32_t* indexData = nullptr;
+//	indexResource->Map(0, nullptr,
+//		reinterpret_cast<void**>(&indexData));
+//	// 1枚目の三角形
+//	indexData[0] = 0;
+//	indexData[1] = 1;
+//	indexData[2] = 2;
+//	indexData[3] = 1;
+//	indexData[4] = 3;
+//	indexData[5] = 2;
+//}
+
 void Mesh::CreateMaterialResource()
 {
 	// マテリアル用のリソースを作る。今回はcolor1つ分のサイズを用意する
