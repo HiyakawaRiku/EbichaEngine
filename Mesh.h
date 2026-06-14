@@ -15,6 +15,11 @@ struct VertexData {
 	Vector2 texcoord;
 };
 
+enum Texture {
+	uvChecker,
+	monsterBall
+};
+
 class Mesh {
 public:
 	void Initialize();
