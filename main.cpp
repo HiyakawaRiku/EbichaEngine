@@ -1,6 +1,7 @@
 #include "DirectXCommon.h"
 #include "Matrix.h"
 #include "Mesh.h"
+#include "Sprite.h"
 
 //Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int){
@@ -22,7 +23,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int){
 
 	Mesh* mesh=new Mesh;
 	mesh->Initialize();
-	
+
+	Sprite* sprite = new Sprite;
+	sprite->Initialize();
 
 	// ImGuiの初期化。詳細はさして重要ではないので解説は省略する。
 	// こういうもんである
@@ -44,6 +47,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int){
 	// Transform変数を作る
 	Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 	Transform cameraTransform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-5.0f} };
+	// CPUで動かす用のTransformを作る
+	Transform transformSprite{ {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
 
 
 	MSG msg{};
@@ -69,6 +74,13 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int){
 			Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
 			// GPU上のリソース（定数バッファ）の中身を書き換える
 			*mesh->wvpData = worldViewProjectionMatrix;
+			
+			Matrix4x4 worldMatrixSprite = MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
+			Matrix4x4 viewMatrixSprite = MakeIdentity4x4();
+			Matrix4x4 projectionMatrixSprite = MakeOrthographicMatrix(0.0f, 0.0f, float(app->kWindowWidth), float(app->kWindowHeight), 0.0f, 100.0f);
+			Matrix4x4 worldViewProjectionMatrixSprite = Multiply(worldMatrixSprite, Multiply(viewMatrixSprite, projectionMatrixSprite));
+			*sprite->transformationMatrixData = worldViewProjectionMatrixSprite;
+
 
 #ifdef USE_IMGUI
 			ImGui_ImplDX12_NewFrame();
@@ -83,18 +95,10 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int){
 #endif
 
 			dxCommon->Draw();
-			
-			dxCommon->GetCommandList()->IASetVertexBuffers(0, 1, &mesh->vertexBufferView);    // VBVを設定
-			// 形状を設定。PSOに設定しているものとはまた別。同じものを設定すると考えておけば良い
-			dxCommon->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-			//マテリアルCBufferの場所を設定
-			dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(0, mesh->materialResource->GetGPUVirtualAddress());
-			// WVP用CBufferの場所を設定
-			dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(1, mesh->wvpResource->GetGPUVirtualAddress());
-			// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]である。
-			dxCommon->GetCommandList()->SetGraphicsRootDescriptorTable(2, dxCommon->textureSrvHandleGPU);
-			// 描画！（DrawCall/ドローコール）。3頂点で1つのインスタンス。インスタンスについては今後
-			dxCommon->GetCommandList()->DrawInstanced(6, 1, 0, 0);
+
+			mesh->Draw();
+			sprite->Draw();
+
 
 			// 実際のcommandListのImGuiの描画コマンドを積む
 #ifdef USE_IMGUI

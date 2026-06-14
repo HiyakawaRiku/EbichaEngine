@@ -18,6 +18,7 @@ struct VertexData {
 class Mesh {
 public:
 	void Initialize();
+	void Draw();
 private:
 	DirectXCommon* dxCommon_=DirectXCommon::GetInstance();
 public:

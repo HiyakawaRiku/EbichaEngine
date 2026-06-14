@@ -8,6 +8,21 @@ void Mesh::Initialize()
 	CreateWvpResource();
 }
 
+void Mesh::Draw()
+{
+	dxCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);    // VBVを設定
+	// 形状を設定。PSOに設定しているものとはまた別。同じものを設定すると考えておけば良い
+	dxCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	//マテリアルCBufferの場所を設定
+	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+	// WVP用CBufferの場所を設定
+	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
+	// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]である。
+	dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, dxCommon_->textureSrvHandleGPU);
+	// 描画！（DrawCall/ドローコール）。3頂点で1つのインスタンス。インスタンスについては今後
+	dxCommon_->GetCommandList()->DrawInstanced(6, 1, 0, 0);
+}
+
 void Mesh::CreateVertexResource()
 {
 	// 実際に頂点リソースを作る
@@ -57,7 +72,7 @@ void Mesh::CreateMaterialResource()
 	// 書き込むためのアドレスを取得
 	materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
 	// 今回は赤を書き込んでみる
-	*materialData = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+	*materialData = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 void Mesh::CreateWvpResource()
