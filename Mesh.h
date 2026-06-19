@@ -19,6 +19,8 @@ struct VertexData {
 struct Material {
 	Vector4 color;
 	int32_t enableLighting;
+	float padding[3];
+	Matrix4x4 uvTransform;
 };
 
 struct TransformationMatrix {
@@ -62,6 +64,8 @@ public:
 	Material* materialData = nullptr;
 	// データを書き込む
 	TransformationMatrix* wvpData = nullptr;
+	// マテリアルにデータを書き込む
+	DirectionalLight* directionalLightData = nullptr;
 
 
 private:
