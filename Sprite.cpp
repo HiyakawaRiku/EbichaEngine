@@ -48,7 +48,7 @@ void Sprite::CreateVertexData()
 	VertexData* vertexData = nullptr;
 	vertexResource->Map(0, nullptr,
 		reinterpret_cast<void**>(&vertexData));
-	// 1枚目の三角形
+
 	vertexData[0].position = { 0.0f, 360.0f, 0.0f, 1.0f }; // 左下
 	vertexData[0].texcoord = { 0.0f, 1.0f };
 	vertexData[0].normal = { 0.0f, 0.0f,-1.0f };
