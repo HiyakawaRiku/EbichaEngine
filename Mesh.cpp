@@ -1,4 +1,5 @@
 #include "Mesh.h"
+#include "Model.h"
 
 void Mesh::Initialize()
 {
@@ -146,7 +147,7 @@ void Mesh::CreateVertexDataSphere(uint32_t kSubdivision)
 					cosf(latVal) * sinf(lonVal),
 					1.0f
 				);
-			};
+				};
 
 			// 三角形1（左上から右下への対角線で分割）
 			// 0: 左上 (lat, lon)

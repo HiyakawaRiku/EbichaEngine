@@ -3,6 +3,7 @@
 #include "Mesh.h"
 #include "Sprite.h"
 #include "Camera.h"
+#include "Model.h"
 
 //Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int){
@@ -28,9 +29,12 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int){
 	Sprite* sprite = new Sprite;
 	sprite->Initialize();
 
-	Mesh* sphere = new Mesh;
-	uint32_t kSubdivision = 16;
-	sphere->InitializeSphere(kSubdivision);
+	//Mesh* sphere = new Mesh;
+	//uint32_t kSubdivision = 16;
+	//sphere->InitializeSphere(kSubdivision);
+
+	Model* model = new Model;
+	model->Initialize();
 
 	Camera* camera = new Camera;
 
@@ -68,8 +72,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int){
 			
 			*sprite->transformationMatrixData = camera->DrawObject2d(transformSprite);
 
-			*sphere->wvpData = camera->DrawObject3d(transform);
+			//*sphere->wvpData = camera->DrawObject3d(transform);
 
+			*model->wvpData = camera->DrawObject3d(transform);
 
 
 #ifdef USE_IMGUI
@@ -94,15 +99,15 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int){
 			ImGui::DragFloat("CameraRotateZ", &camera->transform_.rotate.z, 0.1f, -360.0f, 360.0f);
 			ImGui::SameLine(); ImGui::Text("deg");
 
-			// color (3Dオブジェクト用マテリアルカラー)
-			float color4[4] = { sphere->materialData->color.x, sphere->materialData->color.y, sphere->materialData->color.z, sphere->materialData->color.w };
-			ImGui::ColorEdit4("color", color4);
-			sphere->materialData->color = { color4[0], color4[1], color4[2], color4[3] };
+			//// color (3Dオブジェクト用マテリアルカラー)
+			//float color4[4] = { sphere->materialData->color.x, sphere->materialData->color.y, sphere->materialData->color.z, sphere->materialData->color.w };
+			//ImGui::ColorEdit4("color", color4);
+			//sphere->materialData->color = { color4[0], color4[1], color4[2], color4[3] };
 
-			// enableLighting
-			bool enableLighting = sphere->materialData->enableLighting != 0;
-			ImGui::Checkbox("enableLighting", &enableLighting);
-			sphere->materialData->enableLighting = enableLighting ? 1 : 0;
+			//// enableLighting
+			//bool enableLighting = sphere->materialData->enableLighting != 0;
+			//ImGui::Checkbox("enableLighting", &enableLighting);
+			//sphere->materialData->enableLighting = enableLighting ? 1 : 0;
 
 			// colorSprite (Sprite用マテリアルカラー)
 			float colorSprite4[4] = { sprite->materialData->color.x, sprite->materialData->color.y, sprite->materialData->color.z, sprite->materialData->color.w };
@@ -115,16 +120,16 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int){
 			// useMonsterBall
 			ImGui::Checkbox("useMonsterBall", &useMonsterBall);
 
-			// LightColor
-			float lightColor4[4] = { sphere->materialData->color.x, sphere->materialData->color.y, sphere->materialData->color.z, sphere->materialData->color.w };
-			ImGui::ColorEdit4("LightColor", lightColor4);
-			sphere->materialData->color = { lightColor4[0], lightColor4[1], lightColor4[2], lightColor4[3] };
+			//// LightColor
+			//float lightColor4[4] = { sphere->materialData->color.x, sphere->materialData->color.y, sphere->materialData->color.z, sphere->materialData->color.w };
+			//ImGui::ColorEdit4("LightColor", lightColor4);
+			//sphere->materialData->color = { lightColor4[0], lightColor4[1], lightColor4[2], lightColor4[3] };
 
-			// LightDirection
-			ImGui::SliderFloat3("LightDirection", &sphere->directionalLightData->direction.x, -1.0f, 1.0f, "%.2f");
+			//// LightDirection
+			//ImGui::SliderFloat3("LightDirection", &sphere->directionalLightData->direction.x, -1.0f, 1.0f, "%.2f");
 
-			// Intensity
-			ImGui::DragFloat("Intensity", &sphere->directionalLightData->intensity, 0.01f);
+			//// Intensity
+			//ImGui::DragFloat("Intensity", &sphere->directionalLightData->intensity, 0.01f);
 
 			ImGui::DragFloat2("UVTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
 			ImGui::DragFloat2("UVScale", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
@@ -143,7 +148,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int){
 
 			mesh->Draw(6);
 			sprite->Draw(6);
-			sphere->DrawSphere(kSubdivision,useMonsterBall);
+			//sphere->DrawSphere(kSubdivision,useMonsterBall);
+			model->Draw();
 
 			// 実際のcommandListのImGuiの描画コマンドを積む
 #ifdef USE_IMGUI
