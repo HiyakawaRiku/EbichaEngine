@@ -46,7 +46,7 @@ void Mesh::DrawSphere(UINT vertexCountPerInstance,bool useMonsterBall)
 	// WVP用CBufferの場所を設定
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
 	// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]である。
-	dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, useMonsterBall?dxCommon_->textureSrvHandleGPU[Texture::uvChecker] : dxCommon_->textureSrvHandleGPU[Texture::monsterBall]);
+	dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, useMonsterBall?dxCommon_->textureSrvHandleGPU[Texture::monsterBall] : dxCommon_->textureSrvHandleGPU[Texture::uvChecker]);
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 	// 描画！（DrawCall/ドローコール）。3頂点で1つのインスタンス。インスタンスについては今後
 	dxCommon_->GetCommandList()->DrawInstanced(vertexCount, 1, 0, 0);
@@ -231,6 +231,7 @@ void Mesh::CreateMaterialResource()
 	// 今回は赤を書き込んでみる
 	materialData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
 	materialData->enableLighting = true;
+	materialData->uvTransform = MakeIdentity4x4();
 }
 
 void Mesh::CreateWvpResource()
@@ -247,8 +248,6 @@ void Mesh::CreateDirectionalLight()
 {
 	// マテリアル用のリソースを作る。今回はcolor1つ分のサイズを用意する
 	directionalLightResource = CreateBufferResource(dxCommon_->GetDevice(), sizeof(DirectionalLight));
-	// マテリアルにデータを書き込む
-	DirectionalLight* directionalLightData = nullptr;
 	// 書き込むためのアドレスを取得
 	directionalLightResource->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
 	// 今回は赤を書き込んでみる

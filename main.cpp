@@ -40,6 +40,12 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int){
 	// CPUで動かす用のTransformを作る
 	Transform transformSprite{ {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
 
+	Transform uvTransformSprite{
+		{1.0f, 1.0f, 1.0f},
+		{0.0f, 0.0f, 0.0f},
+		{0.0f, 0.0f, 0.0f}
+	};
+
 	bool useMonsterBall = true;
 
 	MSG msg{};
@@ -59,12 +65,12 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int){
 			
 			// GPU上のリソース（定数バッファ）の中身を書き換える
 			*mesh->wvpData = camera->DrawObject3d(transform);
-			mesh->materialData->color = { 0.0f,0.0f,0.0f,1.0f };
 			
 			*sprite->transformationMatrixData = camera->DrawObject2d(transformSprite);
-			*sprite->materialData = { 1.0f,0.0f,1.0f,0.0f };
 
 			*sphere->wvpData = camera->DrawObject3d(transform);
+
+
 
 #ifdef USE_IMGUI
 			ImGui_ImplDX12_NewFrame();
@@ -74,11 +80,66 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int){
 			// 開発用UIの処理。実際に開発用のUIを出す場合はここをゲーム固有の処理に置き換える
 			//ImGui::ShowDemoWindow();
 
+			// === Settings パネル ===
+			ImGui::Begin("Settings");
+
+			// CameraTranslate
+			ImGui::DragFloat3("CameraTranslate", &camera->transform_.translate.x, 0.01f);
+
+			// CameraRotate (deg)
+			ImGui::DragFloat("CameraRotateX", &camera->transform_.rotate.x, 0.1f, -360.0f, 360.0f);
+			ImGui::SameLine(); ImGui::Text("deg");
+			ImGui::DragFloat("CameraRotateY", &camera->transform_.rotate.y, 0.1f, -360.0f, 360.0f);
+			ImGui::SameLine(); ImGui::Text("deg");
+			ImGui::DragFloat("CameraRotateZ", &camera->transform_.rotate.z, 0.1f, -360.0f, 360.0f);
+			ImGui::SameLine(); ImGui::Text("deg");
+
+			// color (3Dオブジェクト用マテリアルカラー)
+			float color4[4] = { sphere->materialData->color.x, sphere->materialData->color.y, sphere->materialData->color.z, sphere->materialData->color.w };
+			ImGui::ColorEdit4("color", color4);
+			sphere->materialData->color = { color4[0], color4[1], color4[2], color4[3] };
+
+			// enableLighting
+			bool enableLighting = sphere->materialData->enableLighting != 0;
+			ImGui::Checkbox("enableLighting", &enableLighting);
+			sphere->materialData->enableLighting = enableLighting ? 1 : 0;
+
+			// colorSprite (Sprite用マテリアルカラー)
+			float colorSprite4[4] = { sprite->materialData->color.x, sprite->materialData->color.y, sprite->materialData->color.z, sprite->materialData->color.w };
+			ImGui::ColorEdit4("colorSprite", colorSprite4);
+			sprite->materialData->color = { colorSprite4[0], colorSprite4[1], colorSprite4[2], colorSprite4[3] };
+
+			// translateSprite
+			ImGui::DragFloat3("translateSprite", &transformSprite.translate.x, 0.5f);
+
+			// useMonsterBall
 			ImGui::Checkbox("useMonsterBall", &useMonsterBall);
+
+			// LightColor
+			float lightColor4[4] = { sphere->materialData->color.x, sphere->materialData->color.y, sphere->materialData->color.z, sphere->materialData->color.w };
+			ImGui::ColorEdit4("LightColor", lightColor4);
+			sphere->materialData->color = { lightColor4[0], lightColor4[1], lightColor4[2], lightColor4[3] };
+
+			// LightDirection
+			ImGui::SliderFloat3("LightDirection", &sphere->directionalLightData->direction.x, -1.0f, 1.0f, "%.2f");
+
+			// Intensity
+			ImGui::DragFloat("Intensity", &sphere->directionalLightData->intensity, 0.01f);
+
+			ImGui::DragFloat2("UVTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
+			ImGui::DragFloat2("UVScale", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
+			ImGui::SliderAngle("UVRotate", &uvTransformSprite.rotate.z);
+
+			ImGui::End();
 
 			// ImGuiの内部コマンドを生成する
 			ImGui::Render();
 #endif
+
+			Matrix4x4 uvTransformMatrix = MakeScaleMatrix(uvTransformSprite.scale);
+			uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(uvTransformSprite.rotate.z));
+			uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(uvTransformSprite.translate));
+			sprite->materialData->uvTransform = uvTransformMatrix;
 
 			mesh->Draw(6);
 			sprite->Draw(6);

@@ -101,6 +101,8 @@ void Sprite::CreateMaterialResource()
 	materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
 	// 今回は赤を書き込んでみる
 	materialData->color = { 1.0f,1.0f,1.0f,1.0f };
+	//materialData->enableLighting = true;
+	materialData->uvTransform = MakeIdentity4x4();
 }
 
 void Sprite::CreateTransformationMatrix()
