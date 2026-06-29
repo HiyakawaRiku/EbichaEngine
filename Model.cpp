@@ -37,8 +37,6 @@ void Model::CreateModelSphere()
 	// 1頂点あたりのサイズ
 	vertexBufferViewSphere.StrideInBytes = sizeof(VertexData);
 
-	float pi = 3.14159265359f;
-
 	// 頂点リソースにデータを書き込む
 	VertexData* vertexData = nullptr;
 	// 書き込むためのアドレスを取得
