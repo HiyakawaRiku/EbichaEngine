@@ -2,9 +2,9 @@
 #include "DirectXCommon.h"
 #include "BaseObject.h"
 
-class Mesh {
+class Mesh :public BaseObject{
 public:
-	void Initialize();
+	void Initialize()override;
 	void InitializeSphere(uint32_t kSubdivision);
 	void Draw(UINT vertexCountPerInstance);
 	void DrawSphere(UINT vertexCountPerInstance, bool useMonsterBall);
@@ -16,19 +16,9 @@ public:
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
 	//D3D12_INDEX_BUFFER_VIEW indexBufferView{};
 	//Microsoft::WRL::ComPtr<ID3D12Resource> indexResource;
-	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource;
-	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource;
-	Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource;
 
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferViewSphere{};
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceSphere;
-
-	// マテリアルにデータを書き込む
-	Material* materialData = nullptr;
-	// データを書き込む
-	TransformationMatrix* wvpData = nullptr;
-	// マテリアルにデータを書き込む
-	DirectionalLight* directionalLightData = nullptr;
 
 
 private:
@@ -38,7 +28,7 @@ private:
 	void CreateVertexDataSphere(uint32_t kSubdivision);
 	//void CreateIndexResource();
 	//void CreateIndexData();
-	void CreateMaterialResource();
-	void CreateWvpResource();
-	void CreateDirectionalLight();
+	void CreateMaterialResource()override;
+	void CreateWvpResource()override;
+	void CreateDirectionalLight()override;
 };

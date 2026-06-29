@@ -2,13 +2,12 @@
 
 void Sprite::Initialize()
 {
+	BaseObject::Initialize();
+
 	CreateVertexResource();
 	CreateVertexData();
 	CreateIndexResource();
 	CreateIndexData();
-	CreateMaterialResource();
-	CreateTransformationMatrix();
-	CreateDirectionalLight();
 }
 
 void Sprite::Draw(UINT vertexCountPerInstance)
@@ -21,7 +20,7 @@ void Sprite::Draw(UINT vertexCountPerInstance)
 	//マテリアルCBufferの場所を設定
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
 	// TransformationMatrixCBufferの場所を設定
-	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource->GetGPUVirtualAddress());
+	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
 	// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]である。
 	dxCommon_->GetCommandList()->SetGraphicsRootDescriptorTable(2, dxCommon_->textureSrvHandleGPU[Texture::monsterBall]);
 	dxCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
@@ -95,37 +94,16 @@ void Sprite::CreateIndexData()
 
 void Sprite::CreateMaterialResource()
 {
-	// マテリアル用のリソースを作る。今回はcolor1つ分のサイズを用意する
-	materialResource = CreateBufferResource(dxCommon_->GetDevice(), sizeof(Material));
-	// 書き込むためのアドレスを取得
-	materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
-	// 今回は赤を書き込んでみる
-	materialData->color = { 1.0f,1.0f,1.0f,1.0f };
-	//materialData->enableLighting = true;
-	materialData->uvTransform = MakeIdentity4x4();
+	BaseObject::CreateMaterialResource();
 }
 
-void Sprite::CreateTransformationMatrix()
+void Sprite::CreateWvpResource()
 {
-	// Sprite用のTransformationMatrix用のリソースを作る。Matrix4x4 1つ分のサイズを用意する
-	transformationMatrixResource = CreateBufferResource(dxCommon_->GetDevice(), sizeof(TransformationMatrix));
-	// 書き込むためのアドレスを取得
-	transformationMatrixResource->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixData));
-	// 単位行列を書きこんでおく
-	transformationMatrixData->WVP = MakeIdentity4x4();
+	BaseObject::CreateWvpResource();
 
 }
 
 void Sprite::CreateDirectionalLight()
 {
-	// マテリアル用のリソースを作る。今回はcolor1つ分のサイズを用意する
-	directionalLightResource = CreateBufferResource(dxCommon_->GetDevice(), sizeof(DirectionalLight));
-	// マテリアルにデータを書き込む
-	DirectionalLight* directionalLightData = nullptr;
-	// 書き込むためのアドレスを取得
-	directionalLightResource->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
-	// 今回は赤を書き込んでみる
-	directionalLightData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-	directionalLightData->direction = { 0.0f, -1.0f, 0.0f };
-	directionalLightData->intensity = 1.0f;
+	BaseObject::CreateDirectionalLight();
 }

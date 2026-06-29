@@ -2,10 +2,9 @@
 
 void Model::Initialize()
 {
+	BaseObject::Initialize();
+
 	CreateModelSphere();
-	CreateMaterialResource();
-	CreateWvpResource();
-	CreateDirectionalLight();
 }
 
 void Model::Draw()
@@ -49,36 +48,15 @@ void Model::CreateModelSphere()
 
 void Model::CreateMaterialResource()
 {
-	// マテリアル用のリソースを作る。今回はcolor1つ分のサイズを用意する
-	materialResource = CreateBufferResource(dxCommon_->GetDevice(), sizeof(Material));
-	// 書き込むためのアドレスを取得
-	materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
-	// 今回は赤を書き込んでみる
-	materialData->color = { 1.0f,1.0f,1.0f,1.0f };
-	//materialData->enableLighting = true;
-	materialData->uvTransform = MakeIdentity4x4();
+	BaseObject::CreateMaterialResource();
 }
 
 void Model::CreateWvpResource()
 {
-	// WVP用のリソースを作る。Matrix4x4 1つ分のサイズを用意する
-	wvpResource = CreateBufferResource(dxCommon_->GetDevice(), sizeof(TransformationMatrix));
-	// 書き込むためのアドレスを取得
-	wvpResource->Map(0, nullptr, reinterpret_cast<void**>(&wvpData));
-	// 単位行列を書き込んでおく
-	wvpData->WVP = MakeIdentity4x4();
+	BaseObject::CreateWvpResource();
 }
 
 void Model::CreateDirectionalLight()
 {
-	// マテリアル用のリソースを作る。今回はcolor1つ分のサイズを用意する
-	directionalLightResource = CreateBufferResource(dxCommon_->GetDevice(), sizeof(DirectionalLight));
-	// マテリアルにデータを書き込む
-	DirectionalLight* directionalLightData = nullptr;
-	// 書き込むためのアドレスを取得
-	directionalLightResource->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
-	// 今回は赤を書き込んでみる
-	directionalLightData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-	directionalLightData->direction = { 0.0f, -1.0f, 0.0f };
-	directionalLightData->intensity = 1.0f;
+	BaseObject::CreateDirectionalLight();
 }
