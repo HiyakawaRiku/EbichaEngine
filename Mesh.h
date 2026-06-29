@@ -1,43 +1,6 @@
 #pragma once
 #include "DirectXCommon.h"
-#include "Matrix.h"
-
-struct Vector2 {
-	float x, y;
-};
-
-struct Vector4 {
-	float x, y, z, w;
-};
-
-struct VertexData {
-	Vector4 position;
-	Vector2 texcoord;
-	Vector3 normal;
-};
-
-struct Material {
-	Vector4 color;
-	int32_t enableLighting;
-	float padding[3];
-	Matrix4x4 uvTransform;
-};
-
-struct TransformationMatrix {
-	Matrix4x4 WVP;
-	Matrix4x4 World;
-};
-
-struct DirectionalLight {
-	Vector4 color;
-	Vector3 direction;
-	float intensity;
-};
-
-enum Texture {
-	uvChecker,
-	monsterBall
-};
+#include "BaseObject.h"
 
 class Mesh {
 public:

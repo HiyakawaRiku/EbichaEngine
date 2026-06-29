@@ -1,7 +1,6 @@
 #pragma once
 #include "DirectXCommon.h"
-#include "Matrix.h"
-#include "Mesh.h"
+#include "BaseObject.h"
 
 class Sprite{
 public:
