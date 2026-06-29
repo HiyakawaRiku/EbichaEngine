@@ -20,5 +20,8 @@ private:
 
 private:
 	void CreateModelSphere();
+	void CreateMaterialResource()override;
+	void CreateWvpResource()override;
+	void CreateDirectionalLight()override;
 };
 

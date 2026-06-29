@@ -91,3 +91,19 @@ void Sprite::CreateIndexData()
 
 
 }
+
+void Sprite::CreateMaterialResource()
+{
+	BaseObject::CreateMaterialResource();
+}
+
+void Sprite::CreateWvpResource()
+{
+	BaseObject::CreateWvpResource();
+
+}
+
+void Sprite::CreateDirectionalLight()
+{
+	BaseObject::CreateDirectionalLight();
+}

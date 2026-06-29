@@ -20,4 +20,7 @@ private:
 	void CreateVertexData();
 	void CreateIndexResource();
 	void CreateIndexData();
+	void CreateMaterialResource()override;
+	void CreateWvpResource()override;
+	void CreateDirectionalLight()override;
 };

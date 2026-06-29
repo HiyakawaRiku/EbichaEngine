@@ -34,7 +34,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int){
 	//sphere->InitializeSphere(kSubdivision);
 
 	Model* model = new Model;
-	model->Initialize();
+	model->Initialize("resources", "plane.obj");
 
 	Camera* camera = new Camera;
 

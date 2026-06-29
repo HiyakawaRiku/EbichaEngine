@@ -221,3 +221,18 @@ void Mesh::CreateVertexDataSphere(uint32_t kSubdivision)
 //	indexData[4] = 3;
 //	indexData[5] = 2;
 //}
+
+void Mesh::CreateMaterialResource()
+{
+	BaseObject::CreateMaterialResource();
+}
+
+void Mesh::CreateWvpResource()
+{
+	BaseObject::CreateWvpResource();
+}
+
+void Mesh::CreateDirectionalLight()
+{
+	BaseObject::CreateDirectionalLight();
+}

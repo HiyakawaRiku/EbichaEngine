@@ -47,3 +47,18 @@ void Model::CreateModelSphere()
 	std::memcpy(vertexData, modelData.vertices.data(), sizeof(VertexData) * modelData.vertices.size());// 頂点データをリソースにコピー
 
 }
+
+void Model::CreateMaterialResource()
+{
+	BaseObject::CreateMaterialResource();
+}
+
+void Model::CreateWvpResource()
+{
+	BaseObject::CreateWvpResource();
+}
+
+void Model::CreateDirectionalLight()
+{
+	BaseObject::CreateDirectionalLight();
+}

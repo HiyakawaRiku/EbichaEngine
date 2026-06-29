@@ -28,4 +28,7 @@ private:
 	void CreateVertexDataSphere(uint32_t kSubdivision);
 	//void CreateIndexResource();
 	//void CreateIndexData();
+	void CreateMaterialResource()override;
+	void CreateWvpResource()override;
+	void CreateDirectionalLight()override;
 };
