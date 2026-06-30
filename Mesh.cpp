@@ -1,12 +1,12 @@
 #include "Mesh.h"
 #include "Model.h"
 
-void Mesh::Initialize()
+void Mesh::Initialize(Vector4 vertex0, Vector4 vertex1, Vector4 vertex2)
 {
 	BaseObject::Initialize();
 
 	CreateVertexResource();
-	CreateVertexData();
+	CreateVertexData(vertex0,vertex1,vertex2);
 }
 
 void Mesh::InitializeSphere(uint32_t kSubdivision)
@@ -25,7 +25,7 @@ void Mesh::Draw(UINT vertexCountPerInstance)
 
 void Mesh::DrawSphere(UINT vertexCountPerInstance,bool useMonsterBall)
 {
-	uint32_t vertexCount = vertexCountPerInstance * vertexCountPerInstance * 6; // 緯度×経度×6頂点（2三角形）
+	uint32_t vertexCount = vertexCountPerInstance * vertexCountPerInstance * 6;
 
 	BaseObject::Draw(vertexBufferViewSphere, materialResource, wvpResource, directionalLightResource, vertexCount);
 }
@@ -34,12 +34,12 @@ void Mesh::DrawSphere(UINT vertexCountPerInstance,bool useMonsterBall)
 void Mesh::CreateVertexResource()
 {
 	// 実際に頂点リソースを作る
-	vertexResource = CreateBufferResource(dxCommon_->GetDevice(), sizeof(VertexData) * 6);
+	vertexResource = CreateBufferResource(dxCommon_->GetDevice(), sizeof(VertexData) * 3);
 
 	// リソースの先頭のアドレスから使う
 	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
 	// 使用するリソースのサイズは頂点3つ分のサイズ
-	vertexBufferView.SizeInBytes = sizeof(VertexData) * 6;
+	vertexBufferView.SizeInBytes = sizeof(VertexData) * 3;
 	// 1頂点あたりのサイズ
 	vertexBufferView.StrideInBytes = sizeof(VertexData);
 }
@@ -59,7 +59,7 @@ void Mesh::CreateVertexResourceSphere(uint32_t kSubdivision)
 	vertexBufferViewSphere.StrideInBytes = sizeof(VertexData);
 }
 
-void Mesh::CreateVertexData()
+void Mesh::CreateVertexData(Vector4 vertex0, Vector4 vertex1, Vector4 vertex2)
 {
 	// 頂点リソースにデータを書き込む
 	VertexData* vertexData = nullptr;
@@ -67,29 +67,17 @@ void Mesh::CreateVertexData()
 	vertexResource->Map(0, nullptr,
 		reinterpret_cast<void**>(&vertexData));
 	// 左下
-	vertexData[0].position = { -0.5f, -0.5f, 0.0f, 1.0f };
+	vertexData[0].position = vertex0;
 	vertexData[0].texcoord = { 0.0f, 1.0f };
 	vertexData[0].normal = { 0.0f, 0.0f,-1.0f };
 	// 上
-	vertexData[1].position = { 0.0f, 0.5f, 0.0f, 1.0f };
+	vertexData[1].position = vertex1;
 	vertexData[1].texcoord = { 0.5f, 0.0f };
 	vertexData[1].normal = { 0.0f, 0.0f,-1.0f };
 	// 右下
-	vertexData[2].position = { 0.5f, -0.5f, 0.0f, 1.0f };
+	vertexData[2].position = vertex2;
 	vertexData[2].texcoord = { 1.0f, 1.0f };
 	vertexData[2].normal = { 0.0f, 0.0f,-1.0f };
-	// 左下
-	vertexData[3].position = { -0.5f, -0.5f, 0.5f, 1.0f };
-	vertexData[3].texcoord = { 0.0f, 1.0f };
-	vertexData[3].normal = { 0.0f, 0.0f,-1.0f };
-	// 上
-	vertexData[4].position = { 0.0f, 0.0f, 0.0f, 1.0f };
-	vertexData[4].texcoord = { 0.5f, 0.0f };
-	vertexData[4].normal = { 0.0f, 0.0f,-1.0f };
-	// 右下
-	vertexData[5].position = { 0.5f, -0.5f, -0.5f, 1.0f };
-	vertexData[5].texcoord = { 1.0f, 1.0f };
-	vertexData[5].normal = { 0.0f, 0.0f,-1.0f };
 }
 
 void Mesh::CreateVertexDataSphere(uint32_t kSubdivision)

@@ -6,8 +6,8 @@
 #include "Model.h"
 
 //Windowsアプリでのエントリーポイント(main関数)
-int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int){
-	
+int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
+
 	//COMの初期化
 	(void)CoInitializeEx(0, COINIT_MULTITHREADED);
 
@@ -23,8 +23,11 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int){
 	DirectXCommon* dxCommon = DirectXCommon::GetInstance();
 	dxCommon->Initialize();
 
-	Mesh* mesh=new Mesh;
-	mesh->Initialize();
+	Mesh* mesh = new Mesh;
+	mesh->Initialize({ -0.5f, -0.5f, 0.0f, 1.0f }, { 0.0f, 0.5f, 0.0f, 1.0f }, { 0.5f, -0.5f, 0.0f, 1.0f });
+
+	Mesh* mesh2 = new Mesh;
+	mesh2->Initialize({ -0.5f, -0.5f, 0.5f, 1.0f }, { 0.0f, 0.0f, 0.0f, 1.0f }, { 0.5f, -0.5f, -0.5f, 1.0f });
 
 	Sprite* sprite = new Sprite;
 	sprite->Initialize();
@@ -34,7 +37,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int){
 	sphere->InitializeSphere(kSubdivision);
 
 	Model* model = new Model;
-	model->Initialize("resources", "plane.obj");
+	model->Initialize("resources", "axis.obj");
 
 	Camera* camera = new Camera;
 
@@ -61,16 +64,17 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int){
 			DispatchMessage(&msg);
 		}
 		else {
-			
+
 			dxCommon->PreDraw();
 
 			// Transformを更新（例：Y軸回転）
 			transform.rotate.y += 0.03f;
-			
+
 			// GPU上のリソース（定数バッファ）の中身を書き換える
 			*mesh->wvpData = camera->DrawObject3d(transform);
+			*mesh2->wvpData = camera->DrawObject3d(transform);
 
-			
+
 			*sprite->wvpData = camera->DrawObject2d(transformSprite);
 			*sphere->wvpData = camera->DrawObject3d(transform);
 			*model->wvpData = camera->DrawObject3d(transform);
@@ -146,12 +150,13 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int){
 			sprite->materialData->uvTransform = uvTransformMatrix;
 
 			mesh->Draw(6);
+			mesh2->Draw(6);
 			sprite->Draw(6);
-			sphere->DrawSphere(kSubdivision,useMonsterBall);
+			//sphere->DrawSphere(kSubdivision,useMonsterBall);
 			model->Draw();
 
 			dxCommon->PostDraw();
-		
+
 		}
 	}
 

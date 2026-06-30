@@ -4,12 +4,10 @@
 
 class Mesh :public BaseObject{
 public:
-	void Initialize()override;
+	void Initialize(Vector4 vertex0, Vector4 vertex1, Vector4 vertex2);
 	void InitializeSphere(uint32_t kSubdivision);
 	void Draw(UINT vertexCountPerInstance);
 	void DrawSphere(UINT vertexCountPerInstance, bool useMonsterBall);
-private:
-	DirectXCommon* dxCommon_=DirectXCommon::GetInstance();
 public:
 	// 頂点バッファビューを作成する
 	//D3D12_INDEX_BUFFER_VIEW indexBufferView{};
@@ -21,7 +19,7 @@ public:
 
 private:
 	void CreateVertexResource();
-	void CreateVertexData();
+	void CreateVertexData(Vector4 vertex0, Vector4 vertex1, Vector4 vertex2);
 	void CreateVertexResourceSphere(uint32_t kSubdivision);
 	void CreateVertexDataSphere(uint32_t kSubdivision);
 	//void CreateIndexResource();
