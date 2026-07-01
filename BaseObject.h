@@ -34,15 +34,6 @@ enum Texture {
 	monsterBall
 };
 
-struct MaterialData {
-	std::string textureFilePath;
-};
-
-struct ModelData {
-	std::vector<VertexData> vertices;
-	MaterialData material;
-};
-
 class BaseObject {
 public:
 	DirectXCommon* dxCommon_ = DirectXCommon::GetInstance();
@@ -64,6 +55,3 @@ public:
 	virtual void CreateWvpResource();
 	virtual void CreateDirectionalLight();
 };
-
-MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
-ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename);

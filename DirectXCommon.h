@@ -21,30 +21,15 @@
 
 #include <wrl.h>
 
-/// <summary>
-/// DirectX汎用
-/// </summary>
 class DirectXCommon {
 public: // メンバ関数
-	/// <summary>
-	/// シングルトンインスタンスの取得
-	/// </summary>
-	/// <returns></returns>
+
 	static DirectXCommon* GetInstance();
 
-	/// <summary>
-	/// 初期化
-	/// </summary>
 	void Initialize();
 
-	/// <summary>
-	/// 描画前処理
-	/// </summary>
 	void PreDraw();
 
-	/// <summary>
-	/// 描画後処理
-	/// </summary>
 	void PostDraw();
 
 	/// <summary>

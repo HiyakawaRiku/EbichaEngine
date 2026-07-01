@@ -1,6 +1,4 @@
 #pragma once
-#include "Matrix.h"
-#include "WinApp.h"
 #include "BaseObject.h"
 
 class Camera
