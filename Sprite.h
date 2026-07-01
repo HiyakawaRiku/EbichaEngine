@@ -4,7 +4,7 @@
 class Sprite:public BaseObject{
 public:
 	void Initialize()override;
-	void Draw(UINT vertexCountPerInstance);
+	void Draw(UINT vertexCountPerInstance, uint32_t textureIndex);
 private:
 	DirectXCommon* dxCommon_ = DirectXCommon::GetInstance();
 public:

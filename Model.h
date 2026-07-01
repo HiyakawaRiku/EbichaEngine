@@ -14,7 +14,7 @@ class Model:public BaseObject
 {
 public:
 	void Initialize(const std::string& directoryPath, const std::string& filename);
-	void Draw();
+	void Draw(uint32_t textureIndex);
 
 private:
 	ModelData modelData_;

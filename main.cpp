@@ -57,6 +57,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 	dxCommon->InitializeTexture("resources/uvChecker.png", 1);
 	dxCommon->InitializeTexture("resources/sky_sphere.png", 2);
+	dxCommon->InitializeTexture("resources/monsterBall.png", 3);
+	dxCommon->InitializeTexture("resources/ground_leaf.png", 4);
 
 	MSG msg{};
 	//ウィンドウのxボタンが押されるまでループ
@@ -83,7 +85,6 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 #ifdef _DEBUG
 
-			// 開発用UIの処理。実際に開発用のUIを出す場合はここをゲーム固有の処理に置き換える
 			//ImGui::ShowDemoWindow();
 
 			// === Settings パネル ===
@@ -145,19 +146,17 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(uvTransformSprite.translate));
 			sprite->materialData->uvTransform = uvTransformMatrix;
 
-			triangle->Draw(6);
-			triangle2->Draw(6);
-			sprite->Draw(6);
-			sphere->Draw(sphere->kSubdivision,1);
-			model->Draw();
+			triangle->Draw(6, 3);
+			triangle2->Draw(6, 2);
+			sprite->Draw(6, 1);
+			sphere->Draw(sphere->kSubdivision, useMonsterBall ? 3 : 2);
+			model->Draw(4);
 
 			dxCommon->PostDraw();
 
 		}
 	}
 
-	// ImGuiの終了処理。詳細はさして重要ではないので解説は省略する。
-	// こういうもんである。初期化と逆順に行う
 #ifdef USE_IMGUI
 	ImGui_ImplDX12_Shutdown();
 	ImGui_ImplWin32_Shutdown();

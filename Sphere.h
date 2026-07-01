@@ -5,7 +5,7 @@ class Sphere :public BaseObject
 {
 public:
 	void Initialize();
-	void Draw(UINT vertexCountPerInstance,int32_t textureIndex);
+	void Draw(UINT vertexCountPerInstance,uint32_t textureIndex);
 
 	uint32_t kSubdivision=16;
 private:

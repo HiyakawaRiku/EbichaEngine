@@ -80,7 +80,7 @@ private: // メンバ変数
 	// シザー矩形
 	D3D12_RECT scissorRect{};
 
-	static const uint32_t kMaxTextureIndex = 3;
+	static const uint32_t kMaxTextureIndex = 256;
 public:
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
 	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};

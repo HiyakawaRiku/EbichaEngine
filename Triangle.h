@@ -4,7 +4,7 @@
 class Triangle :public BaseObject{
 public:
 	void Initialize(Vector4 vertex0, Vector4 vertex1, Vector4 vertex2);
-	void Draw(UINT vertexCountPerInstance);
+	void Draw(UINT vertexCountPerInstance, uint32_t textureIndex);
 
 private:
 	void CreateVertexResource();

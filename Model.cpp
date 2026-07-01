@@ -9,9 +9,9 @@ void Model::Initialize(const std::string& directoryPath, const std::string& file
 	CreateModelSphere();
 }
 
-void Model::Draw()
+void Model::Draw(uint32_t textureIndex)
 {
-	BaseObject::Draw(vertexBufferView, materialResource, wvpResource, directionalLightResource, UINT(modelData_.vertices.size()));
+	BaseObject::Draw(vertexBufferView, materialResource, wvpResource, directionalLightResource, UINT(modelData_.vertices.size()),textureIndex);
 }
 
 void Model::CreateModelSphere()
