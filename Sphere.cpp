@@ -1,22 +1,40 @@
 #include "Sphere.h"
+#define _USE_MATH_DEFINES
+#include <math.h>
 
-void Sphere::Initialize(uint32_t kSubdivision)
+void Sphere::Initialize()
 {
 	BaseObject::Initialize();
-	CreateVertexResource(kSubdivision);
-	CreateVertexData(kSubdivision);
+	CreateVertexResource();
+	CreateVertexData();
+	CreateIndexResource();
+	CreateIndexData();
 }
 
 void Sphere::Draw(UINT vertexCountPerInstance, bool useMonsterBall)
 {
-	uint32_t vertexCount = vertexCountPerInstance * vertexCountPerInstance * 6;
+	auto commandList = dxCommon_->GetCommandList();
 
-	BaseObject::Draw(vertexBufferView, materialResource, wvpResource, directionalLightResource, vertexCount);
+	// Spriteの描画。変更が必要なものだけ変更する
+	commandList->IASetVertexBuffers(0, 1, &vertexBufferView);    // VBVを設定
+	commandList->IASetIndexBuffer(&indexBufferView);
+	// 形状を設定。PSOに設定しているものとはまた別。同じものを設定すると考えておけば良い
+	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	//マテリアルCBufferの場所を設定
+	commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+	// TransformationMatrixCBufferの場所を設定
+	commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
+	// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]である。
+	commandList->SetGraphicsRootDescriptorTable(2, dxCommon_->textureSrvHandleGPU[Texture::monsterBall]);
+	commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+	// 描画！（DrawCall/ドローコール）
+	commandList->DrawIndexedInstanced(indexCount, 1, 0, 0, 0);
 }
 
-void Sphere::CreateVertexResource(uint32_t kSubdivision)
+void Sphere::CreateVertexResource()
 {
-	uint32_t vertexCount = kSubdivision * kSubdivision * 6; // 緯度×経度×6頂点（2三角形）
+	// グリッド状に並べるため、頂点数は (kSubdivision + 1) * (kSubdivision + 1) になる
+	uint32_t vertexCount = (kSubdivision + 1) * (kSubdivision + 1);
 	// 実際に頂点リソースを作る
 	vertexResource = CreateBufferResource(dxCommon_->GetDevice(), sizeof(VertexData) * vertexCount);
 
@@ -28,111 +46,83 @@ void Sphere::CreateVertexResource(uint32_t kSubdivision)
 	vertexBufferView.StrideInBytes = sizeof(VertexData);
 }
 
-void Sphere::CreateVertexData(uint32_t kSubdivision)
+void Sphere::CreateVertexData()
 {
-	float pi = 3.14159265359f;
-
-	// 頂点リソースにデータを書き込む
 	VertexData* vertexData = nullptr;
-	// 書き込むためのアドレスを取得
-	vertexResource->Map(0, nullptr,
-		reinterpret_cast<void**>(&vertexData));
+	vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
 
-	const float kLonEvery = pi * 2.0f / float(kSubdivision);
-	const float kLatEvery = pi / float(kSubdivision);
+	uint32_t vertexIndex = 0;
+	for (uint32_t lat = 0; lat <= kSubdivision; ++lat) {
+		float theta = static_cast<float>(M_PI) * lat / kSubdivision;
+		float sinTheta = sinf(theta);
+		float cosTheta = cosf(theta);
 
-	for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex) {
-		float lat = -pi / 2.0f + kLatEvery * latIndex;
-		for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
-			uint32_t start = (latIndex * kSubdivision + lonIndex) * 6;
-			float lon = lonIndex * kLonEvery;
+		for (uint32_t lon = 0; lon <= kSubdivision; ++lon) {
+			float phi = 2.0f * static_cast<float>(M_PI) * lon / kSubdivision;
+			float sinPhi = sinf(phi);
+			float cosPhi = cosf(phi);
 
-			float u = float(lonIndex) / float(kSubdivision);
-			float v = 1.0f - float(latIndex) / float(kSubdivision);
-			float uNext = float(lonIndex + 1) / float(kSubdivision);
-			float vNext = 1.0f - float(latIndex + 1) / float(kSubdivision);
+			// 座標 (半径 1.0f の球)
+			Vector4 position = {
+				sinTheta * cosPhi,
+				cosTheta,
+				sinTheta * sinPhi,
+				1.0f
+			};
 
-			// 各頂点の位置を計算するヘルパー
-			auto calcPos = [&](float latVal, float lonVal) -> Vector4 {
-				return Vector4(
-					cosf(latVal) * cosf(lonVal),
-					sinf(latVal),
-					cosf(latVal) * sinf(lonVal),
-					1.0f
-				);
-				};
+			// 法線 (中心から外側へ向かうベクトル)
+			Vector3 normal = { position.x, position.y, position.z };
 
-			// 三角形1（左上から右下への対角線で分割）
-			// 0: 左上 (lat, lon)
-			vertexData[start + 0].position = calcPos(lat, lon);
-			vertexData[start + 0].texcoord = { u, v };
-			vertexData[start + 0].normal.x = vertexData[start + 0].position.x;
-			vertexData[start + 0].normal.y = vertexData[start + 0].position.y;
-			vertexData[start + 0].normal.z = vertexData[start + 0].position.z;
-			// 1: 左下 (lat+1, lon)
-			vertexData[start + 1].position = calcPos(lat + kLatEvery, lon);
-			vertexData[start + 1].texcoord = { u, vNext };
-			vertexData[start + 1].normal.x = vertexData[start + 1].position.x;
-			vertexData[start + 1].normal.y = vertexData[start + 1].position.y;
-			vertexData[start + 1].normal.z = vertexData[start + 1].position.z;
+			// UV座標
+			Vector2 texcoord = {
+				static_cast<float>(lon) / kSubdivision,
+				static_cast<float>(lat) / kSubdivision
+			};
 
-			// 2: 右下 (lat+1, lon+1)
-			vertexData[start + 2].position = calcPos(lat + kLatEvery, lon + kLonEvery);
-			vertexData[start + 2].texcoord = { uNext, vNext };
-			vertexData[start + 2].normal.x = vertexData[start + 2].position.x;
-			vertexData[start + 2].normal.y = vertexData[start + 2].position.y;
-			vertexData[start + 2].normal.z = vertexData[start + 2].position.z;
-
-			// 三角形2
-			// 3: 左上 (lat, lon)
-			vertexData[start + 3].position = calcPos(lat, lon);
-			vertexData[start + 3].texcoord = { u, v };
-			vertexData[start + 3].normal.x = vertexData[start + 3].position.x;
-			vertexData[start + 3].normal.y = vertexData[start + 3].position.y;
-			vertexData[start + 3].normal.z = vertexData[start + 3].position.z;
-
-			// 4: 右下 (lat+1, lon+1)
-			vertexData[start + 4].position = calcPos(lat + kLatEvery, lon + kLonEvery);
-			vertexData[start + 4].texcoord = { uNext, vNext };
-			vertexData[start + 4].normal.x = vertexData[start + 4].position.x;
-			vertexData[start + 4].normal.y = vertexData[start + 4].position.y;
-			vertexData[start + 4].normal.z = vertexData[start + 4].position.z;
-
-			// 5: 右上 (lat, lon+1)
-			vertexData[start + 5].position = calcPos(lat, lon + kLonEvery);
-			vertexData[start + 5].texcoord = { uNext, v };
-			vertexData[start + 5].normal.x = vertexData[start + 5].position.x;
-			vertexData[start + 5].normal.y = vertexData[start + 5].position.y;
-			vertexData[start + 5].normal.z = vertexData[start + 5].position.z;
-
+			vertexData[vertexIndex] = { position, texcoord, normal };
+			vertexIndex++;
 		}
 	}
+	vertexResource->Unmap(0, nullptr);
 }
 
 
-//void Mesh::CreateIndexResource()
-//{
-//	// Sprite用の頂点リソースを作る
-//	indexResource = CreateBufferResource(dxCommon_->GetDevice(), sizeof(uint32_t) * 6);
-//
-//
-//	// リソースの先頭のアドレスから使う
-//	indexBufferView.BufferLocation = indexResource->GetGPUVirtualAddress();
-//	// 使用するリソースのサイズは頂点6つ分のサイズ
-//	indexBufferView.SizeInBytes = sizeof(uint32_t) * 6;
-//	// 1頂点あたりのサイズ
-//	indexBufferView.Format = DXGI_FORMAT_R32_UINT;
-//}
-//void Mesh::CreateIndexData()
-//{
-//	uint32_t* indexData = nullptr;
-//	indexResource->Map(0, nullptr,
-//		reinterpret_cast<void**>(&indexData));
-//	// 1枚目の三角形
-//	indexData[0] = 0;
-//	indexData[1] = 1;
-//	indexData[2] = 2;
-//	indexData[3] = 1;
-//	indexData[4] = 3;
-//	indexData[5] = 2;
-//}
+void Sphere::CreateIndexResource()
+{
+	// 1つの四角形（1マス）につき2つの三角形（インデックス6個）が必要
+	indexCount = kSubdivision * kSubdivision * 6;
+	indexResource = CreateBufferResource(dxCommon_->GetDevice(), sizeof(uint32_t) * indexCount);
+
+	indexBufferView.BufferLocation = indexResource->GetGPUVirtualAddress();
+	indexBufferView.SizeInBytes = sizeof(uint32_t) * indexCount;
+	indexBufferView.Format = DXGI_FORMAT_R32_UINT; // 32ビットインデックス
+}
+
+void Sphere::CreateIndexData()
+{
+	uint32_t* indexData = nullptr;
+	indexResource->Map(0, nullptr, reinterpret_cast<void**>(&indexData));
+
+	uint32_t indexOffset = 0;
+	for (uint32_t lat = 0; lat < kSubdivision; ++lat) {
+		for (uint32_t lon = 0; lon < kSubdivision; ++lon) {
+			// 現在のグリッドマスを構成する4頂点のインデックスを計算
+			// p00 (上左), p01 (上右), p10 (下左), p11 (下右)
+			uint32_t p00 = lat * (kSubdivision + 1) + lon;
+			uint32_t p01 = p00 + 1;
+			uint32_t p10 = (lat + 1) * (kSubdivision + 1) + lon;
+			uint32_t p11 = p10 + 1;
+
+			// 三角形1 (上左 -> 上右 -> 下左) の時計回り
+			indexData[indexOffset++] = p00;
+			indexData[indexOffset++] = p01;
+			indexData[indexOffset++] = p10;
+
+			// 三角形2 (上右 -> 下右 -> 下左) の時計回り
+			indexData[indexOffset++] = p01;
+			indexData[indexOffset++] = p11;
+			indexData[indexOffset++] = p10;
+		}
+	}
+	indexResource->Unmap(0, nullptr);
+}

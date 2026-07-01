@@ -124,7 +124,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </ClCompile>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Matrix.cpp" />
-    <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="Triangle.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="Sphere.cpp" />
     <ClCompile Include="Sprite.cpp" />
@@ -144,7 +144,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="externals\imgui\imstb_textedit.h" />
     <ClInclude Include="externals\imgui\imstb_truetype.h" />
     <ClInclude Include="Matrix.h" />
-    <ClInclude Include="Mesh.h" />
+    <ClInclude Include="Triangle.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="Sphere.h" />
     <ClInclude Include="Sprite.h" />

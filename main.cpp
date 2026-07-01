@@ -1,6 +1,6 @@
 #include "DirectXCommon.h"
 #include "Matrix.h"
-#include "Mesh.h"
+#include "Triangle.h"
 #include "Sprite.h"
 #include "Camera.h"
 #include "Model.h"
@@ -24,18 +24,17 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	DirectXCommon* dxCommon = DirectXCommon::GetInstance();
 	dxCommon->Initialize();
 
-	Mesh* mesh = new Mesh;
-	mesh->Initialize({ -0.5f, -0.5f, 0.0f, 1.0f }, { 0.0f, 0.5f, 0.0f, 1.0f }, { 0.5f, -0.5f, 0.0f, 1.0f });
+	Triangle* triangle = new Triangle;
+	triangle->Initialize({ -0.5f, -0.5f, 0.0f, 1.0f }, { 0.0f, 0.5f, 0.0f, 1.0f }, { 0.5f, -0.5f, 0.0f, 1.0f });
 
-	Mesh* mesh2 = new Mesh;
-	mesh2->Initialize({ -0.5f, -0.5f, 0.5f, 1.0f }, { 0.0f, 0.0f, 0.0f, 1.0f }, { 0.5f, -0.5f, -0.5f, 1.0f });
+	Triangle* triangle2 = new Triangle;
+	triangle2->Initialize({ -0.5f, -0.5f, 0.5f, 1.0f }, { 0.0f, 0.0f, 0.0f, 1.0f }, { 0.5f, -0.5f, -0.5f, 1.0f });
 
 	Sprite* sprite = new Sprite;
 	sprite->Initialize();
 
 	Sphere* sphere = new Sphere;
-	uint32_t kSubdivision = 16;
-	sphere->Initialize(kSubdivision);
+	sphere->Initialize();
 
 
 	Model* model = new Model;
@@ -73,9 +72,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			transform.rotate.y += 0.03f;
 
 			// GPU上のリソース（定数バッファ）の中身を書き換える
-			*mesh->wvpData = camera->DrawObject3d(transform);
-			*mesh2->wvpData = camera->DrawObject3d(transform);
-
+			*triangle->wvpData = camera->DrawObject3d(transform);
+			*triangle2->wvpData = camera->DrawObject3d(transform);
 
 			*sprite->wvpData = camera->DrawObject2d(transformSprite);
 			*sphere->wvpData = camera->DrawObject3d(transform);
@@ -145,10 +143,10 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(uvTransformSprite.translate));
 			sprite->materialData->uvTransform = uvTransformMatrix;
 
-			mesh->Draw(6);
-			mesh2->Draw(6);
+			triangle->Draw(6);
+			triangle2->Draw(6);
 			sprite->Draw(6);
-			sphere->Draw(kSubdivision,useMonsterBall);
+			sphere->Draw(sphere->kSubdivision,useMonsterBall);
 			model->Draw();
 
 			dxCommon->PostDraw();

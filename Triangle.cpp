@@ -1,7 +1,7 @@
-#include "Mesh.h"
+#include "Triangle.h"
 #include "Model.h"
 
-void Mesh::Initialize(Vector4 vertex0, Vector4 vertex1, Vector4 vertex2)
+void Triangle::Initialize(Vector4 vertex0, Vector4 vertex1, Vector4 vertex2)
 {
 	BaseObject::Initialize();
 
@@ -9,12 +9,12 @@ void Mesh::Initialize(Vector4 vertex0, Vector4 vertex1, Vector4 vertex2)
 	CreateVertexData(vertex0,vertex1,vertex2);
 }
 
-void Mesh::Draw(UINT vertexCountPerInstance)
+void Triangle::Draw(UINT vertexCountPerInstance)
 {
 	BaseObject::Draw(vertexBufferView, materialResource, wvpResource, directionalLightResource, vertexCountPerInstance);
 }
 
-void Mesh::CreateVertexResource()
+void Triangle::CreateVertexResource()
 {
 	// 実際に頂点リソースを作る
 	vertexResource = CreateBufferResource(dxCommon_->GetDevice(), sizeof(VertexData) * 3);
@@ -27,7 +27,7 @@ void Mesh::CreateVertexResource()
 	vertexBufferView.StrideInBytes = sizeof(VertexData);
 }
 
-void Mesh::CreateVertexData(Vector4 vertex0, Vector4 vertex1, Vector4 vertex2)
+void Triangle::CreateVertexData(Vector4 vertex0, Vector4 vertex1, Vector4 vertex2)
 {
 	// 頂点リソースにデータを書き込む
 	VertexData* vertexData = nullptr;
@@ -47,4 +47,3 @@ void Mesh::CreateVertexData(Vector4 vertex0, Vector4 vertex1, Vector4 vertex2)
 	vertexData[2].texcoord = { 1.0f, 1.0f };
 	vertexData[2].normal = { 0.0f, 0.0f,-1.0f };
 }
-
