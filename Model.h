@@ -1,5 +1,4 @@
 #pragma once
-#include "DirectXCommon.h"
 #include "BaseObject.h"
 
 class Model:public BaseObject
@@ -9,11 +8,7 @@ public:
 	void Draw();
 
 private:
-
-	// モデル読み込み
-	ModelData modelData;
-
-	DirectXCommon* dxCommon_ = DirectXCommon::GetInstance();
+	ModelData modelData_;
 
 private:
 	void CreateModelSphere();

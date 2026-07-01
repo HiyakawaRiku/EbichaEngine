@@ -1,5 +1,4 @@
 #pragma once
-#include "DirectXCommon.h"
 #include "BaseObject.h"
 
 class Sprite:public BaseObject{

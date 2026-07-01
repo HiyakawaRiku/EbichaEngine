@@ -47,7 +47,7 @@ void DirectXCommon::PreDraw()
 
 
 	// 描画用のDescriptorHeapの設定
-	ID3D12DescriptorHeap* descriptorHeaps[] = { srvHeap_.Get()};
+	ID3D12DescriptorHeap* descriptorHeaps[] = { srvHeap_.Get() };
 	commandList_->SetDescriptorHeaps(1, descriptorHeaps);
 
 	commandList_->RSSetViewports(1, &viewport);  // Viewportを設定
@@ -56,13 +56,22 @@ void DirectXCommon::PreDraw()
 	commandList_->SetGraphicsRootSignature(rootSignature_.Get());
 	commandList_->SetPipelineState(graphicsPipelineState_.Get());    // PSOを設定
 
+#ifdef USE_IMGUI
+	ImGui_ImplDX12_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
+#endif
+
 }
 
 void DirectXCommon::PostDraw()
 {
 	// 実際のcommandListのImGuiの描画コマンドを積む
 #ifdef USE_IMGUI
-	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(),GetCommandList());
+	// ImGuiの内部コマンドを生成する
+	ImGui::Render();
+
+	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), GetCommandList());
 #endif
 
 	// 画面に描く処理はすべて終わり、画面に映すので、状態を遷移
@@ -301,11 +310,11 @@ void DirectXCommon::InitializeTexture(const std::string& filePath, uint32_t inde
 	srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
 
 	// SRVを作成するDescriptorHeapの場所を決める
-	textureSrvHandleCPU[index-1] = GetCPUDescriptorHandle(srvHeap_.Get(), descriptorSizeSRV, index);
-	textureSrvHandleGPU[index-1] = GetGPUDescriptorHandle(srvHeap_.Get(), descriptorSizeSRV, index);
+	textureSrvHandleCPU[index - 1] = GetCPUDescriptorHandle(srvHeap_.Get(), descriptorSizeSRV, index);
+	textureSrvHandleGPU[index - 1] = GetGPUDescriptorHandle(srvHeap_.Get(), descriptorSizeSRV, index);
 
 	// SRVの生成
-	device_->CreateShaderResourceView(textureResource, &srvDesc, textureSrvHandleCPU[index-1]);
+	device_->CreateShaderResourceView(textureResource, &srvDesc, textureSrvHandleCPU[index - 1]);
 
 }
 
@@ -409,7 +418,7 @@ void DirectXCommon::InitializePSO()
 	inputElementDescs[2].SemanticIndex = 0;
 	inputElementDescs[2].Format = DXGI_FORMAT_R32G32B32_FLOAT; // ※画像ではR32G32B32A32ですが、通常UVはfloat2(R32G32)です
 	inputElementDescs[2].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-	
+
 
 	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc{};
 	inputLayoutDesc.pInputElementDescs = inputElementDescs;

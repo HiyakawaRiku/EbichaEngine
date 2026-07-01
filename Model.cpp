@@ -2,7 +2,7 @@
 
 void Model::Initialize(const std::string& directoryPath, const std::string& filename)
 {
-	modelData = LoadObjFile(directoryPath, filename);
+	modelData_ = LoadObjFile(directoryPath, filename);
 
 	BaseObject::Initialize();
 
@@ -11,18 +11,18 @@ void Model::Initialize(const std::string& directoryPath, const std::string& file
 
 void Model::Draw()
 {
-	BaseObject::Draw(vertexBufferView, materialResource, wvpResource, directionalLightResource, UINT(modelData.vertices.size()));
+	BaseObject::Draw(vertexBufferView, materialResource, wvpResource, directionalLightResource, UINT(modelData_.vertices.size()));
 }
 
 void Model::CreateModelSphere()
 {
 	// 実際に頂点リソースを作る
-	vertexResource = CreateBufferResource(dxCommon_->GetDevice(), sizeof(VertexData) * modelData.vertices.size());
+	vertexResource = CreateBufferResource(dxCommon_->GetDevice(), sizeof(VertexData) * modelData_.vertices.size());
 
 	// リソースの先頭のアドレスから使う
 	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
 	// 使用するリソースのサイズは頂点3つ分のサイズ
-	vertexBufferView.SizeInBytes = UINT(sizeof(VertexData) * modelData.vertices.size());
+	vertexBufferView.SizeInBytes = UINT(sizeof(VertexData) * modelData_.vertices.size());
 	// 1頂点あたりのサイズ
 	vertexBufferView.StrideInBytes = sizeof(VertexData);
 
@@ -31,6 +31,6 @@ void Model::CreateModelSphere()
 	// 書き込むためのアドレスを取得
 	vertexResource->Map(0, nullptr,
 		reinterpret_cast<void**>(&vertexData));
-	std::memcpy(vertexData, modelData.vertices.data(), sizeof(VertexData) * modelData.vertices.size());// 頂点データをリソースにコピー
+	std::memcpy(vertexData, modelData_.vertices.data(), sizeof(VertexData) * modelData_.vertices.size());// 頂点データをリソースにコピー
 
 }

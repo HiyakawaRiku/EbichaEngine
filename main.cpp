@@ -4,6 +4,7 @@
 #include "Sprite.h"
 #include "Camera.h"
 #include "Model.h"
+#include "Sphere.h"
 
 //Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
@@ -32,9 +33,10 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	Sprite* sprite = new Sprite;
 	sprite->Initialize();
 
-	Mesh* sphere = new Mesh;
+	Sphere* sphere = new Sphere;
 	uint32_t kSubdivision = 16;
-	sphere->InitializeSphere(kSubdivision);
+	sphere->Initialize(kSubdivision);
+
 
 	Model* model = new Model;
 	model->Initialize("resources", "axis.obj");
@@ -79,11 +81,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			*sphere->wvpData = camera->DrawObject3d(transform);
 			*model->wvpData = camera->DrawObject3d(transform);
 
-
-#ifdef USE_IMGUI
-			ImGui_ImplDX12_NewFrame();
-			ImGui_ImplWin32_NewFrame();
-			ImGui::NewFrame();
+#ifdef _DEBUG
 
 			// 開発用UIの処理。実際に開発用のUIを出す場合はここをゲーム固有の処理に置き換える
 			//ImGui::ShowDemoWindow();
@@ -140,8 +138,6 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 			ImGui::End();
 
-			// ImGuiの内部コマンドを生成する
-			ImGui::Render();
 #endif
 
 			Matrix4x4 uvTransformMatrix = MakeScaleMatrix(uvTransformSprite.scale);
@@ -152,7 +148,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			mesh->Draw(6);
 			mesh2->Draw(6);
 			sprite->Draw(6);
-			//sphere->DrawSphere(kSubdivision,useMonsterBall);
+			sphere->Draw(kSubdivision,useMonsterBall);
 			model->Draw();
 
 			dxCommon->PostDraw();
