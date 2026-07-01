@@ -24,7 +24,7 @@ void Sprite::Draw(UINT vertexCountPerInstance)
 	// TransformationMatrixCBufferの場所を設定
 	commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
 	// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]である。
-	commandList->SetGraphicsRootDescriptorTable(2, dxCommon_->textureSrvHandleGPU[Texture::monsterBall]);
+	commandList->SetGraphicsRootDescriptorTable(2, dxCommon_->textureSrvHandleGPU[1]);
 	commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 	// 描画！（DrawCall/ドローコール）
 	commandList->DrawIndexedInstanced(vertexCountPerInstance, 1, 0, 0, 0);

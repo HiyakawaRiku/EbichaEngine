@@ -79,6 +79,8 @@ private: // メンバ変数
 	D3D12_VIEWPORT viewport{};
 	// シザー矩形
 	D3D12_RECT scissorRect{};
+
+	static const uint32_t kMaxTextureIndex = 3;
 public:
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
 	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};
@@ -87,9 +89,10 @@ public:
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvHeap_;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvHeap_;
 
-	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU[2];
-	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU[2];
+	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU[kMaxTextureIndex];
+	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU[kMaxTextureIndex];
 
+	void InitializeTexture(const std::string& filePath, uint32_t index);
 private: // メンバ関数
 
 	/// <summary>
@@ -132,7 +135,6 @@ private: // メンバ関数
 	/// </summary>
 	void InitializeImgui();
 
-	void InitializeTexture(const std::string& filePath, uint32_t index);
 };
 
 Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(

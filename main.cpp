@@ -42,7 +42,6 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 	Camera* camera = new Camera;
 
-
 	// Transform変数を作る
 	Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 	// CPUで動かす用のTransformを作る
@@ -55,6 +54,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	};
 
 	bool useMonsterBall = true;
+
+	dxCommon->InitializeTexture("resources/uvChecker.png", 1);
+	dxCommon->InitializeTexture("resources/sky_sphere.png", 2);
 
 	MSG msg{};
 	//ウィンドウのxボタンが押されるまでループ
@@ -146,7 +148,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			triangle->Draw(6);
 			triangle2->Draw(6);
 			sprite->Draw(6);
-			sphere->Draw(sphere->kSubdivision,useMonsterBall);
+			sphere->Draw(sphere->kSubdivision,1);
 			model->Draw();
 
 			dxCommon->PostDraw();

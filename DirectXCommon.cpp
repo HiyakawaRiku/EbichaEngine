@@ -278,9 +278,6 @@ void DirectXCommon::CreateFinalRenderTargets()
 	// 2つ目を作る
 	device_->CreateRenderTargetView(swapChainResources[1], &rtvDesc, rtvHandles[1]);
 
-	InitializeTexture("resources/uvChecker.png", 1);
-	InitializeTexture("resources/monsterBall.png", 2);
-
 	ID3D12Resource* depthStencilResource = CreateDepthStencilTextureResource(device_.Get(), winApp_->kWindowWidth, winApp_->kWindowHeight);
 
 	// DSVの設定

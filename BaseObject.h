@@ -29,11 +29,6 @@ struct DirectionalLight {
 	float intensity;
 };
 
-enum Texture {
-	uvChecker,
-	monsterBall
-};
-
 class BaseObject {
 public:
 	DirectXCommon* dxCommon_ = DirectXCommon::GetInstance();
