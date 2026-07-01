@@ -29,6 +29,10 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 	Camera* camera = new Camera;
 
+	// 初期化
+	DebugCamera debugCamera;
+	debugCamera.Initialize();
+
 	// Transform変数を作る
 	Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 	// CPUで動かす用のTransformを作る
@@ -61,6 +65,13 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 			BYTE key[256] = {};
 			dxCommon->keyboard->GetDeviceState(sizeof(key), key);
+
+			debugCamera.Update();
+
+			// ビュー行列・射影行列を取得
+			Matrix4x4 viewMatrix = debugCamera.GetViewMatrix();
+			Matrix4x4 projectionMatrix = debugCamera.GetProjectionMatrix();
+			Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 
 
 			// Transformを更新（例：Y軸回転）
@@ -135,6 +146,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			ImGui::End();
 
 #endif
+
 
 			Matrix4x4 uvTransformMatrix = MakeScaleMatrix(uvTransformSprite.scale);
 			uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(uvTransformSprite.rotate.z));
