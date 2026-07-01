@@ -53,7 +53,6 @@ public: // メンバ関数
 	/// </summary>
 	/// <returns></returns>
 	HWND GetHwnd() const { return hwnd; }
-
 	HINSTANCE GetHInstance() const { return wc.hInstance; }
 
 private: // メンバ変数

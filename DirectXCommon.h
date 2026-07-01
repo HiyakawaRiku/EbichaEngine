@@ -21,6 +21,8 @@
 
 #include <wrl.h>
 
+#include "Input.h"
+
 class DirectXCommon {
 public: // メンバ関数
 
@@ -44,9 +46,11 @@ public: // メンバ関数
 	/// <returns>描画コマンドリスト</returns>
 	ID3D12GraphicsCommandList* GetCommandList() const { return commandList_.Get(); }
 
+	IDirectInputDevice8* keyboard = nullptr;
+
 private: // メンバ変数
 	// ウィンドウズアプリケーション管理
-	WinApp* winApp_;
+	WinApp* winApp_ = WinApp::GetInstance();
 
 	// Direct3D関連
 	Microsoft::WRL::ComPtr<IDXGIFactory7> dxgiFactory_;

@@ -8,8 +8,20 @@ DirectXCommon* DirectXCommon::GetInstance()
 
 void DirectXCommon::Initialize()
 {
-	WinApp* app = WinApp::GetInstance();
-	app->CreateGameWindow();
+	winApp_->CreateGameWindow();
+
+	IDirectInput8* directInput = nullptr;
+	int result = DirectInput8Create(winApp_->GetHInstance(), DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&directInput, nullptr);
+	assert(SUCCEEDED(result));
+
+	result = directInput->CreateDevice(GUID_SysKeyboard, &keyboard, nullptr);
+	assert(SUCCEEDED(result));
+
+	result = keyboard->SetDataFormat(&c_dfDIKeyboard);
+	assert(SUCCEEDED(result));
+
+	result = keyboard->SetCooperativeLevel(winApp_->GetHwnd(), DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);
+	assert(SUCCEEDED(result));
 
 	InitializeDXGIDevice();
 	InitializeCommand();
@@ -59,11 +71,15 @@ void DirectXCommon::PreDraw()
 	commandList_->SetGraphicsRootSignature(rootSignature_.Get());
 	commandList_->SetPipelineState(graphicsPipelineState_.Get());    // PSOを設定
 
+	//キーボード情報の取得開始
+	keyboard->Acquire();
+
 #ifdef USE_IMGUI
 	ImGui_ImplDX12_NewFrame();
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
 #endif
+
 
 }
 

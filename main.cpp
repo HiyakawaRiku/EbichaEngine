@@ -1,4 +1,6 @@
 #include "EbichaEngine.h"
+#include "Input.h"
+#include "DebugCamera.h"
 
 //Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
@@ -57,8 +59,11 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 			dxCommon->PreDraw();
 
+			BYTE key[256] = {};
+			dxCommon->keyboard->GetDeviceState(sizeof(key), key);
+
+
 			// Transformを更新（例：Y軸回転）
-			transform.rotate.y += 0.03f;
 
 			// GPU上のリソース（定数バッファ）の中身を書き換える
 			*triangle->wvpData = camera->DrawObject3d(transform);
@@ -67,6 +72,11 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			*sprite->wvpData = camera->DrawObject2d(transformSprite);
 			*sphere->wvpData = camera->DrawObject3d(transform);
 			*model->wvpData = camera->DrawObject3d(transform);
+
+			if (key[DIK_0]) {
+			transform.rotate.y += 0.03f;
+				OutputDebugStringA("Hit 0\n");
+			}
 
 #ifdef _DEBUG
 
