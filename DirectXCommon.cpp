@@ -8,6 +8,9 @@ DirectXCommon* DirectXCommon::GetInstance()
 
 void DirectXCommon::Initialize()
 {
+	WinApp* app = WinApp::GetInstance();
+	app->CreateGameWindow();
+
 	InitializeDXGIDevice();
 	InitializeCommand();
 	CreateSwapChain();

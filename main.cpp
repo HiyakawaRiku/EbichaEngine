@@ -1,25 +1,10 @@
-#include "DirectXCommon.h"
-#include "Matrix.h"
-#include "Triangle.h"
-#include "Sprite.h"
-#include "Camera.h"
-#include "Model.h"
-#include "Sphere.h"
+#include "EbichaEngine.h"
 
 //Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
-	//COMの初期化
-	(void)CoInitializeEx(0, COINIT_MULTITHREADED);
-
-	// 誰も捕捉しなかった場合に(Unhandled)、補足する関数を登録
-	// main関数はじまってすぐに登録すると良い
-	SetUnhandledExceptionFilter(ExportDump);
-
-	WinApp* app = WinApp::GetInstance();
-	app->CreateGameWindow();
-
-	CreateLogFile();
+	EbichaEngine* ebichaEngine = EbichaEngine::GetInstance();
+	ebichaEngine->Initialize();
 
 	DirectXCommon* dxCommon = DirectXCommon::GetInstance();
 	dxCommon->Initialize();
@@ -157,13 +142,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		}
 	}
 
-#ifdef USE_IMGUI
-	ImGui_ImplDX12_Shutdown();
-	ImGui_ImplWin32_Shutdown();
-	ImGui::DestroyContext();
-#endif
-
-	CoUninitialize();
+	ebichaEngine->Finalize();
 
 	return 0;
 }
