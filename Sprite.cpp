@@ -10,35 +10,17 @@ void Sprite::Initialize()
 	CreateIndexData();
 }
 
-void Sprite::Draw(UINT vertexCountPerInstance, uint32_t textureIndex)
-{
-	auto commandList = dxCommon_->GetCommandList();
-
-	// Spriteの描画。変更が必要なものだけ変更する
-	commandList->IASetVertexBuffers(0, 1, &vertexBufferView);    // VBVを設定
-	commandList->IASetIndexBuffer(&indexBufferView);
-	// 形状を設定。PSOに設定しているものとはまた別。同じものを設定すると考えておけば良い
-	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	//マテリアルCBufferの場所を設定
-	commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
-	// TransformationMatrixCBufferの場所を設定
-	commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
-	// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]である。
-	commandList->SetGraphicsRootDescriptorTable(2, dxCommon_->textureSrvHandleGPU[textureIndex - 1]);
-	commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
-	// 描画！（DrawCall/ドローコール）
-	commandList->DrawIndexedInstanced(vertexCountPerInstance, 1, 0, 0, 0);
-}
-
 void Sprite::CreateVertexResource()
 {
+	vertexCount = 4;
+
 	// 実際に頂点リソースを作る
-	vertexResource = CreateBufferResource(dxCommon_->GetDevice(), sizeof(VertexData) * 4);
+	vertexResource = CreateBufferResource(dxCommon_->GetDevice(), sizeof(VertexData) * vertexCount);
 
 	// リソースの先頭のアドレスから使う
 	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
 	// 使用するリソースのサイズは頂点3つ分のサイズ
-	vertexBufferView.SizeInBytes = sizeof(VertexData) * 4;
+	vertexBufferView.SizeInBytes = sizeof(VertexData) * vertexCount;
 	// 1頂点あたりのサイズ
 	vertexBufferView.StrideInBytes = sizeof(VertexData);
 }
@@ -67,14 +49,15 @@ void Sprite::CreateVertexData()
 
 void Sprite::CreateIndexResource()
 {
-	// Sprite用の頂点リソースを作る
-	indexResource = CreateBufferResource(dxCommon_->GetDevice(), sizeof(uint32_t) * 6);
+	indexCount = 6;
 
+	// Sprite用の頂点リソースを作る
+	indexResource = CreateBufferResource(dxCommon_->GetDevice(), sizeof(uint32_t) * indexCount);
 
 	// リソースの先頭のアドレスから使う
 	indexBufferView.BufferLocation = indexResource->GetGPUVirtualAddress();
 	// 使用するリソースのサイズは頂点6つ分のサイズ
-	indexBufferView.SizeInBytes = sizeof(uint32_t) * 6;
+	indexBufferView.SizeInBytes = sizeof(uint32_t) * indexCount;
 	// 1頂点あたりのサイズ
 	indexBufferView.Format = DXGI_FORMAT_R32_UINT;
 }

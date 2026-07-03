@@ -8,6 +8,8 @@
 #include "Sphere.h"
 
 #include "DebugRenderer.h"
+#include "Input.h"
+#include "DebugCamera.h"
 
 class EbichaEngine
 {

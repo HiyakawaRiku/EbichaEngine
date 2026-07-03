@@ -9,15 +9,12 @@ void Model::Initialize(const std::string& directoryPath, const std::string& file
 	CreateModelSphere();
 }
 
-void Model::Draw(uint32_t textureIndex)
-{
-	BaseObject::Draw(vertexBufferView, materialResource, wvpResource, directionalLightResource, UINT(modelData_.vertices.size()),textureIndex);
-}
-
 void Model::CreateModelSphere()
 {
+
+	vertexCount = static_cast<uint32_t>(modelData_.vertices.size());
 	// 実際に頂点リソースを作る
-	vertexResource = CreateBufferResource(dxCommon_->GetDevice(), sizeof(VertexData) * modelData_.vertices.size());
+	vertexResource = CreateBufferResource(dxCommon_->GetDevice(), sizeof(VertexData) *vertexCount);
 
 	// リソースの先頭のアドレスから使う
 	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();

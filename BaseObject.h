@@ -35,6 +35,11 @@ public:
 
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
+	uint32_t vertexCount = 0;
+
+	D3D12_INDEX_BUFFER_VIEW indexBufferView{};
+	Microsoft::WRL::ComPtr<ID3D12Resource> indexResource;
+	uint32_t indexCount = 0;
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource;
 	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource;
@@ -45,7 +50,7 @@ public:
 	DirectionalLight* directionalLightData = nullptr;
 
 	virtual void Initialize();
-	virtual void Draw(D3D12_VERTEX_BUFFER_VIEW vertexBufferView, Microsoft::WRL::ComPtr<ID3D12Resource> materialResource, Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource, Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource, UINT vertexCountPerInstance, uint32_t textureIndex);
+	virtual void Draw(uint32_t textureIndex);
 	virtual void CreateMaterialResource();
 	virtual void CreateWvpResource();
 	virtual void CreateDirectionalLight();

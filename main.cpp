@@ -1,6 +1,4 @@
 #include "EbichaEngine.h"
-#include "Input.h"
-#include "DebugCamera.h"
 
 //Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
@@ -93,8 +91,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			DebugRenderer::AddWireSphere({ 0.0f, 0.0f, 0.0f }, 1.0f, 16, { 0.0f, 1.0f, 0.0f, 1.0f });
 
 			if (key[DIK_0]) {
-			transform.rotate.y += 0.03f;
-			DebugRenderer::AddLine({ -5.0f, 2.0f, 0.0f }, { 5.0f, 2.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f });
+				transform.rotate.y += 0.03f;
+				DebugRenderer::AddLine({ -5.0f, 2.0f, 0.0f }, { 5.0f, 2.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f });
 			}
 
 #ifdef _DEBUG
@@ -161,10 +159,10 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(uvTransformSprite.translate));
 			sprite->materialData->uvTransform = uvTransformMatrix;
 
-			triangle->Draw(6, 3);
-			triangle2->Draw(6, 2);
-			sprite->Draw(6, 1);
-			sphere->Draw(sphere->kSubdivision, useMonsterBall ? 3 : 2);
+			triangle->Draw(3);
+			triangle2->Draw(2);
+			sprite->Draw(1);
+			sphere->Draw(useMonsterBall ? 3 : 2);
 			model->Draw(4);
 
 			DebugRenderer::Flush(camera);

@@ -9,30 +9,10 @@ void Sphere::Initialize()
 	CreateIndexData();
 }
 
-void Sphere::Draw(UINT vertexCountPerInstance,uint32_t textureIndex)
-{
-	auto commandList = dxCommon_->GetCommandList();
-
-	// Spriteの描画。変更が必要なものだけ変更する
-	commandList->IASetVertexBuffers(0, 1, &vertexBufferView);    // VBVを設定
-	commandList->IASetIndexBuffer(&indexBufferView);
-	// 形状を設定。PSOに設定しているものとはまた別。同じものを設定すると考えておけば良い
-	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	//マテリアルCBufferの場所を設定
-	commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
-	// TransformationMatrixCBufferの場所を設定
-	commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
-	// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]である。
-	commandList->SetGraphicsRootDescriptorTable(2, dxCommon_->textureSrvHandleGPU[textureIndex - 1]);
-	commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
-	// 描画！（DrawCall/ドローコール）
-	commandList->DrawIndexedInstanced(indexCount, 1, 0, 0, 0);
-}
-
 void Sphere::CreateVertexResource()
 {
 	// グリッド状に並べるため、頂点数は (kSubdivision + 1) * (kSubdivision + 1) になる
-	uint32_t vertexCount = (kSubdivision + 1) * (kSubdivision + 1);
+	vertexCount = (kSubdivision + 1) * (kSubdivision + 1);
 	// 実際に頂点リソースを作る
 	vertexResource = CreateBufferResource(dxCommon_->GetDevice(), sizeof(VertexData) * vertexCount);
 

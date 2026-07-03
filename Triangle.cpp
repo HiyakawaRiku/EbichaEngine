@@ -9,11 +9,6 @@ void Triangle::Initialize(Vector4 vertex0, Vector4 vertex1, Vector4 vertex2)
 	CreateVertexData(vertex0,vertex1,vertex2);
 }
 
-void Triangle::Draw(UINT vertexCountPerInstance, uint32_t textureIndex)
-{
-	BaseObject::Draw(vertexBufferView, materialResource, wvpResource, directionalLightResource, vertexCountPerInstance,textureIndex);
-}
-
 void Triangle::CreateVertexResource()
 {
 	// 実際に頂点リソースを作る
