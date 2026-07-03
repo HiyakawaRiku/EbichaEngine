@@ -33,6 +33,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	DebugCamera debugCamera;
 	debugCamera.Initialize();
 
+	DebugRenderer::Initialize();
+
 	// Transform変数を作る
 	Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 	// CPUで動かす用のTransformを作る
@@ -84,9 +86,15 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			*sphere->wvpData = camera->DrawObject3d(transform);
 			*model->wvpData = camera->DrawObject3d(transform);
 
+			// グレーのグリッドを床に配置
+			DebugRenderer::AddGrid(20.0f, 20, { 0.5f, 0.5f, 0.5f, 1.0f });
+
+			// 原点に緑色のワイヤーフレーム球体を表示 (半径2.0f, 分割数16)
+			DebugRenderer::AddWireSphere({ 0.0f, 0.0f, 0.0f }, 1.0f, 16, { 0.0f, 1.0f, 0.0f, 1.0f });
+
 			if (key[DIK_0]) {
 			transform.rotate.y += 0.03f;
-				OutputDebugStringA("Hit 0\n");
+			DebugRenderer::AddLine({ -5.0f, 2.0f, 0.0f }, { 5.0f, 2.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f });
 			}
 
 #ifdef _DEBUG
@@ -159,11 +167,14 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			sphere->Draw(sphere->kSubdivision, useMonsterBall ? 3 : 2);
 			model->Draw(4);
 
+			DebugRenderer::Flush(camera);
+
 			dxCommon->PostDraw();
 
 		}
 	}
 
+	DebugRenderer::Finalize();
 	ebichaEngine->Finalize();
 
 	return 0;

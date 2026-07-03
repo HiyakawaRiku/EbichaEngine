@@ -7,6 +7,8 @@
 #include "Model.h"
 #include "Sphere.h"
 
+#include "DebugRenderer.h"
+
 class EbichaEngine
 {
 public:
