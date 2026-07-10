@@ -273,6 +273,18 @@ Matrix4x4 MakeRotateZMatrix(float radian) {
 	return result;
 }
 
+Matrix4x4 MakeRotateMatrix(const Vector3& rotate) {
+	// 各軸の回転行列を生成
+	Matrix4x4 rotateXMatrix = MakeRotateXMatrix(rotate.x);
+	Matrix4x4 rotateYMatrix = MakeRotateYMatrix(rotate.y);
+	Matrix4x4 rotateZMatrix = MakeRotateZMatrix(rotate.z);
+
+	// 回転行列を合成 (一般的にゲームエンジンで広く使われる X * Y * Z の順)
+	Matrix4x4 rotateMatrix = Multiply(rotateXMatrix, Multiply(rotateYMatrix, rotateZMatrix));
+
+	return rotateMatrix;
+}
+
 Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Vector3& translate) {
 	// 1. 各基本行列を作成
 	Matrix4x4 scaleMatrix = MakeScaleMatrix(scale);

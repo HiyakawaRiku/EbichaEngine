@@ -9,12 +9,6 @@ Microsoft::WRL::ComPtr<ID3D12Resource> DebugRenderer::m_vertexBuffer;
 D3D12_VERTEX_BUFFER_VIEW DebugRenderer::m_vertexBufferView{};
 Microsoft::WRL::ComPtr<ID3D12Resource> DebugRenderer::m_constBuffer;
 
-// main.cpp や Camera.cpp 周辺で使われている数理関数を外部参照
-extern Matrix4x4 MakeAffineMatrix(DirectX::XMFLOAT3 scale, DirectX::XMFLOAT3 rotate, DirectX::XMFLOAT3 translate);
-extern Matrix4x4 Inverse(const Matrix4x4& m);
-extern Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspect, float nearZ, float farZ);
-extern Matrix4x4 Multiply(const Matrix4x4& m1, const Matrix4x4& m2);
-
 void DebugRenderer::Initialize() {
     ID3D12Device* device = DirectXCommon::GetInstance()->GetDevice();
     assert(device != nullptr);
@@ -101,27 +95,34 @@ void DebugRenderer::Initialize() {
 
 void DebugRenderer::Finalize() {
     m_requests.clear();
+    m_rootSignature.Reset();
+    m_pipelineState.Reset();
     m_vertexBuffer.Reset();
     m_constBuffer.Reset();
-    m_pipelineState.Reset();
-    m_rootSignature.Reset();
 }
 
-void DebugRenderer::AddLine(const DirectX::XMFLOAT3& start, const DirectX::XMFLOAT3& end, const DirectX::XMFLOAT4& color) {
-    if (m_requests.size() * 2 >= m_maxVertices) return;
+// ★ 引数を Vector3, Vector4 に修正
+void DebugRenderer::AddLine(const Vector3& start, const Vector3& end, const Vector4& color) {
+    if (m_requests.size() >= m_maxVertices / 2) return;
     m_requests.push_back({ start, end, color });
 }
 
-void DebugRenderer::AddGrid(float size, int divisions, const DirectX::XMFLOAT4& color) {
-    float step = (size * 2.0f) / divisions;
+// ★ 引数を Vector4 に修正
+void DebugRenderer::AddGrid(float size, int divisions, const Vector4& color) {
+    float halfSize = size / 2.0f;
+    float step = size / divisions;
+
     for (int i = 0; i <= divisions; ++i) {
-        float pos = -size + i * step;
-        AddLine({ -size, 0.0f, pos }, { size, 0.0f, pos }, color);
-        AddLine({ pos, 0.0f, -size }, { pos, 0.0f, size }, color);
+        float x = -halfSize + i * step;
+        AddLine({ x, 0.0f, -halfSize }, { x, 0.0f, halfSize }, color);
+
+        float z = -halfSize + i * step;
+        AddLine({ -halfSize, 0.0f, z }, { halfSize, 0.0f, z }, color);
     }
 }
 
-void DebugRenderer::AddWireSphere(const DirectX::XMFLOAT3& center, float radius, int tessellation, const DirectX::XMFLOAT4& color) {
+// ★ 引数を Vector3, Vector4 に修正
+void DebugRenderer::AddWireSphere(const Vector3& center, float radius, int tessellation, const Vector4& color) {
     for (int i = 0; i < tessellation; ++i) {
         float phi1 = DirectX::XM_2PI * (float)i / tessellation;
         float phi2 = DirectX::XM_2PI * (float)(i + 1) / tessellation;
@@ -129,19 +130,19 @@ void DebugRenderer::AddWireSphere(const DirectX::XMFLOAT3& center, float radius,
             float theta1 = DirectX::XM_PI * (float)j / tessellation;
             float theta2 = DirectX::XM_PI * (float)(j + 1) / tessellation;
 
-            DirectX::XMFLOAT3 p1 = {
+            Vector3 p1 = {
                 center.x + radius * sinf(theta1) * cosf(phi1),
                 center.y + radius * cosf(theta1),
                 center.z + radius * sinf(theta1) * sinf(phi1)
             };
-            DirectX::XMFLOAT3 p2 = {
+            Vector3 p2 = {
                 center.x + radius * sinf(theta2) * cosf(phi1),
                 center.y + radius * cosf(theta2),
                 center.z + radius * sinf(theta2) * sinf(phi1)
             };
             AddLine(p1, p2, color);
 
-            DirectX::XMFLOAT3 p3 = {
+            Vector3 p3 = {
                 center.x + radius * sinf(theta1) * cosf(phi2),
                 center.y + radius * cosf(theta1),
                 center.z + radius * sinf(theta1) * sinf(phi2)
@@ -152,28 +153,25 @@ void DebugRenderer::AddWireSphere(const DirectX::XMFLOAT3& center, float radius,
 }
 
 void DebugRenderer::Flush(Camera* camera) {
-    if (m_requests.empty() || !camera) return;
+    if (m_vertexBuffer == nullptr) {
+        m_requests.clear();
+        return;
+    }
+    if (m_requests.empty()) return;
 
-    ID3D12GraphicsCommandList* commandList = DirectXCommon::GetInstance()->GetCommandList();
-    assert(commandList != nullptr);
+    auto commandList = DirectXCommon::GetInstance()->GetCommandList();
 
-    // ★ 既存の Camera.cpp と全く同じ手順で View-Projection 行列を合成
-    Matrix4x4 cameraMatrix = MakeAffineMatrix(camera->transform_.scale, camera->transform_.rotate, camera->transform_.translate);
-    Matrix4x4 viewMatrix = Inverse(cameraMatrix);
+    // ビュー・プロジェクション行列の計算
+    Matrix4x4 viewMatrix = camera->GetViewMatrix();
+    Matrix4x4 projectionMatrix = camera->GetProjectionMatrix();
 
-    // WinAppのウィンドウサイズ定義を安全に引っ張るために camera オブジェクト経由等のアスペクト比計算に合わせる
-    // (Camera.cppのロジックをそのまま流用)
-    float windowWidth = 1280.0f;  // 必要に応じて適切なグローバル定義やwinApp_->kWindowWidthに変更してください
-    float windowHeight = 720.0f;
-    Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, windowWidth / windowHeight, 0.1f, 100.0f);
-
-    // ワールド行列を掛け算する前の「ViewProjection行列」を作る
     Matrix4x4 viewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
 
     // 1. 頂点バッファデータの作成
     std::vector<Vertex> vertices;
     vertices.reserve(m_requests.size() * 2);
     for (const auto& req : m_requests) {
+        // ★ Vector4 (x,y,z,w) の形に合わせてすっきり投入
         vertices.push_back({ {req.start.x, req.start.y, req.start.z, 1.0f}, req.color });
         vertices.push_back({ {req.end.x, req.end.y, req.end.z, 1.0f}, req.color });
     }
@@ -189,15 +187,17 @@ void DebugRenderer::Flush(Camera* camera) {
     memcpy(pConstData, &viewProjectionMatrix, sizeof(Matrix4x4));
     m_constBuffer->Unmap(0, nullptr);
 
-    // 3. パイプライン・トポロジー設定
-    commandList->SetGraphicsRootSignature(m_rootSignature.Get());
+    // 3. 描画コマンドの積載
     commandList->SetPipelineState(m_pipelineState.Get());
-    commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
+    commandList->SetGraphicsRootSignature(m_rootSignature.Get());
+
     commandList->IASetVertexBuffers(0, 1, &m_vertexBufferView);
+    commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
+
     commandList->SetGraphicsRootConstantBufferView(0, m_constBuffer->GetGPUVirtualAddress());
 
-    // 4. ドローコール
-    commandList->DrawInstanced(static_cast<UINT>(vertices.size()), 1, 0, 0);
+    commandList->DrawInstanced((UINT)vertices.size(), 1, 0, 0);
 
+    // 4. リクエストのリセット
     m_requests.clear();
 }

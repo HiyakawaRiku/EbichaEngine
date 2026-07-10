@@ -19,4 +19,7 @@ public:
     void Update()override;
 
     TransformationMatrix CalculateWVP(const Transform& objectTransform) override;
+
+    Matrix4x4 GetViewMatrix() override { return viewMatrix_; }
+    Matrix4x4 GetProjectionMatrix() override { return projectionMatrix_; }
 };

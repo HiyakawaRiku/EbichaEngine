@@ -54,6 +54,8 @@ Matrix4x4 MakeRotateYMatrix(float radian);
 // 3.Z軸回転行列
 Matrix4x4 MakeRotateZMatrix(float radian);
 
+Matrix4x4 MakeRotateMatrix(const Vector3& rotate);
+
 Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Vector3& translate);
 
 Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip, float farClip);
