@@ -26,16 +26,15 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	Model* model = new Model;
 	model->Initialize("resources", "axis.obj");
 
-	auto camera = std::make_unique<Camera>();
+	auto camera = std::make_unique<DebugCamera>();
+	camera.get()->Initialize();
 
-	// 初期化
-	DebugCamera debugCamera;
-	debugCamera.Initialize();
+	//// 初期化
+	//DebugCamera debugCamera;
+	//debugCamera.Initialize();
 
 	DebugRenderer::Initialize();
 
-	// Transform変数を作る
-	Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 	// CPUで動かす用のTransformを作る
 	Transform transformSprite{ {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
 
@@ -67,7 +66,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			BYTE key[256] = {};
 			dxCommon->keyboard->GetDeviceState(sizeof(key), key);
 
-			//debugCamera.Update();
+			camera->Update();
 
 			//// ビュー行列・射影行列を取得
 			//Matrix4x4 viewMatrix = debugCamera.GetViewMatrix();
@@ -91,7 +90,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			DebugRenderer::AddWireSphere({ 0.0f, 0.0f, 0.0f }, 1.0f, 16, { 0.0f, 1.0f, 0.0f, 1.0f });
 
 			if (key[DIK_0]) {
-				transform.rotate.y += 0.03f;
+				camera->transform_.rotate.y += 0.03f;
 				DebugRenderer::AddLine({ -5.0f, 2.0f, 0.0f }, { 5.0f, 2.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f });
 			}
 
@@ -129,7 +128,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			sprite->color = { colorSprite4[0], colorSprite4[1], colorSprite4[2], colorSprite4[3] };
 
 			// translateSprite
-			ImGui::DragFloat3("translateSprite", &transformSprite.translate.x, 0.5f);
+			ImGui::DragFloat3("translateSprite", &sprite->transform.translate.x, 0.5f);
 
 			// useMonsterBall
 			ImGui::Checkbox("useMonsterBall", &useMonsterBall);

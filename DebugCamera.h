@@ -1,7 +1,8 @@
 #pragma once
 #include "Matrix.h"
+#include "Camera.h"
 
-class DebugCamera {
+class DebugCamera :public Camera{
 private:
     // ローカル座標
     Vector3 translation_ = { 0.0f, 0.0f, -50.0f };
@@ -15,8 +16,7 @@ private:
 
 public:
     void Initialize();
-    void Update();
+    void Update()override;
 
-    const Matrix4x4& GetViewMatrix() const { return viewMatrix_; }
-    const Matrix4x4& GetProjectionMatrix() const { return projectionMatrix_; }
+    TransformationMatrix CalculateWVP(const Transform& objectTransform) override;
 };

@@ -112,3 +112,15 @@ void DebugCamera::Update() {
         1000.0f
     );
 }
+
+TransformationMatrix DebugCamera::CalculateWVP(const Transform& objectTransform)
+{
+    // オブジェクトのワールド行列を計算
+    Matrix4x4 worldMatrix = MakeAffineMatrix(objectTransform.scale, objectTransform.rotate, objectTransform.translate);
+
+    // すでに Update() 内で計算済みの viewMatrix_ と projectionMatrix_ を使って合成する！
+    Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix_, projectionMatrix_));
+
+    TransformationMatrix result = { worldViewProjectionMatrix, worldMatrix };
+    return result;
+}
