@@ -137,9 +137,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			sphere->color = { color4[0], color4[1], color4[2], color4[3] };
 
 			// enableLighting
-			bool enableLighting = sphere->materialData->enableLighting != 0;
+			bool enableLighting = sphere->enableLighting != 0;
 			ImGui::Checkbox("enableLighting", &enableLighting);
-			sphere->materialData->enableLighting = enableLighting ? 1 : 0;
+			sphere->enableLighting = enableLighting ? 1 : 0;
 
 			// colorSprite (Sprite用マテリアルカラー)
 			float colorSprite4[4] = { sprite->color.x, sprite->color.y, sprite->color.z, sprite->color.w };
