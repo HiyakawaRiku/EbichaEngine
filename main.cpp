@@ -194,9 +194,17 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 				// --- 2. ステップアップ：「カメラが見ている視界の箱（簡易四角錐）」を描画する ---
 				// カメラの目の前にある「画面の4隅」のローカル座標
-				float w = 4.0f; // 横幅
-				float h = 3.0f; // 縦幅
-				float d = 6.0f; // 前方の深さ
+				float fovY = 0.45f; // 実際の画角 (ラジアン)
+				float aspect = 1280.0f / 720.0f; // 画面のアスペクト比
+
+				// ガイド線を表示したいお好みの奥行き（例: 20の距離の視界枠を見る場合）
+				// ※ 100.0f にするとファークリップ（限界の奥）の枠になります
+				float d = 20.0f;
+
+				// 三角関数を使って、奥行き d の位置における「正しい半分の高さ」を逆算
+				float h = d * std::tan(fovY / 2.0f);
+				// アスペクト比を掛けて「正しい半分の横幅」を計算
+				float w = h * aspect;
 
 				Vector3 p0 = Transforms({ -w,  h, d }, camRotMat);
 				Vector3 p1 = Transforms({ w,  h, d }, camRotMat);
