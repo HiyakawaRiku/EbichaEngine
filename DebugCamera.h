@@ -15,7 +15,7 @@ private:
     Matrix4x4 projectionMatrix_;
 
 public:
-    void Initialize();
+    void Initialize()override;
     void Update()override;
 
     TransformationMatrix CalculateWVP(const Transform& objectTransform) override;

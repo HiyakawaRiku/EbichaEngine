@@ -26,8 +26,11 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	Model* model = new Model;
 	model->Initialize("resources", "axis.obj");
 
-	auto camera = std::make_unique<DebugCamera>();
-	camera.get()->Initialize();
+	auto normalCamera = std::make_unique<Camera>();
+	auto debugCamera = std::make_unique<DebugCamera>();
+	debugCamera->Initialize();
+	Camera* activeCamera = normalCamera.get();
+	bool useDebugCamera = false;
 
 	//// 初期化
 	//DebugCamera debugCamera;
@@ -67,7 +70,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			UpdateKeyState(dxCommon->keyboard);
 			dxCommon->keyboard->GetDeviceState(sizeof(key), key);
 
-			camera->Update();
+			activeCamera->Update();
 
 			//// ビュー行列・射影行列を取得
 			//Matrix4x4 viewMatrix = debugCamera.GetViewMatrix();
@@ -77,12 +80,12 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			// Transformを更新（例：Y軸回転）
 
 			// GPU上のリソース（定数バッファ）の中身を書き換える
-			triangle->Update(camera.get());
-			triangle2->Update(camera.get());
-			sprite->Update(camera.get());
-		
-			sphere->Update(camera.get());
-			model->Update(camera.get());
+			triangle->Update(activeCamera);
+			triangle2->Update(activeCamera);
+			sprite->Update(activeCamera);
+
+			sphere->Update(activeCamera);
+			model->Update(activeCamera);
 
 			// グレーのグリッドを床に配置
 			DebugRenderer::AddGrid(20.0f, 20, { 0.5f, 0.5f, 0.5f, 1.0f });
@@ -91,11 +94,26 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			DebugRenderer::AddWireSphere({ 0.0f, 0.0f, 0.0f }, 1.0f, 16, { 0.0f, 1.0f, 0.0f, 1.0f });
 
 			if (PushKey(DIK_0)) {
-				camera->transform_.rotate.y += 0.03f;
+				activeCamera->transform_.rotate.y += 0.03f;
 				DebugRenderer::AddLine({ -5.0f, 2.0f, 0.0f }, { 5.0f, 2.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f });
 			}
 
 #ifdef _DEBUG
+
+			ImGui::Begin("Settings");
+
+			// カメラ切り替え用のチェックボックス
+			if (ImGui::Checkbox("Use Debug Camera", &useDebugCamera)) {
+				// 【劇的変化】インスタンスを破壊せず、指す先を切り替えるだけ！
+				if (useDebugCamera) {
+					activeCamera = debugCamera.get();
+				}
+				else {
+					activeCamera = normalCamera.get();
+				}
+			}
+
+			ImGui::End();
 
 			//ImGui::ShowDemoWindow();
 
@@ -103,14 +121,14 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			ImGui::Begin("Settings");
 
 			// CameraTranslate
-			ImGui::DragFloat3("CameraTranslate", &camera->transform_.translate.x, 0.01f);
+			ImGui::DragFloat3("CameraTranslate", &activeCamera->transform_.translate.x, 0.01f);
 
 			// CameraRotate (deg)
-			ImGui::DragFloat("CameraRotateX", &camera->transform_.rotate.x, 0.1f, -360.0f, 360.0f);
+			ImGui::DragFloat("CameraRotateX", &activeCamera->transform_.rotate.x, 0.1f, -360.0f, 360.0f);
 			ImGui::SameLine(); ImGui::Text("deg");
-			ImGui::DragFloat("CameraRotateY", &camera->transform_.rotate.y, 0.1f, -360.0f, 360.0f);
+			ImGui::DragFloat("CameraRotateY", &activeCamera->transform_.rotate.y, 0.1f, -360.0f, 360.0f);
 			ImGui::SameLine(); ImGui::Text("deg");
-			ImGui::DragFloat("CameraRotateZ", &camera->transform_.rotate.z, 0.1f, -360.0f, 360.0f);
+			ImGui::DragFloat("CameraRotateZ", &activeCamera->transform_.rotate.z, 0.1f, -360.0f, 360.0f);
 			ImGui::SameLine(); ImGui::Text("deg");
 
 			// color (3Dオブジェクト用マテリアルカラー)
@@ -165,7 +183,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			sphere->Draw(useMonsterBall ? 3 : 2);
 			model->Draw(4);
 
-			DebugRenderer::Flush(camera.get());
+			DebugRenderer::Flush(activeCamera);
 
 			dxCommon->PostDraw();
 

@@ -8,6 +8,7 @@ public:
     virtual TransformationMatrix CalculateWVP(const Transform& objectTransform);
     virtual TransformationMatrix CalculateWVP2D(const Transform& objectTransform);
 
+    virtual void Initialize() {}
     virtual void Update() {}
 
     Transform transform_{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-10.0f} };
