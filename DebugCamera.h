@@ -28,4 +28,6 @@ public:
 
     Matrix4x4 GetViewMatrix() override { return viewMatrix_; }
     Matrix4x4 GetProjectionMatrix() override { return projectionMatrix_; }
+
+    void DrawFrustum(Camera* normalCamera);
 };
