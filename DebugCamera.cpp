@@ -63,8 +63,22 @@ void DebugCamera::Update() {
         targetPos_.z += move.z;
     }
 
-    if (PushKey(DIK_I)) { targetDistance_ -= kZoomSpeed; } // ズームイン
-    if (PushKey(DIK_O)) { targetDistance_ += kZoomSpeed; } // ズームアウト
+    if ((GetKeyState(VK_MBUTTON) & 0x8000) != 0) {
+        if (deltaY != 0.0f) {
+            // マウスを上に動かしたら近づく（距離マイナス）、下に動かしたら離れる
+            targetDistance_ += deltaY * kMouseMoveSpeed * 2.0f;
+        }
+    }
+
+    if (targetDistance_ < 2.0f) targetDistance_ = 2.0f;
+
+    // 【予備・または併用】もしホイールメッセージが上手く取れない環境の場合、
+    // 「キーボードのIとO」でも全く同じように動く予備コードを残しておくと安心です
+    if (PushKey(DIK_I)) { targetDistance_ -= kZoomSpeed * 0.2f; }
+    if (PushKey(DIK_O)) { targetDistance_ += kZoomSpeed * 0.2f; }
+
+    // 距離がマイナス（注視点を突き抜けて反転する）にならないように最小値をガード（重要）
+    if (targetDistance_ < 2.0f) targetDistance_ = 2.0f;
 
     // 距離がマイナス（突き抜ける）にならないように最小値をガード
     if (targetDistance_ < 1.0f) targetDistance_ = 1.0f;
