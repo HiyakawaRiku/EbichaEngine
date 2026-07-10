@@ -11,6 +11,15 @@ void DebugCamera::Initialize() {
 }
 
 void DebugCamera::Update() {
+
+    if (ImGui::GetIO().WantCaptureMouse) {
+        // 次のフレームで急に視点が跳ねないように、マウスの現在位置だけは毎フレーム記憶させておく
+        POINT currentMousePos;
+        GetCursorPos(&currentMousePos);
+        prevMousePos_ = currentMousePos;
+        return;
+    }
+
     const float kMoveSpeed = 0.5f;
     const float kRotateSpeed = 0.02f;
     const float kMouseRotateSpeed = 0.005f; // 回転の感度
