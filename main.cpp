@@ -64,6 +64,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			dxCommon->PreDraw();
 
 			BYTE key[256] = {};
+			UpdateKeyState(dxCommon->keyboard);
 			dxCommon->keyboard->GetDeviceState(sizeof(key), key);
 
 			camera->Update();
@@ -89,7 +90,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			// 原点に緑色のワイヤーフレーム球体を表示 (半径2.0f, 分割数16)
 			DebugRenderer::AddWireSphere({ 0.0f, 0.0f, 0.0f }, 1.0f, 16, { 0.0f, 1.0f, 0.0f, 1.0f });
 
-			if (key[DIK_0]) {
+			if (PushKey(DIK_0)) {
 				camera->transform_.rotate.y += 0.03f;
 				DebugRenderer::AddLine({ -5.0f, 2.0f, 0.0f }, { 5.0f, 2.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f });
 			}
