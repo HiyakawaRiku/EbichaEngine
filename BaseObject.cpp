@@ -1,10 +1,18 @@
 #include "BaseObject.h"
+#include "Camera.h"
 
 void BaseObject::Initialize()
 {
 	CreateMaterialResource();
 	CreateWvpResource();
 	CreateDirectionalLight();
+}
+
+void BaseObject::Update(Camera* camera)
+{
+	if (wvpData && camera) {
+		*wvpData = camera->CalculateWVP(transform);
+	}
 }
 
 void BaseObject::Draw(uint32_t textureIndex)

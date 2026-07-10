@@ -25,7 +25,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	Model* model = new Model;
 	model->Initialize("resources", "axis.obj");
 
-	Camera* camera = new Camera;
+	auto camera = std::make_unique<Camera>();
 
 	// 初期化
 	DebugCamera debugCamera;
@@ -66,23 +66,22 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			BYTE key[256] = {};
 			dxCommon->keyboard->GetDeviceState(sizeof(key), key);
 
-			debugCamera.Update();
+			//debugCamera.Update();
 
-			// ビュー行列・射影行列を取得
-			Matrix4x4 viewMatrix = debugCamera.GetViewMatrix();
-			Matrix4x4 projectionMatrix = debugCamera.GetProjectionMatrix();
-			Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
-
+			//// ビュー行列・射影行列を取得
+			//Matrix4x4 viewMatrix = debugCamera.GetViewMatrix();
+			//Matrix4x4 projectionMatrix = debugCamera.GetProjectionMatrix();
+			//Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 
 			// Transformを更新（例：Y軸回転）
 
 			// GPU上のリソース（定数バッファ）の中身を書き換える
-			*triangle->wvpData = camera->DrawObject3d(transform);
-			*triangle2->wvpData = camera->DrawObject3d(transform);
-
-			*sprite->wvpData = camera->DrawObject2d(transformSprite);
-			*sphere->wvpData = camera->DrawObject3d(transform);
-			*model->wvpData = camera->DrawObject3d(transform);
+			triangle->Update(camera.get());
+			triangle2->Update(camera.get());
+			sprite->Update(camera.get());
+		
+			sphere->Update(camera.get());
+			model->Update(camera.get());
 
 			// グレーのグリッドを床に配置
 			DebugRenderer::AddGrid(20.0f, 20, { 0.5f, 0.5f, 0.5f, 1.0f });
@@ -165,7 +164,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			sphere->Draw(useMonsterBall ? 3 : 2);
 			model->Draw(4);
 
-			DebugRenderer::Flush(camera);
+			DebugRenderer::Flush(camera.get());
 
 			dxCommon->PostDraw();
 

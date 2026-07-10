@@ -1,4 +1,5 @@
 #include "Sprite.h"
+#include "Camera.h"
 
 void Sprite::Initialize()
 {
@@ -8,6 +9,13 @@ void Sprite::Initialize()
 	CreateVertexData();
 	CreateIndexResource();
 	CreateIndexData();
+}
+
+void Sprite::Update(Camera* camera)
+{
+	if (wvpData && camera) {
+		*wvpData = camera->CalculateWVP2D(transform);
+	}
 }
 
 void Sprite::CreateVertexResource()

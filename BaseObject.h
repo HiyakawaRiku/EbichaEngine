@@ -49,7 +49,10 @@ public:
 	TransformationMatrix* wvpData = nullptr;
 	DirectionalLight* directionalLightData = nullptr;
 
+	Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
+
 	virtual void Initialize();
+	virtual void Update(class Camera* camera);
 	virtual void Draw(uint32_t textureIndex);
 	virtual void CreateMaterialResource();
 	virtual void CreateWvpResource();

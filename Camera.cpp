@@ -1,23 +1,41 @@
 #include "Camera.h"
 
-TransformationMatrix Camera::DrawObject3d(Transform transform)
+// 3Dオブジェクト用のWVP行列を計算して返す
+TransformationMatrix Camera::CalculateWVP(const Transform& objectTransform)
 {
-	Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+	// 1. オブジェクトのワールド行列を計算
+	Matrix4x4 worldMatrix = MakeAffineMatrix(objectTransform.scale, objectTransform.rotate, objectTransform.translate);
+
+	// 2. カメラ自身の状態（transform_）からビュー行列を計算
 	Matrix4x4 cameraMatrix = MakeAffineMatrix(transform_.scale, transform_.rotate, transform_.translate);
 	Matrix4x4 viewMatrix = Inverse(cameraMatrix);
+
+	// 3. 射影行列を計算
 	Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(app_->kWindowWidth) / float(app_->kWindowHeight), 0.1f, 100.0f);
+
+	// 4. すべてを掛け合わせてWVP行列を合成
 	Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
-	
-	TransformationMatrix index={ worldViewProjectionMatrix,worldMatrix };
-	return index;
+
+	// 構造体にまとめて返す
+	TransformationMatrix result = { worldViewProjectionMatrix, worldMatrix };
+	return result;
 }
 
-TransformationMatrix Camera::DrawObject2d(Transform transform)
+// 2D（スプライトなど）オブジェクト用のWVP行列を計算して返す
+TransformationMatrix Camera::CalculateWVP2D(const Transform& objectTransform)
 {
-	Matrix4x4 worldMatrixSprite = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+	// 2Dオブジェクトのワールド行列を計算
+	Matrix4x4 worldMatrixSprite = MakeAffineMatrix(objectTransform.scale, objectTransform.rotate, objectTransform.translate);
+
+	// 2Dはカメラの移動や回転を無視するため、ビュー行列は単位行列
 	Matrix4x4 viewMatrixSprite = MakeIdentity4x4();
+
+	// 平行投影（スクリーン座標系）の射影行列を計算
 	Matrix4x4 projectionMatrixSprite = MakeOrthographicMatrix(0.0f, 0.0f, float(app_->kWindowWidth), float(app_->kWindowHeight), 0.0f, 100.0f);
+
+	// すべてを掛け合わせてWVP行列を合成
 	Matrix4x4 worldViewProjectionMatrixSprite = Multiply(worldMatrixSprite, Multiply(viewMatrixSprite, projectionMatrixSprite));
-	TransformationMatrix index = { worldViewProjectionMatrixSprite,worldMatrixSprite };
-	return index;
+
+	TransformationMatrix result = { worldViewProjectionMatrixSprite, worldMatrixSprite };
+	return result;
 }
