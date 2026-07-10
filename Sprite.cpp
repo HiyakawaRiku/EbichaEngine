@@ -16,6 +16,11 @@ void Sprite::Update(Camera* camera)
 	if (wvpData && camera) {
 		*wvpData = camera->CalculateWVP2D(transform);
 	}
+
+	if (materialData) {
+		materialData->color = this->color;
+		materialData->enableLighting = this->enableLighting;
+	}
 }
 
 void Sprite::CreateVertexResource()

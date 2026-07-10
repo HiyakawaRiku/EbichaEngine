@@ -1,5 +1,6 @@
 #include "EbichaEngine.h"
 
+
 //Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
@@ -113,9 +114,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			ImGui::SameLine(); ImGui::Text("deg");
 
 			// color (3Dオブジェクト用マテリアルカラー)
-			float color4[4] = { sphere->materialData->color.x, sphere->materialData->color.y, sphere->materialData->color.z, sphere->materialData->color.w };
+			float color4[4] = { sphere->color.x, sphere->color.y, sphere->color.z, sphere->color.w };
 			ImGui::ColorEdit4("color", color4);
-			sphere->materialData->color = { color4[0], color4[1], color4[2], color4[3] };
+			sphere->color = { color4[0], color4[1], color4[2], color4[3] };
 
 			// enableLighting
 			bool enableLighting = sphere->materialData->enableLighting != 0;
@@ -123,9 +124,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			sphere->materialData->enableLighting = enableLighting ? 1 : 0;
 
 			// colorSprite (Sprite用マテリアルカラー)
-			float colorSprite4[4] = { sprite->materialData->color.x, sprite->materialData->color.y, sprite->materialData->color.z, sprite->materialData->color.w };
+			float colorSprite4[4] = { sprite->color.x, sprite->color.y, sprite->color.z, sprite->color.w };
 			ImGui::ColorEdit4("colorSprite", colorSprite4);
-			sprite->materialData->color = { colorSprite4[0], colorSprite4[1], colorSprite4[2], colorSprite4[3] };
+			sprite->color = { colorSprite4[0], colorSprite4[1], colorSprite4[2], colorSprite4[3] };
 
 			// translateSprite
 			ImGui::DragFloat3("translateSprite", &transformSprite.translate.x, 0.5f);
@@ -134,9 +135,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			ImGui::Checkbox("useMonsterBall", &useMonsterBall);
 
 			// LightColor
-			float lightColor4[4] = { sphere->materialData->color.x, sphere->materialData->color.y, sphere->materialData->color.z, sphere->materialData->color.w };
+			float lightColor4[4] = { sphere->color.x, sphere->color.y, sphere->color.z, sphere->color.w };
 			ImGui::ColorEdit4("LightColor", lightColor4);
-			sphere->materialData->color = { lightColor4[0], lightColor4[1], lightColor4[2], lightColor4[3] };
+			sphere->color = { lightColor4[0], lightColor4[1], lightColor4[2], lightColor4[3] };
 
 			// LightDirection
 			ImGui::SliderFloat3("LightDirection", &sphere->directionalLightData->direction.x, -1.0f, 1.0f, "%.2f");

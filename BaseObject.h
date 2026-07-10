@@ -31,6 +31,10 @@ struct DirectionalLight {
 
 class BaseObject {
 public:
+	Vector4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
+	int32_t enableLighting = true;
+
+
 	DirectXCommon* dxCommon_ = DirectXCommon::GetInstance();
 
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};

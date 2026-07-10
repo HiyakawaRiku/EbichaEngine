@@ -13,6 +13,11 @@ void BaseObject::Update(Camera* camera)
 	if (wvpData && camera) {
 		*wvpData = camera->CalculateWVP(transform);
 	}
+
+	if (materialData) {
+		materialData->color = this->color;
+		materialData->enableLighting = this->enableLighting;
+	}
 }
 
 void BaseObject::Draw(uint32_t textureIndex)
