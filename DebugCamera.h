@@ -14,6 +14,12 @@ private:
     // 射影行列
     Matrix4x4 projectionMatrix_;
 
+    POINT prevMousePos_ = { 0, 0 }; // 前フレームのマウス位置
+    bool isFirstFrame_ = true;      // 起動直後のズレ防止フラグ
+
+    Vector3 targetPos_ = { 0.0f, 0.0f, 0.0f }; // 注視点（回転の中心）
+    float targetDistance_ = 50.0f;             // 注視点からの距離
+
 public:
     void Initialize()override;
     void Update()override;
