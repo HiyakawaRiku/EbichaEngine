@@ -23,8 +23,23 @@
 
 #include "Input.h"
 
+enum BlendMode {
+	kBlendModeNone,
+	kBlendModeNormal,
+	kBlendModeAdd,
+	kBlendModeSubtract,
+	kBlendModeMultiply,
+	kBlendModeScreen,
+	kCountOfBlendMode,
+};
+
+
 class DirectXCommon {
 public: // メンバ関数
+	const char* blendMode_names = "None\0Normal\0Add\0Subtract\0Multiply\0Screen\0\0";
+
+	BlendMode blendMode_ = BlendMode::kBlendModeScreen;
+	void SetBlendMode(BlendMode blendMode) { blendMode = blendMode_; }
 
 	static DirectXCommon* GetInstance();
 
@@ -47,6 +62,10 @@ public: // メンバ関数
 	ID3D12GraphicsCommandList* GetCommandList() const { return commandList_.Get(); }
 
 	IDirectInputDevice8* keyboard = nullptr;
+	/// <summary>
+	/// パイプライン生成
+	/// </summary>
+	void InitializePSO();
 
 private: // メンバ変数
 	// ウィンドウズアプリケーション管理
@@ -124,10 +143,6 @@ private: // メンバ関数
 	/// </summary>
 	void CreateFence();
 
-	/// <summary>
-	/// パイプライン生成
-	/// </summary>
-	void InitializePSO();
 
 	/// <summary>
 	/// 

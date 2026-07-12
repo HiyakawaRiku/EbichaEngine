@@ -64,6 +64,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		}
 		else {
 
+			dxCommon->InitializePSO();
+
 			dxCommon->PreDraw();
 
 			BYTE key[256] = {};
@@ -75,6 +77,26 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			if (activeCamera != normalCamera.get()) {
 				activeCamera->Update();
 			}
+
+			ImGui::Begin("Settings");
+
+			// カメラ切り替え用のチェックボックス
+			if (ImGui::Checkbox("Use Debug Camera", &useDebugCamera)) {
+				// 【劇的変化】インスタンスを破壊せず、指す先を切り替えるだけ！
+				if (useDebugCamera) {
+					activeCamera = debugCamera.get();
+				}
+				else {
+					activeCamera = normalCamera.get();
+				}
+			}
+			int currentIndex = static_cast<int>(dxCommon->blendMode_);
+			if (ImGui::Combo("Blend Mode", &currentIndex, dxCommon->blendMode_names)) {
+				dxCommon->blendMode_ = static_cast<BlendMode>(currentIndex);
+				dxCommon->SetBlendMode(dxCommon->blendMode_);
+			};
+
+			ImGui::End();
 
 			//// ビュー行列・射影行列を取得
 			//Matrix4x4 viewMatrix = debugCamera.GetViewMatrix();
@@ -106,23 +128,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 			ImGui::Begin("Settings");
 
-			// カメラ切り替え用のチェックボックス
-			if (ImGui::Checkbox("Use Debug Camera", &useDebugCamera)) {
-				// 【劇的変化】インスタンスを破壊せず、指す先を切り替えるだけ！
-				if (useDebugCamera) {
-					activeCamera = debugCamera.get();
-				}
-				else {
-					activeCamera = normalCamera.get();
-				}
-			}
-
-			ImGui::End();
-
 			//ImGui::ShowDemoWindow();
 
 			// === Settings パネル ===
-			ImGui::Begin("Settings");
 
 			// CameraTranslate
 			ImGui::DragFloat3("CameraTranslate", &normalCamera->transform_.translate.x, 0.1f);
