@@ -25,7 +25,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 
 	Model* model = new Model;
-	model->Initialize("resources", "axis.obj");
+	model->Initialize("resources", "fence.obj");
 
 	auto normalCamera = std::make_unique<Camera>();
 	auto debugCamera = std::make_unique<DebugCamera>();
@@ -53,6 +53,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	dxCommon->InitializeTexture("resources/sky_sphere.png", 2);
 	dxCommon->InitializeTexture("resources/monsterBall.png", 3);
 	dxCommon->InitializeTexture("resources/ground_leaf.png", 4);
+	dxCommon->InitializeTexture("resources/fence.png", 4);
 
 	MSG msg{};
 	//ウィンドウのxボタンが押されるまでループ
@@ -188,7 +189,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			triangle->Draw(3);
 			triangle2->Draw(2);
 			sprite->Draw(1);
-			sphere->Draw(useMonsterBall ? 3 : 2);
+			//sphere->Draw(useMonsterBall ? 3 : 2);
 			model->Draw(4);
 
 			DebugRenderer::Flush(activeCamera);
