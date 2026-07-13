@@ -39,7 +39,7 @@ public: // メンバ関数
 	const char* blendMode_names = "None\0Normal\0Add\0Subtract\0Multiply\0Screen\0\0";
 
 	BlendMode blendMode_ = BlendMode::kBlendModeScreen;
-	void SetBlendMode(BlendMode blendMode) { blendMode = blendMode_; }
+	void SetBlendMode(BlendMode blendMode) { blendMode_ = blendMode; }
 
 	static DirectXCommon* GetInstance();
 
@@ -84,7 +84,7 @@ private: // メンバ変数
 	//std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> resourcesForTransfer;
 	UINT64 fenceVal_ = 0;
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature_;
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState_;
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineStates_[BlendMode::kCountOfBlendMode];
 	//int32_t backBufferWidth_ = 0;
 	//int32_t backBufferHeight_ = 0;
 	//HANDLE frameLatencyWaitableObject_;
