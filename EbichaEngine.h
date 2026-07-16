@@ -1,15 +1,15 @@
 #pragma once
+#include "WinApp.h"
 #include "DirectXCommon.h"
+#include "Input.h"
+#include "DebugRenderer.h"
+#include "DebugCamera.h"
 #include "Matrix.h"
 #include "Triangle.h"
 #include "Sprite.h"
 #include "Camera.h"
 #include "Model.h"
 #include "Sphere.h"
-
-#include "DebugRenderer.h"
-#include "Input.h"
-#include "DebugCamera.h"
 
 class EbichaEngine
 {
@@ -18,4 +18,3 @@ public:
 	void Initialize();
 	void Finalize();
 };
-

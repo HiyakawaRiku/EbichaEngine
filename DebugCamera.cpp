@@ -1,5 +1,4 @@
 #include "DebugCamera.h"
-#include "Input.h"
 #include "DebugRenderer.h"
 
 Matrix4x4 operator*(const Matrix4x4& a, const Matrix4x4& b) {
@@ -79,8 +78,8 @@ void DebugCamera::Update() {
 
 	// 【予備・または併用】もしホイールメッセージが上手く取れない環境の場合、
 	// 「キーボードのIとO」でも全く同じように動く予備コードを残しておくと安心です
-	if (PushKey(DIK_I)) { targetDistance_ -= kZoomSpeed * 0.2f; }
-	if (PushKey(DIK_O)) { targetDistance_ += kZoomSpeed * 0.2f; }
+	if (input->PushKey(DIK_I)) { targetDistance_ -= kZoomSpeed * 0.2f; }
+	if (input->PushKey(DIK_O)) { targetDistance_ += kZoomSpeed * 0.2f; }
 
 	// 距離がマイナス（注視点を突き抜けて反転する）にならないように最小値をガード（重要）
 	if (targetDistance_ < 2.0f) targetDistance_ = 2.0f;
@@ -92,26 +91,26 @@ void DebugCamera::Update() {
 	prevMousePos_ = currentMousePos;
 
 	// X軸回りの回転入力
-	if (PushKey(DIK_UP)) {
+	if (input->PushKey(DIK_UP)) {
 		matRotDelta = MakeRotateXMatrix(-kRotateSpeed) * matRotDelta;
 	}
-	if (PushKey(DIK_DOWN)) {
+	if (input->PushKey(DIK_DOWN)) {
 		matRotDelta = MakeRotateXMatrix(kRotateSpeed) * matRotDelta;
 	}
 
 	// Y軸回りの回転入力
-	if (PushKey(DIK_RIGHT)) {
+	if (input->PushKey(DIK_RIGHT)) {
 		matRotDelta = MakeRotateYMatrix(kRotateSpeed) * matRotDelta;
 	}
-	if (PushKey(DIK_LEFT)) {
+	if (input->PushKey(DIK_LEFT)) {
 		matRotDelta = MakeRotateYMatrix(-kRotateSpeed) * matRotDelta;
 	}
 
 	// Z軸回りの回転入力
-	if (PushKey(DIK_Q)) {
+	if (input->PushKey(DIK_Q)) {
 		matRotDelta = MakeRotateZMatrix(kRotateSpeed) * matRotDelta;
 	}
-	if (PushKey(DIK_E)) {
+	if (input->PushKey(DIK_E)) {
 		matRotDelta = MakeRotateZMatrix(-kRotateSpeed) * matRotDelta;
 	}
 
@@ -121,14 +120,14 @@ void DebugCamera::Update() {
 
 	// === 移動処理 ===
 	// 前後移動
-	if (PushKey(DIK_W)) {
+	if (input->PushKey(DIK_W)) {
 		Vector3 move = { 0.0f, 0.0f, kMoveSpeed };
 		move = Transforms(move, matRot_);  // 累積回転行列で回転
 		translation_.x += move.x;
 		translation_.y += move.y;
 		translation_.z += move.z;
 	}
-	if (PushKey(DIK_S)) {
+	if (input->PushKey(DIK_S)) {
 		Vector3 move = { 0.0f, 0.0f, -kMoveSpeed };
 		move = Transforms(move, matRot_);
 		translation_.x += move.x;
@@ -137,14 +136,14 @@ void DebugCamera::Update() {
 	}
 
 	// 左右移動
-	if (PushKey(DIK_D)) {
+	if (input->PushKey(DIK_D)) {
 		Vector3 move = { kMoveSpeed, 0.0f, 0.0f };
 		move = Transforms(move, matRot_);
 		translation_.x += move.x;
 		translation_.y += move.y;
 		translation_.z += move.z;
 	}
-	if (PushKey(DIK_A)) {
+	if (input->PushKey(DIK_A)) {
 		Vector3 move = { -kMoveSpeed, 0.0f, 0.0f };
 		move = Transforms(move, matRot_);
 		translation_.x += move.x;
@@ -153,14 +152,14 @@ void DebugCamera::Update() {
 	}
 
 	// 上下移動
-	if (PushKey(DIK_SPACE)) {
+	if (input->PushKey(DIK_SPACE)) {
 		Vector3 move = { 0.0f, kMoveSpeed, 0.0f };
 		move = Transforms(move, matRot_);
 		translation_.x += move.x;
 		translation_.y += move.y;
 		translation_.z += move.z;
 	}
-	if (PushKey(DIK_LSHIFT)) {
+	if (input->PushKey(DIK_LSHIFT)) {
 		Vector3 move = { 0.0f, -kMoveSpeed, 0.0f };
 		move = Transforms(move, matRot_);
 		translation_.x += move.x;

@@ -2,6 +2,8 @@
 #include "Matrix.h"
 #include "Camera.h"
 
+#include "Input.h"
+
 class DebugCamera :public Camera{
 private:
     // ローカル座標
@@ -21,6 +23,9 @@ private:
     float targetDistance_ = 50.0f;             // 注視点からの距離
 
 public:
+
+    Input* input = Input::GetInstance();
+
     void Initialize()override;
     void Update()override;
 

@@ -1,36 +1,53 @@
 #include "Input.h"
 #include <cstring>
+#include <cassert>
 
-// === キー入力状態を保持する変数 ===
-static BYTE g_currentKeyState[256] = { 0 };
-static BYTE g_previousKeyState[256] = { 0 };
-
-// キー状態の更新
-void UpdateKeyState(IDirectInputDevice8* keyboard) {
-    // 前フレームの状態を保存
-    memcpy(g_previousKeyState, g_currentKeyState, sizeof(g_currentKeyState));
-
-    // 現在の状態を取得
-    keyboard->Acquire();
-    keyboard->GetDeviceState(sizeof(g_currentKeyState), g_currentKeyState);
+Input* Input::GetInstance() {
+	static Input instance;
+	return &instance;
 }
 
-// キーを押した状態か（押しっぱなし）
-bool PushKey(uint8_t keyNumber) {
-    return g_currentKeyState[keyNumber] != 0;
+Input::~Input() {
+	if (keyboard_) {
+		keyboard_->Unacquire();
+	}
 }
 
-// キーを離した状態か（離しっぱなし）
-bool ReleaseKey(uint8_t keyNumber) {
-    return g_currentKeyState[keyNumber] == 0;
+void Input::Initialize(HINSTANCE hInstance, HWND hwnd) {
+	HRESULT result = DirectInput8Create(hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&directInput_, nullptr);
+	assert(SUCCEEDED(result));
+
+	result = directInput_->CreateDevice(GUID_SysKeyboard, &keyboard_, nullptr);
+	assert(SUCCEEDED(result));
+
+	result = keyboard_->SetDataFormat(&c_dfDIKeyboard);
+	assert(SUCCEEDED(result));
+
+	result = keyboard_->SetCooperativeLevel(hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);
+	assert(SUCCEEDED(result));
 }
 
-// キーを押した瞬間か
-bool TriggerKey(uint8_t keyNumber) {
-    return (g_currentKeyState[keyNumber] != 0) && (g_previousKeyState[keyNumber] == 0);
+void Input::Update() {
+	// 前フレームの状態を保存
+	std::memcpy(previousKeyState_, currentKeyState_, sizeof(currentKeyState_));
+
+	// 現在の状態を取得
+	keyboard_->Acquire();
+	keyboard_->GetDeviceState(sizeof(currentKeyState_), currentKeyState_);
 }
 
-// キーを離した瞬間か
-bool ReturnKey(uint8_t keyNumber) {
-    return (g_currentKeyState[keyNumber] == 0) && (g_previousKeyState[keyNumber] != 0);
+bool Input::PushKey(uint8_t keyNumber) const {
+	return currentKeyState_[keyNumber] != 0;
+}
+
+bool Input::ReleaseKey(uint8_t keyNumber) const {
+	return currentKeyState_[keyNumber] == 0;
+}
+
+bool Input::TriggerKey(uint8_t keyNumber) const {
+	return (currentKeyState_[keyNumber] != 0) && (previousKeyState_[keyNumber] == 0);
+}
+
+bool Input::ReturnKey(uint8_t keyNumber) const {
+	return (currentKeyState_[keyNumber] == 0) && (previousKeyState_[keyNumber] != 0);
 }

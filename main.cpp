@@ -1,15 +1,14 @@
 #include "EbichaEngine.h"
 
-
-//Windowsアプリでのエントリーポイント(main関数)
+// Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
+	// エンジンの一括初期化
 	EbichaEngine* ebichaEngine = EbichaEngine::GetInstance();
 	ebichaEngine->Initialize();
 
 	DirectXCommon* dxCommon = DirectXCommon::GetInstance();
-	dxCommon->Initialize();
-	DebugRenderer::Initialize();
+	Input* input = Input::GetInstance(); // シングルトンインスタンス
 
 	Triangle* triangle = new Triangle;
 	triangle->Initialize({ -0.5f, -0.5f, 0.0f, 1.0f }, { 0.0f, 0.5f, 0.0f, 1.0f }, { 0.5f, -0.5f, 0.0f, 1.0f });
@@ -64,18 +63,16 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			DispatchMessage(&msg);
 		}
 		else {
+			input->Update();
 
-			dxCommon->PreDraw();
 
-			BYTE key[256] = {};
-			UpdateKeyState(dxCommon->keyboard);
-			dxCommon->keyboard->GetDeviceState(sizeof(key), key);
 
 			normalCamera->Update();
 
 			if (activeCamera != normalCamera.get()) {
 				activeCamera->Update();
 			}
+			dxCommon->PreDraw();
 
 			ImGui::Begin("Settings");
 
@@ -118,7 +115,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			// 原点に緑色のワイヤーフレーム球体を表示 (半径2.0f, 分割数16)
 			DebugRenderer::AddWireSphere({ 0.0f, 0.0f, 0.0f }, 1.0f, 16, { 0.0f, 1.0f, 0.0f, 1.0f });
 
-			if (PushKey(DIK_0)) {
+			if (input->PushKey(DIK_0)) {
 				activeCamera->transform_.rotate.y += 0.03f;
 				DebugRenderer::AddLine({ -5.0f, 2.0f, 0.0f }, { 5.0f, 2.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f });
 			}

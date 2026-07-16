@@ -61,7 +61,6 @@ public: // メンバ関数
 	/// <returns>描画コマンドリスト</returns>
 	ID3D12GraphicsCommandList* GetCommandList() const { return commandList_.Get(); }
 
-	IDirectInputDevice8* keyboard = nullptr;
 	/// <summary>
 	/// パイプライン生成
 	/// </summary>
