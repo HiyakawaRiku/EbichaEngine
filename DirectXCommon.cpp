@@ -30,7 +30,7 @@ void DirectXCommon::PreDraw()
 	// Noneにしておく
 	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
 	// バリアを張る対象のリソース。現在のバックバッファに対して行う
-	barrier.Transition.pResource = swapChainResources[backBufferIndex];
+	barrier.Transition.pResource = swapChainResources[backBufferIndex].Get();
 	// 遷移前（現在）のResourceState
 	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
 	// 遷移後のResourceState
@@ -273,13 +273,13 @@ void DirectXCommon::CreateFinalRenderTargets()
 
 	// まず1つ目を作る。1つ目は最初のところに作る。作る場所をこちらで指定してあげる必要がある
 	rtvHandles[0] = rtvStartHandle;
-	device_->CreateRenderTargetView(swapChainResources[0], &rtvDesc, rtvHandles[0]);
+	device_->CreateRenderTargetView(swapChainResources[0].Get(), &rtvDesc, rtvHandles[0]);
 
 	// 2つ目のデスクリプタハンドルを得る（自力で）
 	rtvHandles[1].ptr = rtvHandles[0].ptr + device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
 	// 2つ目を作る
-	device_->CreateRenderTargetView(swapChainResources[1], &rtvDesc, rtvHandles[1]);
+	device_->CreateRenderTargetView(swapChainResources[1].Get(), &rtvDesc, rtvHandles[1]);
 
 	ID3D12Resource* depthStencilResource = CreateDepthStencilTextureResource(device_.Get(), winApp_->kWindowWidth, winApp_->kWindowHeight);
 

@@ -36,35 +36,49 @@ enum BlendMode {
 
 class DirectXCommon {
 public: // メンバ関数
-	const char* blendMode_names = "None\0Normal\0Add\0Subtract\0Multiply\0Screen\0\0";
+	static const uint32_t kMaxTextureIndex = 256;
+	static constexpr uint32_t kBackBufferCount = 2;
 
-	BlendMode blendMode_ = BlendMode::kBlendModeScreen;
-	void SetBlendMode(BlendMode blendMode) { blendMode_ = blendMode; }
+	const char* blendMode_names = "None\0Normal\0Add\0Subtract\0Multiply\0Screen\0\0";
+	BlendMode blendMode_ = BlendMode::kBlendModeNone;
+
 
 	static DirectXCommon* GetInstance();
 
 	void Initialize();
+	//void Finalize(); // 後処理用の終了関数
 
 	void PreDraw();
-
 	void PostDraw();
-
-	/// <summary>
-	/// デバイスの取得
-	/// </summary>
-	/// <returns>デバイス</returns>
+	
 	ID3D12Device* GetDevice() const { return device_.Get(); }
-
-	/// <summary>
-	/// 描画コマンドリストの取得
-	/// </summary>
-	/// <returns>描画コマンドリスト</returns>
 	ID3D12GraphicsCommandList* GetCommandList() const { return commandList_.Get(); }
 
-	/// <summary>
-	/// パイプライン生成
-	/// </summary>
+	void SetBlendMode(BlendMode blendMode) { blendMode_ = blendMode; }
+	void InitializeTexture(const std::string& filePath, uint32_t index);
+
+public:
+	DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
+	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvHeap_;
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvHeap_;
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvHeap_;
+
+	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU[kMaxTextureIndex];
+	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU[kMaxTextureIndex];
+
+private: // メンバ関数
+
+	void InitializeDXGIDevice();
+	void CreateSwapChain();
+	void InitializeCommand();
+	void CreateFinalRenderTargets();
+	void CreateFence();
 	void InitializePSO();
+	void InitializeViewport();
+	void InitializeImgui();
 
 private: // メンバ変数
 	// ウィンドウズアプリケーション管理
@@ -77,81 +91,22 @@ private: // メンバ変数
 	Microsoft::WRL::ComPtr<ID3D12CommandAllocator> commandAllocator_;
 	Microsoft::WRL::ComPtr<ID3D12CommandQueue> commandQueue_;
 	Microsoft::WRL::ComPtr<IDXGISwapChain4> swapChain_;
-	//std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> backBuffers_;
-	//Microsoft::WRL::ComPtr<ID3D12Resource> depthBuffer_;
 	Microsoft::WRL::ComPtr<ID3D12Fence> fence_;
-	//std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> resourcesForTransfer;
-	UINT64 fenceVal_ = 0;
+
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature_;
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineStates_[BlendMode::kCountOfBlendMode];
-	//int32_t backBufferWidth_ = 0;
-	//int32_t backBufferHeight_ = 0;
-	//HANDLE frameLatencyWaitableObject_;
-	//std::chrono::steady_clock::time_point reference_;
-	//int32_t refreshRate_ = 0;
 
-	// RTVを2つ作るのでデスクリプタを2つ用意
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[2];
-	// SwapChainからResourceを引っ張ってくる
-	ID3D12Resource* swapChainResources[2] = { nullptr };
-	// TransitionBarrierの設定
 	D3D12_RESOURCE_BARRIER barrier{};
 	HANDLE fenceEvent;
-	// ビューポート
+	UINT64 fenceVal_ = 0;
+
 	D3D12_VIEWPORT viewport{};
-	// シザー矩形
 	D3D12_RECT scissorRect{};
 
-	static const uint32_t kMaxTextureIndex = 256;
-public:
-	DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
-	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvHeap_;
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvHeap_;
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvHeap_;
-
-	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU[kMaxTextureIndex];
-	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU[kMaxTextureIndex];
-
-	void InitializeTexture(const std::string& filePath, uint32_t index);
-private: // メンバ関数
-
-	/// <summary>
-	/// DXGIデバイス初期化
-	/// </summary>
-	void InitializeDXGIDevice();
-
-	/// <summary>
-	/// スワップチェーンの生成
-	/// </summary>
-	void CreateSwapChain();
-
-	/// <summary>
-	/// コマンド関連初期化
-	/// </summary>
-	void InitializeCommand();
-
-	/// <summary>
-	/// レンダーターゲット生成
-	/// </summary>
-	void CreateFinalRenderTargets();
-
-	/// <summary>
-	/// フェンス生成
-	/// </summary>
-	void CreateFence();
+	Microsoft::WRL::ComPtr<ID3D12Resource> swapChainResources[kBackBufferCount] = { nullptr };
+	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[kBackBufferCount];
 
 
-	/// <summary>
-	/// 
-	/// </summary>
-	void InitializeViewport();
-
-	/// <summary>
-	/// 
-	/// </summary>
-	void InitializeImgui();
 
 };
 
@@ -168,10 +123,9 @@ Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(
 ID3D12Resource* CreateBufferResource(const Microsoft::WRL::ComPtr<ID3D12Device>& device, size_t sizeInBytes);
 ID3D12DescriptorHeap* CreateDescriptorHeap(
 	ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible);
-
 DirectX::ScratchImage LoadTexture(const std::string& filePath);
-
 ID3D12Resource* CreateTextureResource(ID3D12Device* device, const DirectX::TexMetadata& metadata);
+ID3D12Resource* CreateDepthStencilTextureResource(ID3D12Device* device, int32_t width, int32_t height);
 
 [[nodiscard]]
 inline ID3D12Resource* UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages, ID3D12Device* device,
@@ -195,7 +149,6 @@ inline ID3D12Resource* UploadTextureData(ID3D12Resource* texture, const DirectX:
 	return intermediateResource;
 }
 
-ID3D12Resource* CreateDepthStencilTextureResource(ID3D12Device* device, int32_t width, int32_t height);
 
 inline D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index)
 {
