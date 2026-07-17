@@ -54,6 +54,7 @@ public:
 	DirectionalLight* directionalLightData = nullptr;
 
 	Transform transform{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
+	int instanceCount_ = 1;
 
 	virtual void Initialize();
 	virtual void Update(class Camera* camera);

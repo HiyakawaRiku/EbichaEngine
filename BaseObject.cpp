@@ -40,10 +40,10 @@ void BaseObject::Draw(uint32_t textureIndex)
 	commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 	// 描画！（DrawCall/ドローコール）。3頂点で1つのインスタンス。インスタンスについては今後
 	if (indexCount > 0) {
-		commandList->DrawIndexedInstanced(indexCount, 1, 0, 0, 0);
+		commandList->DrawIndexedInstanced(indexCount, instanceCount_, 0, 0, 0);
 	}
 	else {
-		commandList->DrawInstanced(vertexCount, 1, 0, 0);
+		commandList->DrawInstanced(vertexCount, instanceCount_, 0, 0);
 	}
 }
 
