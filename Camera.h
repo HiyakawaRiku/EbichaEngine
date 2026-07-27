@@ -11,7 +11,7 @@ public:
     virtual void Initialize() {}
     virtual void Update() {}
 
-    Transform transform_{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-10.0f} };
+    Transform transform_{ {1.0f,1.0f,1.0f},{0.1f,0.0f,0.0f},{0.0f,1.0f,-10.0f} };
 
     virtual Matrix4x4 GetViewMatrix() {
         Matrix4x4 cameraMatrix = MakeAffineMatrix(transform_.scale, transform_.rotate, transform_.translate);

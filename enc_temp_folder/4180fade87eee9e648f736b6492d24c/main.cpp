@@ -31,8 +31,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	Sphere* sphere = new Sphere;
 	sphere->Initialize();
 
-	Model* model = new Model;
-	model->Initialize("resources", "plane.obj");
+	Model* modelPlane = new Model;
+	modelPlane->Initialize("resources", "plane.obj");
 	Model* modelTeapot = new Model;
 	modelTeapot->Initialize("resources", "teapot.obj");
 	Model* modelBunny = new Model;
@@ -75,7 +75,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	ObjectType objectType = ObjectType::plane;
 	const char* object_names = "plane\0sphere\0teapot\0bunny\0multiMesh\0suzanne\0\0";
 
-	float colorModel4[4] = { model->color.x, model->color.y, model->color.z, model->color.w };
+	float colorModel4[4] = { modelPlane->color.x, modelPlane->color.y, modelPlane->color.z, modelPlane->color.w };
+	float colorModelBunny4[4] = { modelBunny->color.x, modelBunny->color.y, modelBunny->color.z, modelBunny->color.w };
+	float colorModelTeapot4[4] = { modelTeapot->color.x, modelTeapot->color.y, modelTeapot->color.z, modelTeapot->color.w };
 	float color4[4] = { sphere->color.x, sphere->color.y, sphere->color.z, sphere->color.w };
 
 	// enableLighting
@@ -158,7 +160,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			sprite->Update(activeCamera);
 
 			sphere->Update(activeCamera);
-			model->Update(activeCamera);
+			modelPlane->Update(activeCamera);
 			modelTeapot->Update(activeCamera);
 			modelBunny->Update(activeCamera);
 			modelMultiMesh->Update(activeCamera);
@@ -189,11 +191,11 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 				// color (3Dオブジェクト用マテリアルカラー)
 				ImGui::ColorEdit4("color", colorModel4);
-				model->color = { colorModel4[0], colorModel4[1], colorModel4[2], colorModel4[3] };
+				modelPlane->color = { colorModel4[0], colorModel4[1], colorModel4[2], colorModel4[3] };
 
-				ImGui::DragFloat3("Scale",&model->transform.scale.x, 0.1f);
-				ImGui::DragFloat3("Rotate",&model->transform.rotate.x, 0.1f);
-				ImGui::DragFloat3("Translate",&model->transform.translate.x, 0.1f);
+				ImGui::DragFloat3("Scale",&modelPlane->transform.scale.x, 0.1f);
+				ImGui::DragFloat3("Rotate",&modelPlane->transform.rotate.x, 0.1f);
+				ImGui::DragFloat3("Translate",&modelPlane->transform.translate.x, 0.1f);
 
 				break;
 			case ObjectType::sphere:
@@ -216,8 +218,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			case ObjectType::teapot:
 
 				// color (3Dオブジェクト用マテリアルカラー)
-				ImGui::ColorEdit4("color", colorModel4);
-				modelTeapot->color = { colorModel4[0], colorModel4[1], colorModel4[2], colorModel4[3] };
+				ImGui::ColorEdit4("color", colorModelTeapot4);
+				modelTeapot->color = { colorModelTeapot4[0], colorModelTeapot4[1], colorModelTeapot4[2], colorModelTeapot4[3] };
 
 				ImGui::DragFloat3("Scale", &modelTeapot->transform.scale.x, 0.1f);
 				ImGui::DragFloat3("Rotate", &modelTeapot->transform.rotate.x, 0.1f);
@@ -288,7 +290,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 			switch (objectType) {
 			case ObjectType::plane:
-				model->Draw(1);
+				modelPlane->Draw(1);
 				break;
 			case ObjectType::sphere:
 				sphere->Draw(useMonsterBall ? 3 : 2);
