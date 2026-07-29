@@ -9,6 +9,75 @@ enum ObjectType {
 	suzanne
 };
 
+enum LightingMode {
+	none,
+	lambert,
+	halfLambert,
+};
+
+#include <vector>
+#include <memory>
+#include <string>
+
+// 動的に生成されたオブジェクト群を管理するコンテナ
+std::vector<std::unique_ptr<BaseObject>> g_sceneObjects;
+int selectedObjectIndex = -1; // ImGuiのリストで選択中のインデックス
+
+// CreateObject 関数に camera を渡せるように変更
+void CreateObject(ObjectType type, Camera* camera) {
+	std::unique_ptr<BaseObject> newObj = nullptr;
+
+	switch (type) {
+	case ObjectType::plane: {
+		auto model = std::make_unique<Model>();
+		model->Initialize("resources", "plane.obj");
+		newObj = std::move(model);
+		break;
+	}
+	case ObjectType::sphere: {
+		auto sphere = std::make_unique<Sphere>();
+		sphere->Initialize();
+		newObj = std::move(sphere);
+		break;
+	}
+	case ObjectType::teapot: {
+		auto model = std::make_unique<Model>();
+		model->Initialize("resources", "teapot.obj");
+		newObj = std::move(model);
+		break;
+	}
+	case ObjectType::bunny: {
+		auto model = std::make_unique<Model>();
+		model->Initialize("resources", "bunny.obj");
+		newObj = std::move(model);
+		break;
+	}
+	case ObjectType::multiMesh: {
+		auto model = std::make_unique<Model>();
+		model->Initialize("resources", "multiMesh.obj");
+		newObj = std::move(model);
+		break;
+	}
+	case ObjectType::suzanne:
+		return;
+	}
+
+	if (newObj) {
+		// (0, 0, 0) の位置・回転・スケールに初期化
+		newObj->transform.translate = { 0.0f, 0.0f, 0.0f };
+		newObj->transform.rotate = { 0.0f, 0.0f, 0.0f };
+		newObj->transform.scale = { 1.0f, 1.0f, 1.0f };
+
+		// 【重要】描画される前にその場で Update を呼び出し、WVP行列等を正しく計算・転送しておく
+		if (camera) {
+			newObj->Update(camera);
+		}
+
+		g_sceneObjects.push_back(std::move(newObj));
+		selectedObjectIndex = static_cast<int>(g_sceneObjects.size()) - 1;
+	}
+}
+
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
@@ -19,11 +88,11 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	DirectXCommon* dxCommon = DirectXCommon::GetInstance();
 	Input* input = Input::GetInstance(); // シングルトンインスタンス
 
-	Triangle* triangle = new Triangle;
-	triangle->Initialize({ -0.5f, -0.5f, 0.0f, 1.0f }, { 0.0f, 0.5f, 0.0f, 1.0f }, { 0.5f, -0.5f, 0.0f, 1.0f });
+	//Triangle* triangle = new Triangle;
+	//triangle->Initialize({ -0.5f, -0.5f, 0.0f, 1.0f }, { 0.0f, 0.5f, 0.0f, 1.0f }, { 0.5f, -0.5f, 0.0f, 1.0f });
 
-	Triangle* triangle2 = new Triangle;
-	triangle2->Initialize({ -0.5f, -0.5f, 0.5f, 1.0f }, { 0.0f, 0.0f, 0.0f, 1.0f }, { 0.5f, -0.5f, -0.5f, 1.0f });
+	//Triangle* triangle2 = new Triangle;
+	//triangle2->Initialize({ -0.5f, -0.5f, 0.5f, 1.0f }, { 0.0f, 0.0f, 0.0f, 1.0f }, { 0.5f, -0.5f, -0.5f, 1.0f });
 
 	Sprite* sprite = new Sprite;
 	sprite->Initialize();
@@ -31,8 +100,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	Sphere* sphere = new Sphere;
 	sphere->Initialize();
 
-	Model* model = new Model;
-	model->Initialize("resources", "plane.obj");
+	Model* modelPlane = new Model;
+	modelPlane->Initialize("resources", "plane.obj");
 	Model* modelTeapot = new Model;
 	modelTeapot->Initialize("resources", "teapot.obj");
 	Model* modelBunny = new Model;
@@ -75,11 +144,20 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	ObjectType objectType = ObjectType::plane;
 	const char* object_names = "plane\0sphere\0teapot\0bunny\0multiMesh\0suzanne\0\0";
 
-	float colorModel4[4] = { model->color.x, model->color.y, model->color.z, model->color.w };
+	LightingMode lightingMode = LightingMode::none;
+	const char* lightingMode_names = "none\0lambert\0halfLambert\0\0";
+
+
+	float colorModel4[4] = { modelPlane->color.x, modelPlane->color.y, modelPlane->color.z, modelPlane->color.w };
+	float colorModelBunny4[4] = { modelBunny->color.x, modelBunny->color.y, modelBunny->color.z, modelBunny->color.w };
+	float colorModelTeapot4[4] = { modelTeapot->color.x, modelTeapot->color.y, modelTeapot->color.z, modelTeapot->color.w };
 	float color4[4] = { sphere->color.x, sphere->color.y, sphere->color.z, sphere->color.w };
 
 	// enableLighting
 	bool enableLighting = sphere->enableLighting != 0;
+
+	// モデルの生成状態フラグ（初期状態は false）
+	bool isModelCreated = false;
 
 	MSG msg{};
 	//ウィンドウのxボタンが押されるまでループ
@@ -114,6 +192,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 				}
 			}
 
+
 			// CameraTranslate
 			//ImGui::DragFloat3("CameraScale", &normalCamera->transform_.scale.x, 0.1f);
 			ImGui::DragFloat3("CameraRotate", &normalCamera->transform_.rotate.x, 0.01f);
@@ -143,6 +222,29 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 				ImGui::SliderAngle("UVRotate", &uvTransformSprite.rotate.z);
 			}
 
+			int lightingIndex = static_cast<int>(lightingMode);
+			if (ImGui::Combo("Lighting Mode", &lightingIndex, lightingMode_names)) {
+				lightingMode = static_cast<LightingMode>(lightingIndex);
+			}
+			switch (lightingMode) {
+			case LightingMode::none:
+				break;
+			case LightingMode::lambert:
+				break;
+			case LightingMode::halfLambert:
+			// LightColor
+			float lightColor4[4] = { sphere->directionalLightData->color.x, sphere->directionalLightData->color.y, sphere->directionalLightData->color.z, sphere->directionalLightData->color.w };
+			ImGui::ColorEdit4("LightColor", lightColor4);
+			sphere->directionalLightData->color = { lightColor4[0], lightColor4[1], lightColor4[2], lightColor4[3] };
+
+			// LightDirection
+			ImGui::SliderFloat3("LightDirection", &sphere->directionalLightData->direction.x, -1.0f, 1.0f, "%.2f");
+
+			// Intensity
+			ImGui::DragFloat("Intensity", &sphere->directionalLightData->intensity, 0.01f);
+				break;
+			}
+
 			ImGui::End();
 
 			//// ビュー行列・射影行列を取得
@@ -153,15 +255,22 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			// Transformを更新（例：Y軸回転）
 
 			// GPU上のリソース（定数バッファ）の中身を書き換える
-			triangle->Update(activeCamera);
-			triangle2->Update(activeCamera);
+			//triangle->Update(activeCamera);
+			//triangle2->Update(activeCamera);
+// 既存のUpdate呼び出し
 			sprite->Update(activeCamera);
-
 			sphere->Update(activeCamera);
-			model->Update(activeCamera);
+			modelPlane->Update(activeCamera);
 			modelTeapot->Update(activeCamera);
 			modelBunny->Update(activeCamera);
 			modelMultiMesh->Update(activeCamera);
+
+			// ----------------------------------------------------
+			// 【追加】動的に生成された全オブジェクトの更新 (ポリモーフィズム)
+			// ----------------------------------------------------
+			for (auto& obj : g_sceneObjects) {
+				obj->Update(activeCamera);
+			}
 
 			// グレーのグリッドを床に配置
 			DebugRenderer::AddGrid(20.0f, 20, { 0.5f, 0.5f, 0.5f, 1.0f });
@@ -170,101 +279,82 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			//DebugRenderer::AddWireSphere({ 0.0f, 0.0f, 0.0f }, 1.0f, 16, { 0.0f, 1.0f, 0.0f, 1.0f });
 
 			if (input->PushKey(DIK_P)) {
-				activeCamera->transform_.rotate.y += 0.03f;
-				DebugRenderer::AddLine({ -5.0f, 2.0f, 0.0f }, { 5.0f, 2.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f });
+				activeCamera->transform_.scale.x -= 0.03f;
 			}
 
 #ifdef _DEBUG
 
 			ImGui::Begin("Settings");
 
-			//ImGui::ShowDemoWindow();
-
+			// --- 1. 生成するモデルタイプの選択 ---
 			int objectIndex = static_cast<int>(objectType);
-			if (ImGui::Combo("object", &objectIndex, object_names)) {
+			if (ImGui::Combo("Select Object", &objectIndex, object_names)) {
 				objectType = static_cast<ObjectType>(objectIndex);
 			}
-			switch (objectType) {
-			case ObjectType::plane:
 
-				// color (3Dオブジェクト用マテリアルカラー)
-				ImGui::ColorEdit4("color", colorModel4);
-				model->color = { colorModel4[0], colorModel4[1], colorModel4[2], colorModel4[3] };
-
-				ImGui::DragFloat3("Scale",&model->transform.scale.x, 0.1f);
-				ImGui::DragFloat3("Rotate",&model->transform.rotate.x, 0.1f);
-				ImGui::DragFloat3("Translate",&model->transform.translate.x, 0.1f);
-
-				break;
-			case ObjectType::sphere:
-				// color (3Dオブジェクト用マテリアルカラー)
-				ImGui::ColorEdit4("color", color4);
-				sphere->color = { color4[0], color4[1], color4[2], color4[3] };
-
-				ImGui::Checkbox("enableLighting", &enableLighting);
-				sphere->enableLighting = enableLighting ? 1 : 0;
-
-				ImGui::DragFloat3("Scale", &sphere->transform.scale.x, 0.1f);
-				ImGui::DragFloat3("Rotate", &sphere->transform.rotate.x, 0.1f);
-				ImGui::DragFloat3("Translate", &sphere->transform.translate.x, 0.1f);
-
-
-				// useMonsterBall
-				ImGui::Checkbox("useMonsterBall", &useMonsterBall);
-
-				break;
-			case ObjectType::teapot:
-
-				// color (3Dオブジェクト用マテリアルカラー)
-				ImGui::ColorEdit4("color", colorModel4);
-				modelTeapot->color = { colorModel4[0], colorModel4[1], colorModel4[2], colorModel4[3] };
-
-				ImGui::DragFloat3("Scale", &modelTeapot->transform.scale.x, 0.1f);
-				ImGui::DragFloat3("Rotate", &modelTeapot->transform.rotate.x, 0.1f);
-				ImGui::DragFloat3("Translate", &modelTeapot->transform.translate.x, 0.1f);
-
-				break;
-			case ObjectType::bunny:
-
-				// color (3Dオブジェクト用マテリアルカラー)
-				ImGui::ColorEdit4("color", colorModel4);
-				modelBunny->color = { colorModel4[0], colorModel4[1], colorModel4[2], colorModel4[3] };
-
-				ImGui::DragFloat3("Scale", &modelBunny->transform.scale.x, 0.1f);
-				ImGui::DragFloat3("Rotate", &modelBunny->transform.rotate.x, 0.1f);
-				ImGui::DragFloat3("Translate", &modelBunny->transform.translate.x, 0.1f);
-
-				break;
-			case ObjectType::multiMesh:
-
-				// color (3Dオブジェクト用マテリアルカラー)
-				ImGui::ColorEdit4("color", colorModel4);
-				modelMultiMesh->color = { colorModel4[0], colorModel4[1], colorModel4[2], colorModel4[3] };
-
-				ImGui::DragFloat3("Scale", &modelMultiMesh->transform.scale.x, 0.1f);
-				ImGui::DragFloat3("Rotate", &modelMultiMesh->transform.rotate.x, 0.1f);
-				ImGui::DragFloat3("Translate", &modelMultiMesh->transform.translate.x, 0.1f);
-
-				break;
-			case ObjectType::suzanne:
-
-				break;
+			// --- 2. Create ボタン (何回でも(0,0,0)に生成) ---
+			if (ImGui::Button("Create")) {
+				CreateObject(objectType, activeCamera); // activeCamera を渡す
 			}
 
-				//// LightColor
-				//float lightColor4[4] = { sphere->color.x, sphere->color.y, sphere->color.z, sphere->color.w };
-				//ImGui::ColorEdit4("LightColor", lightColor4);
-				//sphere->color = { lightColor4[0], lightColor4[1], lightColor4[2], lightColor4[3] };
+			ImGui::Separator();
+			ImGui::Text("Created Objects (%d)", static_cast<int>(g_sceneObjects.size()));
 
-				//// LightDirection
-				//ImGui::SliderFloat3("LightDirection", &sphere->directionalLightData->direction.x, -1.0f, 1.0f, "%.2f");
+			// --- 3. 生成されたオブジェクトの一覧・編集・削除 ---
+			if (!g_sceneObjects.empty()) {
+				// オブジェクト一覧を表示するリストボックス
+				if (ImGui::BeginListBox("Created List")) {
+					for (int i = 0; i < g_sceneObjects.size(); i++) {
+						std::string label = "Object " + std::to_string(i + 1);
+						const bool isSelected = (selectedObjectIndex == i);
+						if (ImGui::Selectable(label.c_str(), isSelected)) {
+							selectedObjectIndex = i;
+						}
+						if (isSelected) {
+							ImGui::SetItemDefaultFocus();
+						}
+					}
+					ImGui::EndListBox();
+				}
 
-				//// Intensity
-				//ImGui::DragFloat("Intensity", &sphere->directionalLightData->intensity, 0.01f);
+				// --- Delete ボタン ---
+				if (selectedObjectIndex >= 0 && selectedObjectIndex < g_sceneObjects.size()) {
+					if (ImGui::Button("Delete Selected")) {
+						// unique_ptr なので erase された瞬間に自動でメモリ解放されます
+						g_sceneObjects.erase(g_sceneObjects.begin() + selectedObjectIndex);
 
+						if (selectedObjectIndex >= g_sceneObjects.size()) {
+							selectedObjectIndex = static_cast<int>(g_sceneObjects.size()) - 1;
+						}
+					}
+				}
 
+				// 全部一括消去したい場合用
+				ImGui::SameLine();
+				if (ImGui::Button("Delete All")) {
+					g_sceneObjects.clear();
+					selectedObjectIndex = -1;
+				}
 
+				// --- 選択中のオブジェクトの Transform や Color 調整 ---
+				if (selectedObjectIndex >= 0 && selectedObjectIndex < g_sceneObjects.size()) {
+					auto& target = g_sceneObjects[selectedObjectIndex];
+					ImGui::Separator();
+					ImGui::Text("Edit Target: Object %d", selectedObjectIndex + 1);
 
+					float colorBuf[4] = { target->color.x, target->color.y, target->color.z, target->color.w };
+					if (ImGui::ColorEdit4("Color", colorBuf)) {
+						target->color = { colorBuf[0], colorBuf[1], colorBuf[2], colorBuf[3] };
+					}
+
+					ImGui::DragFloat3("Scale", &target->transform.scale.x, 0.1f);
+					ImGui::DragFloat3("Rotate", &target->transform.rotate.x, 0.1f);
+					ImGui::DragFloat3("Translate", &target->transform.translate.x, 0.1f);
+				}
+			}
+			else {
+				ImGui::Text("No objects created.");
+			}
 
 			ImGui::End();
 
@@ -283,27 +373,34 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			if (visibleUI) {
 				sprite->Draw(1);
 			}
-			//sphere->Draw(useMonsterBall ? 3 : 2);
-			//model->Draw(4);
 
-			switch (objectType) {
-			case ObjectType::plane:
-				model->Draw(1);
-				break;
-			case ObjectType::sphere:
-				sphere->Draw(useMonsterBall ? 3 : 2);
-				break;
-			case ObjectType::teapot:
-				modelTeapot->Draw(6);
-				break;
-			case ObjectType::bunny:
-				modelBunny->Draw(4);
-				break;
-			case ObjectType::multiMesh:
-				modelMultiMesh->Draw(useMonsterBall ? 3 : 2);
-				break;
-			case ObjectType::suzanne:
-				break;
+			//// 既存の描画処理 (切り替え表示)
+			//switch (objectType) {
+			//case ObjectType::plane:
+			//	modelPlane->Draw(1);
+			//	break;
+			//case ObjectType::sphere:
+			//	sphere->Draw(useMonsterBall ? 3 : 2);
+			//	break;
+			//case ObjectType::teapot:
+			//	modelTeapot->Draw(6);
+			//	break;
+			//case ObjectType::bunny:
+			//	modelBunny->Draw(4);
+			//	break;
+			//case ObjectType::multiMesh:
+			//	modelMultiMesh->Draw(useMonsterBall ? 3 : 2);
+			//	break;
+			//case ObjectType::suzanne:
+			//	break;
+			//}
+
+			// ----------------------------------------------------
+			// 【追加】動的に生成された全オブジェクトの描画
+			// ----------------------------------------------------
+			for (auto& obj : g_sceneObjects) {
+				// 描画したいテクスチャ番号（例: 1 や 2 など）を渡して描画
+				obj->Draw(1);
 			}
 
 			DebugRenderer::Flush(activeCamera);
