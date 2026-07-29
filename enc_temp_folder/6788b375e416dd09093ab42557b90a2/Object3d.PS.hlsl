@@ -47,7 +47,7 @@ PixelShaderOutput main(VertexShaderOutput input)
     }
     else
     {
-        float NdotL = dot(normalize(input.normal), -gDirectionalLight.direction);
+        float NdotL = saturate(dot(normalize(input.normal), -gDirectionalLight.direction));
         float lightFactor = 1.0f;
 
         if (gMaterial.lightingType == 1)
