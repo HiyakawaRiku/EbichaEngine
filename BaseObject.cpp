@@ -16,7 +16,7 @@ void BaseObject::Update(Camera* camera)
 
 	if (materialData) {
 		materialData->color = this->color;
-		materialData->enableLighting = this->enableLighting;
+		materialData->lightingType = this->lightingType;
 	}
 }
 
@@ -55,7 +55,7 @@ void BaseObject::CreateMaterialResource()
 	materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
 	// 今回は赤を書き込んでみる
 	materialData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-	materialData->enableLighting = true;
+	materialData->lightingType = LightType_Lambert;
 	materialData->uvTransform = MakeIdentity4x4();
 }
 

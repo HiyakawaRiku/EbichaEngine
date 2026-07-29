@@ -153,9 +153,6 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	float colorModelTeapot4[4] = { modelTeapot->color.x, modelTeapot->color.y, modelTeapot->color.z, modelTeapot->color.w };
 	float color4[4] = { sphere->color.x, sphere->color.y, sphere->color.z, sphere->color.w };
 
-	// enableLighting
-	bool enableLighting = sphere->enableLighting != 0;
-
 	// モデルの生成状態フラグ（初期状態は false）
 	bool isModelCreated = false;
 
@@ -227,23 +224,77 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 				lightingMode = static_cast<LightingMode>(lightingIndex);
 			}
 			switch (lightingMode) {
-			case LightingMode::none:
-				break;
-			case LightingMode::lambert:
-				break;
-			case LightingMode::halfLambert:
-			// LightColor
-			float lightColor4[4] = { sphere->directionalLightData->color.x, sphere->directionalLightData->color.y, sphere->directionalLightData->color.z, sphere->directionalLightData->color.w };
-			ImGui::ColorEdit4("LightColor", lightColor4);
-			sphere->directionalLightData->color = { lightColor4[0], lightColor4[1], lightColor4[2], lightColor4[3] };
+			case LightingMode::none:	for (auto& obj : g_sceneObjects) {
 
-			// LightDirection
-			ImGui::SliderFloat3("LightDirection", &sphere->directionalLightData->direction.x, -1.0f, 1.0f, "%.2f");
+				obj->lightingType = LightType_None;
+			}
+								   break;
+			case LightingMode::lambert:	for (auto& obj : g_sceneObjects) {
+
+				obj->lightingType = LightType_Lambert;
+			}
+									  break;
+			case LightingMode::halfLambert:	for (auto& obj : g_sceneObjects) {
+
+				obj->lightingType = LightType_HalfLambert;
+			}
+										  break;
+			}
+			// ----------------------------------------------------
+// Global Setting ウィンドウ内（ImGui）
+// ----------------------------------------------------
+
+// LightColor
+			float lightColor4[4] = { sphere->directionalLightData->color.x, sphere->directionalLightData->color.y, sphere->directionalLightData->color.z, sphere->directionalLightData->color.w };
+				if (ImGui::ColorEdit4("LightColor", lightColor4)) {
+					Vector4 newColor = { lightColor4[0], lightColor4[1], lightColor4[2], lightColor4[3] };
+					sphere->directionalLightData->color = newColor;
+						// 生成された全オブジェクトにも反映[cite: 10]
+						for (auto& obj : g_sceneObjects) {
+							if (obj->directionalLightData) obj->directionalLightData->color = newColor;
+						}
+				}
+
+			// LightDirection (ImGuiで直接アドレスを渡して操作)
+			if (ImGui::SliderFloat3("LightDirection", &sphere->directionalLightData->direction.x, -1.0f, 1.0f, "%.2f")) {
+				Vector3 newDir = sphere->directionalLightData->direction;
+					// 生成された全オブジェクトにも反映[cite: 10]
+					for (auto& obj : g_sceneObjects) {
+						if (obj->directionalLightData) obj->directionalLightData->direction = newDir;
+					}
+			}
 
 			// Intensity
-			ImGui::DragFloat("Intensity", &sphere->directionalLightData->intensity, 0.01f);
-				break;
+			if (ImGui::DragFloat("Intensity", &sphere->directionalLightData->intensity, 0.01f)) {
+				float newIntensity = sphere->directionalLightData->intensity;
+					for (auto& obj : g_sceneObjects) {
+						if (obj->directionalLightData) obj->directionalLightData->intensity = newIntensity;
+					}
 			}
+
+
+			// ----------------------------------------------------
+			// ライト位置の可視化（DebugRenderer::Flush の直前に記述）
+			// ----------------------------------------------------
+			Vector3 lightDir = sphere->directionalLightData->direction;
+
+				// 方向ベクトルを正規化（長さ1にする）して計算を安定させる
+				float len = std::sqrt(lightDir.x * lightDir.x + lightDir.y * lightDir.y + lightDir.z * lightDir.z);
+			if (len > 0.001f) {
+				lightDir.x /= len;
+				lightDir.y /= len;
+				lightDir.z /= len;
+			}
+
+			// 光が射してくる反対方向（空）に 5.0f 離した位置を計算
+			Vector3 lightPos = {
+				-lightDir.x * 5.0f,
+				-lightDir.y * 5.0f,
+				-lightDir.z * 5.0f
+			};
+
+			// 計算された位置に黄色のワイヤーフレーム球体を描画
+			DebugRenderer::AddWireSphere(lightPos, 0.5f, 12, { 1.0f, 1.0f, 0.0f, 1.0f });
 
 			ImGui::End();
 
@@ -279,7 +330,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			//DebugRenderer::AddWireSphere({ 0.0f, 0.0f, 0.0f }, 1.0f, 16, { 0.0f, 1.0f, 0.0f, 1.0f });
 
 			if (input->PushKey(DIK_P)) {
-				activeCamera->transform_.scale.x -= 0.03f;
+				activeCamera->transform_.rotate.x -= 0.03f;
 			}
 
 #ifdef _DEBUG

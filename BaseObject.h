@@ -11,9 +11,15 @@ struct VertexData {
 	Vector3 normal;
 };
 
+enum LightType {
+	LightType_None = 0,        // ライトなし
+	LightType_Lambert = 1,     // ランバート
+	LightType_HalfLambert = 2, // ハーフランバート
+};
+
 struct Material {
 	Vector4 color;
-	int32_t enableLighting;
+	int32_t lightingType;
 	float padding[3];
 	Matrix4x4 uvTransform;
 };
@@ -32,7 +38,7 @@ struct DirectionalLight {
 class BaseObject {
 public:
 	Vector4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
-	int32_t enableLighting = true;
+	int32_t lightingType = LightType_Lambert;
 
 
 	DirectXCommon* dxCommon_ = DirectXCommon::GetInstance();
