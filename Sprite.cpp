@@ -19,7 +19,7 @@ void Sprite::Update(Camera* camera)
 
 	if (materialData) {
 		materialData->color = this->color;
-		materialData->lightingType = this->lightingType;
+		materialData->lightingType = LightType_None;
 	}
 }
 

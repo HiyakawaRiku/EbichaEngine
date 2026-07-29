@@ -40,6 +40,8 @@ public:
 	Vector4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
 	int32_t lightingType = LightType_Lambert;
 
+	int textureId = 1;
+
 
 	DirectXCommon* dxCommon_ = DirectXCommon::GetInstance();
 
