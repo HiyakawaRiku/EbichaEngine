@@ -1,7 +1,6 @@
 #include "EbichaEngine.h"
 
 enum ObjectType {
-	plane,
 	sphere,
 	teapot,
 	bunny,
@@ -35,12 +34,6 @@ void CreateObject(ObjectType type, Camera* camera) {
 	std::unique_ptr<BaseObject> newObj = nullptr;
 
 	switch (type) {
-	case ObjectType::plane: {
-		auto model = std::make_unique<Model>();
-		model->Initialize("resources", "plane.obj");
-		newObj = std::move(model);
-		break;
-	}
 	case ObjectType::sphere: {
 		auto sphere = std::make_unique<Sphere>();
 		sphere->Initialize();
@@ -104,8 +97,6 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	Sphere* sphere = new Sphere;
 	sphere->Initialize();
 
-	Model* modelPlane = new Model;
-	modelPlane->Initialize("resources", "plane.obj");
 	Model* modelTeapot = new Model;
 	modelTeapot->Initialize("resources", "teapot.obj");
 	Model* modelBunny = new Model;
@@ -157,8 +148,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	// 選択中のテクスチャインデックス（配列要素のインデックス 0〜5）
 	int selectedSpriteTexIndex = 0; // Sprite用
 
-	ObjectType objectType = ObjectType::plane;
-	const char* object_names = "plane\0sphere\0teapot\0bunny\0multiMesh\0suzanne\0\0";
+	ObjectType objectType = ObjectType::sphere;
+	const char* object_names = "sphere\0teapot\0bunny\0multiMesh\0suzanne\0\0";
 
 	LightingMode lightingMode = LightingMode::none;
 	const char* lightingMode_names = "none\0lambert\0halfLambert\0\0";
@@ -183,50 +174,46 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 			ImGui::Begin("Global Setting");
 
-			// カメラ切り替え用のチェックボックス
-			if (ImGui::Checkbox("Use Debug Camera", &useDebugCamera)) {
-				if (useDebugCamera) {
-					activeCamera = debugCamera.get();
+			if (ImGui::CollapsingHeader("camera", ImGuiTreeNodeFlags_None)) {
+				// カメラ切り替え用のチェックボックス
+				if (ImGui::Checkbox("Use Debug Camera", &useDebugCamera)) {
+					if (useDebugCamera) {
+						activeCamera = debugCamera.get();
+					}
+					else {
+						activeCamera = normalCamera.get();
+					}
 				}
-				else {
-					activeCamera = normalCamera.get();
-				}
-			}
-			if (ImGui::CollapsingHeader("camera", ImGuiTreeNodeFlags_DefaultOpen)) {
 				ImGui::DragFloat3("Rotate", &normalCamera->transform_.rotate.x, 0.01f);
 				ImGui::DragFloat3("Translate", &normalCamera->transform_.translate.x, 0.01f);
 			}
 			ImGui::Separator();
 
-			int currentIndex = static_cast<int>(dxCommon->blendMode_);
-			if (ImGui::Combo("Blend Mode", &currentIndex, dxCommon->blendMode_names)) {
-				dxCommon->blendMode_ = static_cast<BlendMode>(currentIndex);
-				dxCommon->SetBlendMode(dxCommon->blendMode_);
-			};
 
 			ImGui::Separator();
-			ImGui::Text("Sprite Settings");
-			ImGui::Checkbox("Show Sprite", &visibleUI);
-			if (ImGui::CollapsingHeader("sprite", ImGuiTreeNodeFlags_DefaultOpen)) {
+			if (ImGui::CollapsingHeader("sprite", ImGuiTreeNodeFlags_None)) {
+				ImGui::Checkbox("Show Sprite", &visibleUI);
 
-				// スプライト用テクスチャ切り替えコンボボックス
-				ImGui::Combo("Sprite Texture", &selectedSpriteTexIndex, textureNamesCombo.c_str());
+				if (visibleUI) {
 
-				// colorSprite (Sprite用マテリアルカラー)
-				float colorSprite4[4] = { sprite->color.x, sprite->color.y, sprite->color.z, sprite->color.w };
-				ImGui::ColorEdit4("colorSprite", colorSprite4);
-				sprite->color = { colorSprite4[0], colorSprite4[1], colorSprite4[2], colorSprite4[3] };
+					// スプライト用テクスチャ切り替えコンボボックス
+					ImGui::Combo("Sprite Texture", &selectedSpriteTexIndex, textureNamesCombo.c_str());
 
-				// translateSprite
-				ImGui::DragFloat3("translateSprite", &sprite->transform.translate.x, 0.5f);
+					// colorSprite (Sprite用マテリアルカラー)
+					float colorSprite4[4] = { sprite->color.x, sprite->color.y, sprite->color.z, sprite->color.w };
+					ImGui::ColorEdit4("color", colorSprite4);
+					sprite->color = { colorSprite4[0], colorSprite4[1], colorSprite4[2], colorSprite4[3] };
 
-				ImGui::DragFloat2("UVTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
-				ImGui::DragFloat2("UVScale", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
-				ImGui::SliderAngle("UVRotate", &uvTransformSprite.rotate.z);
+					// translateSprite
+					ImGui::DragFloat3("translate", &sprite->transform.translate.x, 0.5f);
 
+					ImGui::DragFloat2("UVTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
+					ImGui::DragFloat2("UVScale", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
+					ImGui::SliderAngle("UVRotate", &uvTransformSprite.rotate.z);
+
+				}
 			}
 			ImGui::Separator();
-
 			int lightingIndex = static_cast<int>(lightingMode);
 			if (ImGui::Combo("Lighting Mode", &lightingIndex, lightingMode_names)) {
 				lightingMode = static_cast<LightingMode>(lightingIndex);
@@ -249,31 +236,48 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 				break;
 			}
 
-			// LightColor
-			float lightColor4[4] = { sphere->directionalLightData->color.x, sphere->directionalLightData->color.y, sphere->directionalLightData->color.z, sphere->directionalLightData->color.w };
-			if (ImGui::ColorEdit4("LightColor", lightColor4)) {
-				Vector4 newColor = { lightColor4[0], lightColor4[1], lightColor4[2], lightColor4[3] };
-				sphere->directionalLightData->color = newColor;
-				for (auto& obj : g_sceneObjects) {
-					if (obj->directionalLightData) obj->directionalLightData->color = newColor;
+			switch (lightingMode) {
+			default:
+				break;
+			case LightingMode::lambert:
+			case LightingMode::halfLambert:
+				// LightColor
+				float lightColor4[4] = { sphere->directionalLightData->color.x, sphere->directionalLightData->color.y, sphere->directionalLightData->color.z, sphere->directionalLightData->color.w };
+				if (ImGui::ColorEdit4("LightColor", lightColor4)) {
+					Vector4 newColor = { lightColor4[0], lightColor4[1], lightColor4[2], lightColor4[3] };
+					sphere->directionalLightData->color = newColor;
+					for (auto& obj : g_sceneObjects) {
+						if (obj->directionalLightData) obj->directionalLightData->color = newColor;
+					}
 				}
+
+				// LightDirection
+				if (ImGui::SliderFloat3("LightDirection", &sphere->directionalLightData->direction.x, -1.0f, 1.0f, "%.2f")) {
+					Vector3 newDir = sphere->directionalLightData->direction;
+					for (auto& obj : g_sceneObjects) {
+						if (obj->directionalLightData) obj->directionalLightData->direction = newDir;
+					}
+				}
+
+				// Intensity
+				if (ImGui::DragFloat("Intensity", &sphere->directionalLightData->intensity, 0.01f)) {
+					float newIntensity = sphere->directionalLightData->intensity;
+					for (auto& obj : g_sceneObjects) {
+						if (obj->directionalLightData) obj->directionalLightData->intensity = newIntensity;
+					}
+				}
+
+				break;
 			}
 
-			// LightDirection
-			if (ImGui::SliderFloat3("LightDirection", &sphere->directionalLightData->direction.x, -1.0f, 10.0f, "%.2f")) {
-				Vector3 newDir = sphere->directionalLightData->direction;
-				for (auto& obj : g_sceneObjects) {
-					if (obj->directionalLightData) obj->directionalLightData->direction = newDir;
-				}
-			}
 
-			// Intensity
-			if (ImGui::DragFloat("Intensity", &sphere->directionalLightData->intensity, 0.01f)) {
-				float newIntensity = sphere->directionalLightData->intensity;
-				for (auto& obj : g_sceneObjects) {
-					if (obj->directionalLightData) obj->directionalLightData->intensity = newIntensity;
-				}
-			}
+			ImGui::Separator();
+
+			int currentIndex = static_cast<int>(dxCommon->blendMode_);
+			if (ImGui::Combo("Blend Mode", &currentIndex, dxCommon->blendMode_names)) {
+				dxCommon->blendMode_ = static_cast<BlendMode>(currentIndex);
+				dxCommon->SetBlendMode(dxCommon->blendMode_);
+			};
 
 			// ライト位置の可視化
 			Vector3 lightDir = sphere->directionalLightData->direction;
@@ -297,7 +301,6 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			// オブジェクトの更新
 			sprite->Update(activeCamera);
 			sphere->Update(activeCamera);
-			modelPlane->Update(activeCamera);
 			modelTeapot->Update(activeCamera);
 			modelBunny->Update(activeCamera);
 			modelMultiMesh->Update(activeCamera);
