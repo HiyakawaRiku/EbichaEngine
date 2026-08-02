@@ -10,6 +10,7 @@
 #include "Camera.h"
 #include "Model.h"
 #include "Sphere.h"
+#include "Audio.h"
 
 class EbichaEngine
 {

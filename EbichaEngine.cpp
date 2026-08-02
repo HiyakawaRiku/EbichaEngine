@@ -32,6 +32,9 @@ void EbichaEngine::Initialize()
 
 void EbichaEngine::Finalize()
 {
+
+
+
 	// デバッグレンダラー等の終了処理があればここに記述
 
 #ifdef USE_IMGUI

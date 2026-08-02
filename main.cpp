@@ -14,6 +14,12 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	DirectXCommon* dxCommon = DirectXCommon::GetInstance();
 	Input* input = Input::GetInstance(); // シングルトンインスタンス
 
+	// ============================
+// オーディオ初期化
+// ============================
+	Audio* audio = Audio::GetInstance();
+	audio->Initialize();
+
 	Sprite* sprite = new Sprite;
 	sprite->Initialize();
 
@@ -42,11 +48,17 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		{0.0f, 0.0f, 0.0f}
 	};
 
-	dxCommon->InitializeTexture("resources/uvChecker.png",1);
-	dxCommon->InitializeTexture("resources/monsterBall.png",2);
-	dxCommon->InitializeTexture("resources/sky_sphere.png",3);
-	dxCommon->InitializeTexture("resources/ground_leaf.png",4);
-	dxCommon->InitializeTexture("resources/fence.png",5);
+	dxCommon->InitializeTexture("resources/uvChecker.png", 1);
+	dxCommon->InitializeTexture("resources/monsterBall.png", 2);
+	dxCommon->InitializeTexture("resources/sky_sphere.png", 3);
+	dxCommon->InitializeTexture("resources/ground_leaf.png", 4);
+	dxCommon->InitializeTexture("resources/fence.png", 5);
+
+	// --- サウンド ---
+	SoundData soundData = audio->LoadWave("Resources/Alarm01.wav");
+	//SoundData soundData = audio->LoadWave("Resources/420_long_BPM108.mp3");
+			// --- サウンド再生 ---
+	audio->PlayWave(soundData);
 
 	MSG msg{};
 	// ウィンドウのxボタンが押されるまでループ
@@ -92,6 +104,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			ImGui::End();
 
 #endif
+
+
 			if (useDebugCamera) {
 				debugCamera->DrawFrustum(normalCamera.get());
 			}
@@ -100,7 +114,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(uvTransformSprite.rotate.z));
 			uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(uvTransformSprite.translate));
 			sprite->materialData->uvTransform = uvTransformMatrix;
-			
+
 			sprite->Draw(1);
 			sphere->Draw(1);
 			modelTeapot->Draw(1);
@@ -113,6 +127,16 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 		}
 	}
+
+	// ============================
+	// 後始末
+	// ============================
+
+	// --- サウンド解放 ---
+	audio->Unload(&soundData);
+
+	// --- オーディオ終了 ---
+	audio->Finalize();
 
 	DebugRenderer::Finalize();
 	ebichaEngine->Finalize();
