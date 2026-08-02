@@ -13,17 +13,20 @@ void GameScene::Initialize() {
     sprite_ = new Sprite();
     sprite_->Initialize();
 
-    sphere_ = new Sphere();
-    sphere_->Initialize();
+    //sphere_ = new Sphere();
+    //sphere_->Initialize();
 
-    modelTeapot_ = new Model();
-    modelTeapot_->Initialize("resources", "teapot.obj");
+    //modelTeapot_ = new Model();
+    //modelTeapot_->Initialize("resources", "teapot.obj");
 
-    modelBunny_ = new Model();
-    modelBunny_->Initialize("resources", "bunny.obj");
+    //modelBunny_ = new Model();
+    //modelBunny_->Initialize("resources", "bunny.obj");
 
-    modelMultiMesh_ = new Model();
-    modelMultiMesh_->Initialize("resources", "multiMesh.obj");
+    player_ = new Player();
+    player_->Initialize();
+
+    //modelMultiMesh_ = new Model();
+    //modelMultiMesh_->Initialize("resources", "multiMesh.obj");
 
     // カメラのセットアップ
     normalCamera_ = std::make_unique<Camera>();
@@ -48,18 +51,27 @@ void GameScene::Update() {
     // 入力更新
     input_->Update();
 
+    if (useDebugCamera_) {
+        activeCamera_ = debugCamera_.get();
+    }
+    else {
+        activeCamera_ = normalCamera_.get();
+    }
+
     // カメラ更新
     normalCamera_->Update();
     if (activeCamera_ != normalCamera_.get()) {
         activeCamera_->Update();
     }
 
+    player_->Update(activeCamera_);
+
     // オブジェクト更新
     sprite_->Update(activeCamera_);
-    sphere_->Update(activeCamera_);
-    modelTeapot_->Update(activeCamera_);
-    modelBunny_->Update(activeCamera_);
-    modelMultiMesh_->Update(activeCamera_);
+    //sphere_->Update(activeCamera_);
+    //modelTeapot_->Update(activeCamera_);
+    //modelBunny_->Update(activeCamera_);
+    //modelMultiMesh_->Update(activeCamera_);
 
     // デバッググリッド設定
     DebugRenderer::AddGrid(20.0f, 20, { 0.5f, 0.5f, 0.5f, 1.0f });
@@ -71,11 +83,6 @@ void GameScene::Update() {
     if (input_->PushButton(XINPUT_GAMEPAD_DPAD_RIGHT)) {
         activeCamera_->transform_.rotate.x += 0.03f;
     }
-
-//#ifdef _DEBUG
-//    ImGui::Begin("Settings");
-//    ImGui::End();
-//#endif
 
     if (useDebugCamera_) {
         debugCamera_->DrawFrustum(normalCamera_.get());
@@ -92,12 +99,22 @@ void GameScene::Draw() {
     // 描画前処理
     dxCommon_->PreDraw();
 
+#ifdef _DEBUG
+    ImGui::Begin("Settings");
+
+    ImGui::Checkbox("Change Camera", &useDebugCamera_);
+
+    ImGui::End();
+#endif
+
     // 各オブジェクトの描画
     sprite_->Draw(1);
-    sphere_->Draw(1);
-    modelTeapot_->Draw(1);
-    modelBunny_->Draw(1);
-    modelMultiMesh_->Draw(1);
+    //sphere_->Draw(1);
+    //modelTeapot_->Draw(1);
+    //modelBunny_->Draw(1);
+    //modelMultiMesh_->Draw(1);
+
+    player_->Draw();
 
     // デバッグレンダラーの描画適用
     DebugRenderer::Flush(activeCamera_);
@@ -118,15 +135,15 @@ void GameScene::Finalize() {
     delete sprite_;
     sprite_ = nullptr;
 
-    delete sphere_;
-    sphere_ = nullptr;
+    //delete sphere_;
+    //sphere_ = nullptr;
 
-    delete modelTeapot_;
-    modelTeapot_ = nullptr;
+    //delete modelTeapot_;
+    //modelTeapot_ = nullptr;
 
-    delete modelBunny_;
-    modelBunny_ = nullptr;
+    //delete modelBunny_;
+    //modelBunny_ = nullptr;
 
-    delete modelMultiMesh_;
-    modelMultiMesh_ = nullptr;
+    //delete modelMultiMesh_;
+    //modelMultiMesh_ = nullptr;
 }

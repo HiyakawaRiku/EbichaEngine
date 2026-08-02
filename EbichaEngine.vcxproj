@@ -130,6 +130,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Matrix.cpp" />
+    <ClCompile Include="Player.cpp" />
     <ClCompile Include="Triangle.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="Sphere.cpp" />
@@ -156,6 +157,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="GameScene.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="Matrix.h" />
+    <ClInclude Include="Player.h" />
     <ClInclude Include="Triangle.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="Sphere.h" />

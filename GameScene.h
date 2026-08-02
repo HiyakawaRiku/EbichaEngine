@@ -4,6 +4,7 @@
 
 // 前方宣言または必要なヘッダーのインクルード
 #include "EbichaEngine.h"
+#include "Player.h"
 
 class GameScene {
 public:
@@ -38,10 +39,10 @@ private:
 
     // ゲームオブジェクト（生のポインタ管理）
     Sprite* sprite_ = nullptr;
-    Sphere* sphere_ = nullptr;
-    Model* modelTeapot_ = nullptr;
-    Model* modelBunny_ = nullptr;
-    Model* modelMultiMesh_ = nullptr;
+    //Sphere* sphere_ = nullptr;
+    //Model* modelTeapot_ = nullptr;
+    //Model* modelBunny_ = nullptr;
+    //Model* modelMultiMesh_ = nullptr;
 
     // カメラ関連
     std::unique_ptr<Camera> normalCamera_;
@@ -56,4 +57,7 @@ private:
     // オーディオハンドル
     uint32_t seHandle_ = 0;
     uint32_t bgmHandle_ = 0;
+
+private:
+    Player* player_=nullptr;
 };
