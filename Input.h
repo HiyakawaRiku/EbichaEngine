@@ -1,11 +1,13 @@
 #pragma once
 #define DIRECTINPUT_VERSION 0x0800
 #include <dinput.h>
+#include <Xinput.h>
 #include <wrl.h>
 #include <cstdint>
 
 #pragma comment(lib, "dinput8.lib")
 #pragma comment(lib, "dxguid.lib")
+#pragma comment(lib, "xinput.lib")
 
 class Input {
 public:
@@ -22,6 +24,16 @@ public:
 	bool TriggerKey(uint8_t keyNumber) const;
 	bool ReturnKey(uint8_t keyNumber) const;
 
+	// userIndex: コントローラー番号（0 ~ 3）
+	bool GetPadConnect(DWORD userIndex = 0) const;
+	bool PushButton(WORD button, DWORD userIndex = 0) const;
+	bool TriggerButton(WORD button, DWORD userIndex = 0) const;
+	bool ReleaseButton(WORD button, DWORD userIndex = 0) const;
+
+	// スティック・トリガー値取得（-1.0f ~ 1.0f / 0.0f ~ 1.0f）
+	float GetLeftStickX(DWORD userIndex = 0, float deadZone = 0.3f) const;
+	float GetLeftStickY(DWORD userIndex = 0, float deadZone = 0.3f) const;
+
 private:
 	Input() = default;
 	~Input();
@@ -35,4 +47,8 @@ private:
 
 	BYTE currentKeyState_[256] = { 0 };
 	BYTE previousKeyState_[256] = { 0 };
+
+	bool isPadConnected_[XUSER_MAX_COUNT] = { false };
+	XINPUT_STATE currentPadState_[XUSER_MAX_COUNT] = {};
+	XINPUT_STATE previousPadState_[XUSER_MAX_COUNT] = {};
 };
