@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <set>
 
 #pragma comment(lib, "xaudio2.lib")
 #pragma comment(lib, "mfplat.lib")
@@ -52,4 +53,7 @@ private:
 	// 読み込んだサウンドデータの管理（ハンドル管理）
 	std::unordered_map<uint32_t, SoundData> soundDatas_;
 	uint32_t nextHandle_ = 1;
+
+	// 生成された Source Voice の追跡管理（ハンドルごとに複数のボイスを持つ可能性に対応）
+	std::unordered_map<uint32_t, std::set<IXAudio2SourceVoice*>> activeVoices_;
 };
