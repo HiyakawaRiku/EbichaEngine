@@ -54,11 +54,12 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	dxCommon->InitializeTexture("resources/ground_leaf.png", 4);
 	dxCommon->InitializeTexture("resources/fence.png", 5);
 
-	// --- サウンド ---
-	SoundData soundData = audio->LoadWave("Resources/Alarm01.wav");
-	//SoundData soundData = audio->LoadWave("Resources/420_long_BPM108.mp3");
-			// --- サウンド再生 ---
-	audio->PlayWave(soundData);
+	// MP3 ファイルのロード (ハンドルが返る)
+	uint32_t seHandle = Audio::GetInstance()->LoadAudioSource("Resources/Alarm01.wav");
+	uint32_t bgmHandle = Audio::GetInstance()->LoadAudioSource("Resources/420_long_BPM108.mp3");
+
+	// BGMのループ再生開始
+	Audio::GetInstance()->PlayWave(bgmHandle, true, 0.5f);
 
 	MSG msg{};
 	// ウィンドウのxボタンが押されるまでループ
@@ -133,7 +134,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	// ============================
 
 	// --- サウンド解放 ---
-	audio->Unload(&soundData);
+	audio->Unload(bgmHandle);
+	audio->Unload(seHandle);
 
 	// --- オーディオ終了 ---
 	audio->Finalize();

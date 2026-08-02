@@ -1,53 +1,40 @@
 #pragma once
+#include <wrl.h>
 #include <xaudio2.h>
-#pragma comment(lib, "xaudio2.lib")
-#include <fstream>
+#include <mfapi.h>
+#include <mfidl.h>
+#include <mfreadwrite.h>
 #include <string>
-#include <cstdint>
+#include <vector>
+#include <unordered_map>
 
-/// <summary>
-/// 音声データ構造体
-/// </summary>
+#pragma comment(lib, "xaudio2.lib")
+#pragma comment(lib, "mfplat.lib")
+#pragma comment(lib, "mfreadwrite.lib")
+#pragma comment(lib, "mfuuid.lib")
+
+// 再生用サウンドデータ構造体
 struct SoundData {
-	WAVEFORMATEX wfex;
-	BYTE* pBuffer;
-	unsigned int bufferSize;
+	WAVEFORMATEX wfex = {};
+	std::vector<BYTE> pBuffer;
+	unsigned int bufferSize = 0;
 };
 
-/// <summary>
-/// 音声管理クラス
-/// </summary>
 class Audio {
 public:
-	/// <summary>
-	/// シングルトンインスタンス取得
-	/// </summary>
 	static Audio* GetInstance();
 
-	/// <summary>
-	/// XAudio2初期化
-	/// </summary>
 	void Initialize();
-
-	/// <summary>
-	/// WAVファイル読み込み
-	/// </summary>
-	SoundData LoadWave(const char* filename);
-
-	/// <summary>
-	/// 音声再生
-	/// </summary>
-	void PlayWave(const SoundData& soundData);
-
-	/// <summary>
-	/// 音声データ解放
-	/// </summary>
-	void Unload(SoundData* soundData);
-
-	/// <summary>
-	/// 終了処理
-	/// </summary>
 	void Finalize();
+
+	// MP3 などの音声ファイルを読み込み
+	uint32_t LoadAudioSource(const std::string& filePath);
+
+	// 音声の再生
+	void PlayWave(uint32_t soundHandle, bool loop = false, float volume = 1.0f);
+
+	// サウンドデータの解放
+	void Unload(uint32_t soundHandle);
 
 private:
 	Audio() = default;
@@ -55,6 +42,14 @@ private:
 	Audio(const Audio&) = delete;
 	Audio& operator=(const Audio&) = delete;
 
-	IXAudio2* xAudio2_ = nullptr;
-	IXAudio2MasteringVoice* masteringVoice_ = nullptr;
+	// Media Foundation を使用して MP3 などのファイルを PCM データにデコード
+	bool LoadMediaFile(const std::string& filePath, SoundData& outData);
+
+private:
+	Microsoft::WRL::ComPtr<IXAudio2> xAudio2_ = nullptr;
+	IXAudio2MasteringVoice* masterVoice_ = nullptr;
+
+	// 読み込んだサウンドデータの管理（ハンドル管理）
+	std::unordered_map<uint32_t, SoundData> soundDatas_;
+	uint32_t nextHandle_ = 1;
 };
