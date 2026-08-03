@@ -3,7 +3,7 @@
 void Skydome::Initialize()
 {
 	model_ = new Model();
-	model_->Initialize("resources", "skydome.obj");
+	model_->Initialize("skydome.obj");
 }
 
 void Skydome::Update(Camera* activeCamera_)

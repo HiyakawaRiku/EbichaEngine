@@ -13,7 +13,7 @@ struct ModelData {
 class Model:public BaseObject
 {
 public:
-	void Initialize(const std::string& directoryPath, const std::string& filename);
+	void Initialize(const std::string& filename);
 
 private:
 	ModelData modelData_;

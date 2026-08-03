@@ -17,10 +17,10 @@ void GameScene::Initialize() {
 	//sphere_->Initialize();
 
 	//modelTeapot_ = new Model();
-	//modelTeapot_->Initialize("resources", "teapot.obj");
+	//modelTeapot_->Initialize("teapot.obj");
 
 	//modelBunny_ = new Model();
-	//modelBunny_->Initialize("resources", "bunny.obj");
+	//modelBunny_->Initialize("bunny.obj");
 
 	player_ = new Player();
 	player_->Initialize();
@@ -51,11 +51,13 @@ void GameScene::Initialize() {
 	dxCommon_->InitializeTexture("resources/sky_sphere.png", 3);
 	dxCommon_->InitializeTexture("resources/ground_leaf.png", 4);
 	dxCommon_->InitializeTexture("resources/fence.png", 5);
-	dxCommon_->InitializeTexture("resources/player.png", 6);
+	dxCommon_->InitializeTexture("resources/EModel.png", 6);
+	dxCommon_->InitializeTexture("resources/player.png", 7);
 
 	// 音声ファイルのロード & 再生開始
 	seHandle_ = audio_->LoadAudioSource("Resources/Alarm01.wav");
 	bgmHandle_ = audio_->LoadAudioSource("Resources/420_long_BPM108.mp3");
+	//bgmHandle_ = audio_->LoadAudioSource("Resources/koi.mp3");
 	audio_->PlayWave(bgmHandle_, true, 0.5f);
 }
 

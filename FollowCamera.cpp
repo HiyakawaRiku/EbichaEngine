@@ -8,6 +8,31 @@ void FollowCamera::Initialize()
 
 void FollowCamera::Update()
 {
+	// 左スティックの傾きで移動
+	float moveX = Input::GetInstance()->GetRightStickX(); // -1.0 〜 1.0
+	float moveZ = Input::GetInstance()->GetRightStickY();
+	viewProjection_.transform_.rotate.y += moveX * kRotateSpeed;
+
+	Vector3 cameraPos = {};
+
+	if (Input::GetInstance()->PushKey(DIK_RIGHT) || Input::GetInstance()->PushKey(DIK_LEFT) || Input::GetInstance()->PushKey(DIK_UP) || Input::GetInstance()->PushKey(DIK_DOWN)) {
+		Vector3 acceleration{};
+		if (Input::GetInstance()->PushKey(DIK_RIGHT)) {
+			acceleration.y += kRotateSpeed;
+		}
+		else if (Input::GetInstance()->PushKey(DIK_LEFT)) {
+			acceleration.y -= kRotateSpeed;
+		}
+		else if (Input::GetInstance()->PushKey(DIK_UP)) {
+			acceleration.x -= kRotateSpeed;
+		}
+		else if (Input::GetInstance()->PushKey(DIK_DOWN)) {
+			acceleration.x += kRotateSpeed;
+		}
+		cameraPos += acceleration;
+	}
+	viewProjection_.transform_.rotate.x += (float)cameraPos.x * kRotateSpeed;
+	viewProjection_.transform_.rotate.y += (float)cameraPos.y * kRotateSpeed;
 	// 追従対象がいれば
 	if (target_) {
 		// 追従対象からカメラまでのオフセット
@@ -23,23 +48,7 @@ void FollowCamera::Update()
 		viewProjection_.transform_.translate = target_->translate + offset;
 	}
 
-	//if (Input::GetInstance()->PushKey(DIK_D) || Input::GetInstance()->PushKey(DIK_A) || Input::GetInstance()->PushKey(DIK_W) || Input::GetInstance()->PushKey(DIK_S)) {
-	//	Vector3 acceleration{};
-	//	if (Input::GetInstance()->PushKey(DIK_D)) {
-	//		acceleration.x += kAcceleration;
-	//	}
-	//	else if (Input::GetInstance()->PushKey(DIK_A)) {
-	//		acceleration.x -= kAcceleration;
-	//	}
-	//	else if (Input::GetInstance()->PushKey(DIK_W)) {
-	//		acceleration.z += kAcceleration;
-	//	}
-	//	else if (Input::GetInstance()->PushKey(DIK_S)) {
-	//		acceleration.z -= kAcceleration;
-	//	}
 
-	//	velocity_ += acceleration;
-	//}
 
 	//ビュー行列の更新
 	viewProjection_.Update();

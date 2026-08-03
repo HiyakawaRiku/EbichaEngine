@@ -11,5 +11,7 @@ public:
 private:
 	Camera viewProjection_;
 	const Transform* target_ = nullptr;
+
+	static const inline float kRotateSpeed=0.2f;
 };
 

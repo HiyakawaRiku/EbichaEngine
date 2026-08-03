@@ -16,7 +16,7 @@ namespace MathUtils {
 void Ground::Initialize()
 {
 	model_ = new Model();
-	model_->Initialize("resources","plane.obj");
+	model_->Initialize("plane.obj");
 }
 
 void Ground::Update(Camera* activeCamera_)

@@ -107,3 +107,23 @@ float Input::GetLeftStickY(DWORD userIndex, float deadZone) const {
 
 	return rawY;
 }
+
+// 右スティックX軸 (-1.0 ~ 1.0) ※デッドゾーン処理付き
+float Input::GetRightStickX(DWORD userIndex, float deadZone) const {
+	if (!GetPadConnect(userIndex)) return 0.0f;
+
+	float rawX = static_cast<float>(currentPadState_[userIndex].Gamepad.sThumbRX) / 32767.0f;
+	if (std::abs(rawX) < deadZone) return 0.0f; // 遊び（デッドゾーン）以下の入力をカット
+
+	return rawX;
+}
+
+// 右スティックY軸 (-1.0 ~ 1.0)
+float Input::GetRightStickY(DWORD userIndex, float deadZone) const {
+	if (!GetPadConnect(userIndex)) return 0.0f;
+
+	float rawY = static_cast<float>(currentPadState_[userIndex].Gamepad.sThumbRY) / 32767.0f;
+	if (std::abs(rawY) < deadZone) return 0.0f;
+
+	return rawY;
+}

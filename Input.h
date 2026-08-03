@@ -34,6 +34,10 @@ public:
 	float GetLeftStickX(DWORD userIndex = 0, float deadZone = 0.3f) const;
 	float GetLeftStickY(DWORD userIndex = 0, float deadZone = 0.3f) const;
 
+	// スティック・トリガー値取得（-1.0f ~ 1.0f / 0.0f ~ 1.0f）
+	float GetRightStickX(DWORD userIndex = 0, float deadZone = 0.3f) const;
+	float GetRightStickY(DWORD userIndex = 0, float deadZone = 0.3f) const;
+
 private:
 	Input() = default;
 	~Input();

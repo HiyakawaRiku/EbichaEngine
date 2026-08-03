@@ -1,8 +1,8 @@
 #include "Model.h"
 
-void Model::Initialize(const std::string& directoryPath, const std::string& filename)
+void Model::Initialize(const std::string& filename)
 {
-	modelData_ = LoadObjFile(directoryPath, filename);
+	modelData_ = LoadObjFile("resources", filename);
 
 	BaseObject::Initialize();
 
