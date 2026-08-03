@@ -12,6 +12,8 @@
 #include "Sphere.h"
 #include "Audio.h"
 
+#include "EMath.h"
+
 class EbichaEngine
 {
 public:
