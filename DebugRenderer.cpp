@@ -53,8 +53,8 @@ void DebugRenderer::Initialize() {
     dxcUtils->CreateDefaultIncludeHandler(&includeHandler);
 
     // グローバル定義されている CompileShader を直接呼び出し
-    Microsoft::WRL::ComPtr<IDxcBlob> vsBlob = ::CompileShader(L"DebugLine.VS.hlsl", L"vs_6_0", dxcUtils, dxcCompiler, includeHandler);
-    Microsoft::WRL::ComPtr<IDxcBlob> psBlob = ::CompileShader(L"DebugLine.PS.hlsl", L"ps_6_0", dxcUtils, dxcCompiler, includeHandler);
+    Microsoft::WRL::ComPtr<IDxcBlob> vsBlob = DirectXCommon::GetInstance()->CompileShader(L"DebugLine.VS.hlsl", L"vs_6_0", dxcUtils, dxcCompiler, includeHandler);
+    Microsoft::WRL::ComPtr<IDxcBlob> psBlob = DirectXCommon::GetInstance()->CompileShader(L"DebugLine.PS.hlsl", L"ps_6_0", dxcUtils, dxcCompiler, includeHandler);
 
     // 4. パイプライン状態 (PSO) の作成
     D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc{};
@@ -84,13 +84,13 @@ void DebugRenderer::Initialize() {
     assert(SUCCEEDED(hr));
 
     // 5. バッファ作成 (DirectXCommon.h のグローバル関数を使用)
-    m_vertexBuffer.Attach(::CreateBufferResource(device, sizeof(Vertex) * m_maxVertices));
+    m_vertexBuffer= DirectXCommon::GetInstance()->CreateBufferResource(device, sizeof(Vertex) * m_maxVertices);
     m_vertexBufferView.BufferLocation = m_vertexBuffer->GetGPUVirtualAddress();
     m_vertexBufferView.SizeInBytes = sizeof(Vertex) * m_maxVertices;
     m_vertexBufferView.StrideInBytes = sizeof(Vertex);
 
     // 行列用の定数バッファ (256バイトアライメント)
-    m_constBuffer.Attach(::CreateBufferResource(device, (sizeof(Matrix4x4) + 255) & ~255));
+    m_constBuffer= DirectXCommon::GetInstance()->CreateBufferResource(device, (sizeof(Matrix4x4) + 255) & ~255);
 }
 
 void DebugRenderer::Finalize() {

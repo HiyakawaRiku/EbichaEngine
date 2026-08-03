@@ -14,7 +14,7 @@ void Sphere::CreateVertexResource()
 	// グリッド状に並べるため、頂点数は (kSubdivision + 1) * (kSubdivision + 1) になる
 	vertexCount = (kSubdivision + 1) * (kSubdivision + 1);
 	// 実際に頂点リソースを作る
-	vertexResource = CreateBufferResource(dxCommon_->GetDevice(), sizeof(VertexData) * vertexCount);
+	vertexResource = dxCommon_->CreateBufferResource(dxCommon_->GetDevice(), sizeof(VertexData) * vertexCount);
 
 	// リソースの先頭のアドレスから使う
 	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
@@ -69,7 +69,7 @@ void Sphere::CreateIndexResource()
 {
 	// 1つの四角形（1マス）につき2つの三角形（インデックス6個）が必要
 	indexCount = kSubdivision * kSubdivision * 6;
-	indexResource = CreateBufferResource(dxCommon_->GetDevice(), sizeof(uint32_t) * indexCount);
+	indexResource = dxCommon_->CreateBufferResource(dxCommon_->GetDevice(), sizeof(uint32_t) * indexCount);
 
 	indexBufferView.BufferLocation = indexResource->GetGPUVirtualAddress();
 	indexBufferView.SizeInBytes = sizeof(uint32_t) * indexCount;

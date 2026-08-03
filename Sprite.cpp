@@ -28,7 +28,7 @@ void Sprite::CreateVertexResource()
 	vertexCount = 4;
 
 	// 実際に頂点リソースを作る
-	vertexResource = CreateBufferResource(dxCommon_->GetDevice(), sizeof(VertexData) * vertexCount);
+	vertexResource = dxCommon_->CreateBufferResource(dxCommon_->GetDevice(), sizeof(VertexData) * vertexCount);
 
 	// リソースの先頭のアドレスから使う
 	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
@@ -65,7 +65,7 @@ void Sprite::CreateIndexResource()
 	indexCount = 6;
 
 	// Sprite用の頂点リソースを作る
-	indexResource = CreateBufferResource(dxCommon_->GetDevice(), sizeof(uint32_t) * indexCount);
+	indexResource = dxCommon_->CreateBufferResource(dxCommon_->GetDevice(), sizeof(uint32_t) * indexCount);
 
 	// リソースの先頭のアドレスから使う
 	indexBufferView.BufferLocation = indexResource->GetGPUVirtualAddress();

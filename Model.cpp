@@ -14,7 +14,7 @@ void Model::CreateModelSphere()
 
 	vertexCount = static_cast<uint32_t>(modelData_.vertices.size());
 	// 実際に頂点リソースを作る
-	vertexResource = CreateBufferResource(dxCommon_->GetDevice(), sizeof(VertexData) *vertexCount);
+	vertexResource = dxCommon_->CreateBufferResource(dxCommon_->GetDevice(), sizeof(VertexData) *vertexCount);
 
 	// リソースの先頭のアドレスから使う
 	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();

@@ -12,7 +12,7 @@ void Triangle::Initialize(Vector4 vertex0, Vector4 vertex1, Vector4 vertex2)
 void Triangle::CreateVertexResource()
 {
 	// 実際に頂点リソースを作る
-	vertexResource = CreateBufferResource(dxCommon_->GetDevice(), sizeof(VertexData) * 3);
+	vertexResource = dxCommon_->CreateBufferResource(dxCommon_->GetDevice(), sizeof(VertexData) * 3);
 
 	// リソースの先頭のアドレスから使う
 	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
