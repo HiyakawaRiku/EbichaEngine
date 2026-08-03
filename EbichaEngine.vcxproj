@@ -126,11 +126,14 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="externals\imgui\imgui_widgets.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="FollowCamera.cpp" />
     <ClCompile Include="GameScene.cpp" />
+    <ClCompile Include="Ground.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Matrix.cpp" />
     <ClCompile Include="Player.cpp" />
+    <ClCompile Include="Skydome.cpp" />
     <ClCompile Include="Triangle.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="Sphere.cpp" />
@@ -154,10 +157,13 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="externals\imgui\imstb_rectpack.h" />
     <ClInclude Include="externals\imgui\imstb_textedit.h" />
     <ClInclude Include="externals\imgui\imstb_truetype.h" />
+    <ClInclude Include="FollowCamera.h" />
     <ClInclude Include="GameScene.h" />
+    <ClInclude Include="Ground.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="Matrix.h" />
     <ClInclude Include="Player.h" />
+    <ClInclude Include="Skydome.h" />
     <ClInclude Include="Triangle.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="Sphere.h" />

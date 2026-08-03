@@ -308,20 +308,6 @@ void DirectXCommon::InitializePSO()
 
 void DirectXCommon::CreateRootSignature()
 {
-	//✨
-	//// dxcCompilerを初期化
-	//Microsoft::WRL::ComPtr<IDxcUtils> dxcUtils;
-	//Microsoft::WRL::ComPtr<IDxcCompiler3> dxcCompiler;
-	//HRESULT hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
-	//assert(SUCCEEDED(hr));
-	//hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxcCompiler));
-	//assert(SUCCEEDED(hr));
-
-	//// 現時点でincludeはしないが、includeに対応するための設定を行っておく
-	//Microsoft::WRL::ComPtr<IDxcIncludeHandler> includeHandler = nullptr;
-	//hr = dxcUtils->CreateDefaultIncludeHandler(&includeHandler);
-	//assert(SUCCEEDED(hr));
-
 	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
 	descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
@@ -564,10 +550,10 @@ Microsoft::WRL::ComPtr<IDxcBlob> DirectXCommon::CompileShader(
 
 	Microsoft::WRL::ComPtr<IDxcResult> shaderResult;
 	hr = dxcCompiler->Compile(
-		&shaderSourceBuffer,    // 読み込んだファイル
-		arguments,              // コンパイルオプション
-		_countof(arguments),    // コンパイルオプションの数
-		includeHandler.Get(),         // includeが含まれた諸々
+		&shaderSourceBuffer,		// 読み込んだファイル
+		arguments,					// コンパイルオプション
+		_countof(arguments),		// コンパイルオプションの数
+		includeHandler.Get(),		// includeが含まれた諸々
 		IID_PPV_ARGS(&shaderResult) // コンパイル結果
 	);
 	assert(SUCCEEDED(hr));

@@ -7,7 +7,14 @@ struct Vector2 {
 };
 
 struct Vector3 {
-	float x, y, z;
+    float x;
+    float y;
+    float z;
+
+    // + 演算子のオーバーロードを追加
+    Vector3 operator+(const Vector3& rhs) const {
+        return Vector3{ x + rhs.x, y + rhs.y, z + rhs.z };
+    }
 };
 
 struct Vector4 {
@@ -62,3 +69,16 @@ Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip
 
 // 正射影行列を作る関数を追加
 Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearZ, float farZ);
+
+// ベクトル変換
+Vector3 TransformNormal(const Vector3& v, const Matrix4x4& m);
+
+inline Vector3& operator+=(Vector3& lhs, const Vector3& rhs) {
+	lhs.x += rhs.x; lhs.y += rhs.y; lhs.z += rhs.z;
+	return lhs;
+}
+
+inline Vector3& operator-=(Vector3& lhs, const Vector3& rhs) {
+	lhs.x -= rhs.x; lhs.y -= rhs.y; lhs.z -= rhs.z;
+	return lhs;
+}

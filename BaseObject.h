@@ -38,7 +38,7 @@ struct DirectionalLight {
 class BaseObject {
 public:
 	Vector4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
-	int32_t lightingType = LightType_Lambert;
+	int32_t lightingType = LightType_None;
 
 	int textureId = 1;
 

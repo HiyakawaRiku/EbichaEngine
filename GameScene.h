@@ -5,6 +5,9 @@
 // 前方宣言または必要なヘッダーのインクルード
 #include "EbichaEngine.h"
 #include "Player.h"
+#include "Skydome.h"
+#include "Ground.h"
+#include "FollowCamera.h"
 
 class GameScene {
 public:
@@ -60,4 +63,7 @@ private:
 
 private:
     Player* player_=nullptr;
+    Skydome* skydome_ = nullptr;
+    Ground* ground_ = nullptr;
+    FollowCamera* followCamera_ = nullptr;
 };

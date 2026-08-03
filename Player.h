@@ -8,8 +8,14 @@ public:
 	void Update(Camera* activeCamera_);
 	void Draw();
 
+	void SetViewProjection(const Camera* viewProjection) { viewProjection_ = viewProjection; }
+	const Transform& GetTransform()const { return model_->transform; }
+
 private:
-	Model* modelTeapot_ = nullptr;
+	Model* model_ = nullptr;
+
+	// カメラのビュープロジェクション
+	const Camera* viewProjection_ = nullptr;
 
 	static inline const float kAcceleration = 0.2f;
 };
