@@ -4,7 +4,7 @@
 TransformationMatrix Camera::CalculateWVP(const Transform& objectTransform)
 {
 	// 1. オブジェクトのワールド行列を計算
-	Matrix4x4 worldMatrix = MakeAffineMatrix(objectTransform.scale, objectTransform.rotate, objectTransform.translate);
+	Matrix4x4 worldMatrix = objectTransform.matWorld;
 
 	// 2. カメラ自身の状態（transform_）からビュー行列を計算
 	Matrix4x4 cameraMatrix = MakeAffineMatrix(transform_.scale, transform_.rotate, transform_.translate);
@@ -25,7 +25,7 @@ TransformationMatrix Camera::CalculateWVP(const Transform& objectTransform)
 TransformationMatrix Camera::CalculateWVP2D(const Transform& objectTransform)
 {
 	// 2Dオブジェクトのワールド行列を計算
-	Matrix4x4 worldMatrixSprite = MakeAffineMatrix(objectTransform.scale, objectTransform.rotate, objectTransform.translate);
+	Matrix4x4 worldMatrixSprite = objectTransform.matWorld;
 
 	// 2Dはカメラの移動や回転を無視するため、ビュー行列は単位行列
 	Matrix4x4 viewMatrixSprite = MakeIdentity4x4();

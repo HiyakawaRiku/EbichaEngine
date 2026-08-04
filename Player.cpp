@@ -8,24 +8,24 @@ void Player::Initialize()
 	transformBase_.translate = { 0, 0, 0 };
 
 	modelBody_ = new Model();
-	modelBody_->Initialize("player.obj");
+	modelBody_->Initialize("float_Body.obj");
 	modelBody_->transform.translate = { 0.0f, 0.0f, 0.0f };
 	modelBody_->transform.parent = &transformBase_;
 
 	modelHead_ = new Model();
 	modelHead_->Initialize("float_Head.obj");
 	modelHead_->transform.translate = { 0.0f, 1.5f, 0.0f };
-	modelHead_->transform.parent = &transformBase_;
+	modelHead_->transform.parent = &modelBody_->transform;
 
 	modelL_arm_ = new Model();
 	modelL_arm_->Initialize("float_L_arm.obj");
-	modelL_arm_->transform.translate = { -1.2f, 0.5f, 0.0f };
-	modelL_arm_->transform.parent = &transformBase_;
+	modelL_arm_->transform.translate = { -0.5f, 1.0f, 0.0f };
+	modelL_arm_->transform.parent = &modelBody_->transform;
 
 	modelR_arm_ = new Model();
 	modelR_arm_->Initialize("float_R_arm.obj");
-	modelR_arm_->transform.translate = { 1.2f, 0.5f, 0.0f };
-	modelR_arm_->transform.parent = &transformBase_;
+	modelR_arm_->transform.translate = { 0.5f, 1.0f, 0.0f };
+	modelR_arm_->transform.parent = &modelBody_->transform;
 
 	textureHandle_ = TextureManager::GetInstance()->Load("resources/tex.png", DirectXCommon::GetInstance()->GetCommandList());
 }
@@ -90,7 +90,8 @@ void Player::Update(Camera* activeCamera_)
 		modelBody_->transform.translate += worldMove;
 	}
 
-	modelBody_->transform.UpdateMatrix();
+	//modelBody_->transform.UpdateMatrix();
+
 
 	modelBody_->Update(activeCamera_);
 	modelHead_->Update(activeCamera_);

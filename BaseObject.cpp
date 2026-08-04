@@ -10,6 +10,8 @@ void BaseObject::Initialize()
 
 void BaseObject::Update(Camera* camera)
 {
+	transform.UpdateMatrix();
+
 	if (wvpData && camera) {
 		*wvpData = camera->CalculateWVP(transform);
 	}
