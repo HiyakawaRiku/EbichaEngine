@@ -2,6 +2,7 @@
 #include "DirectXCommon.h"
 #include "TextureManager.h"
 #include "EMath.h"
+#include "Transform.h"
 
 #include <fstream>
 #include <sstream>

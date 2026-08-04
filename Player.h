@@ -9,10 +9,20 @@ public:
 	void Draw();
 
 	void SetViewProjection(const Camera* viewProjection) { viewProjection_ = viewProjection; }
-	const Transform& GetTransform()const { return model_->transform; }
+	const Transform& GetTransform()const { return modelBody_->transform; }
 
 private:
-	Model* model_ = nullptr;
+	Model* modelBody_ = nullptr;
+	Model* modelHead_ = nullptr;
+	Model* modelL_arm_ = nullptr;
+	Model* modelR_arm_ = nullptr;
+
+	Transform transformBase_;
+	//Transform transformBody_;
+	//Transform transformHead_;
+	//Transform transformL_arm_;
+	//Transform transformR_arm_;
+
 	TextureHandle textureHandle_ = TextureManager::kInvalidHandle;
 
 	// カメラのビュープロジェクション

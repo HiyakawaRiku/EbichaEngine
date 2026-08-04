@@ -4,10 +4,30 @@
 
 void Player::Initialize()
 {
-	model_ = new Model();
-	model_->Initialize("player.obj");
-	model_->transform.translate.y = 1;
-	textureHandle_ = TextureManager::GetInstance()->Load("resources/player.png", DirectXCommon::GetInstance()->GetCommandList());
+	transformBase_.Initialize();
+	transformBase_.translate = { 0, 0, 0 };
+
+	modelBody_ = new Model();
+	modelBody_->Initialize("player.obj");
+	modelBody_->transform.translate = { 0.0f, 0.0f, 0.0f };
+	modelBody_->transform.parent = &transformBase_;
+
+	modelHead_ = new Model();
+	modelHead_->Initialize("float_Head.obj");
+	modelHead_->transform.translate = { 0.0f, 1.5f, 0.0f };
+	modelHead_->transform.parent = &transformBase_;
+
+	modelL_arm_ = new Model();
+	modelL_arm_->Initialize("float_L_arm.obj");
+	modelL_arm_->transform.translate = { -1.2f, 0.5f, 0.0f };
+	modelL_arm_->transform.parent = &transformBase_;
+
+	modelR_arm_ = new Model();
+	modelR_arm_->Initialize("float_R_arm.obj");
+	modelR_arm_->transform.translate = { 1.2f, 0.5f, 0.0f };
+	modelR_arm_->transform.parent = &transformBase_;
+
+	textureHandle_ = TextureManager::GetInstance()->Load("resources/tex.png", DirectXCommon::GetInstance()->GetCommandList());
 }
 
 void Player::Update(Camera* activeCamera_)
@@ -60,20 +80,28 @@ void Player::Update(Camera* activeCamera_)
 
 		// 2. EMath::LerpShortAngle を使って現在角度から目標角度へ滑らかに補間
 		const float kRotateSpeed = 0.15f; // 補間率 (0.0f 〜 1.0f)
-		model_->transform.rotate.y = EMath::LerpShortAngle(
-			model_->transform.rotate.y,
+		modelBody_->transform.rotate.y = EMath::LerpShortAngle(
+			modelBody_->transform.rotate.y,
 			targetAngle,
 			kRotateSpeed
 		);
 
 		// 移動量を位置に加算
-		model_->transform.translate += worldMove;
+		modelBody_->transform.translate += worldMove;
 	}
 
-	model_->Update(activeCamera_);
+	modelBody_->transform.UpdateMatrix();
+
+	modelBody_->Update(activeCamera_);
+	modelHead_->Update(activeCamera_);
+	modelL_arm_->Update(activeCamera_);
+	modelR_arm_->Update(activeCamera_);
 }
 
 void Player::Draw()
 {
-	model_->Draw(textureHandle_);
+	modelBody_->Draw(textureHandle_);
+	modelHead_->Draw(textureHandle_);
+	modelL_arm_->Draw(textureHandle_);
+	modelR_arm_->Draw(textureHandle_);
 }
