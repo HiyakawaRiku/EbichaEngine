@@ -34,10 +34,15 @@ void Player::Initialize()
 	}
 
 	textureHandle_ = TextureManager::GetInstance()->Load("resources/tex.png", DirectXCommon::GetInstance()->GetCommandList());
+
+	InitializeFloatingGimmick();
 }
 
 void Player::Update(Camera* activeCamera_)
 {
+
+	UpdateFloatingGimmick();
+
 	Vector3 velocity_ = {};
 
 	if (Input::GetInstance()->PushKey(DIK_D) || Input::GetInstance()->PushKey(DIK_A)|| Input::GetInstance()->PushKey(DIK_W) || Input::GetInstance()->PushKey(DIK_S)) {
@@ -92,11 +97,11 @@ void Player::Update(Camera* activeCamera_)
 		);
 
 		// 移動量を位置に加算
-		modelBody_->transform.translate += worldMove;
+		transformBase_.translate += worldMove;
 	}
 
 	//modelBody_->transform.UpdateMatrix();
-
+	transformBase_.UpdateMatrix();
 
 	modelBody_->Update(activeCamera_);
 	for (auto& part : modelParts_) {
@@ -110,4 +115,24 @@ void Player::Draw()
 	for (auto& part : modelParts_) {
 		part->Draw(textureHandle_);
 	}
+}
+
+void Player::InitializeFloatingGimmick()
+{
+	floatingParameter_ = 0.0f;
+}
+
+void Player::UpdateFloatingGimmick()
+{
+	const uint16_t cycle = (uint16_t)frame_;
+	const float step = 2.0f * 3.14f / cycle;
+
+	floatingParameter_ += step;
+	floatingParameter_ = std::fmod(floatingParameter_, 2.0f * 3.14f);
+
+	modelBody_->transform.translate.y = std::sin(floatingParameter_) * floatingAmplitude;
+
+	ImGui::Begin("Player");
+	ImGui::SliderFloat("amplitude", &floatingAmplitude, 0.1f, 1.0f);
+	ImGui::End();
 }

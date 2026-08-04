@@ -8,8 +8,11 @@ public:
 	void Update(Camera* activeCamera_);
 	void Draw();
 
+	void InitializeFloatingGimmick();
+	void UpdateFloatingGimmick();
+
 	void SetViewProjection(const Camera* viewProjection) { viewProjection_ = viewProjection; }
-	const Transform& GetTransform()const { return modelBody_->transform; }
+	const Transform& GetTransform()const { return transformBase_; }
 
 private:
 	std::unique_ptr<Model> modelBody_;
@@ -28,5 +31,9 @@ private:
 
 	static inline const float kAcceleration = 0.2f;
 	static inline const float kRotateSpeed = 0.15f;
+
+	float floatingParameter_ = 0.0f;
+	float frame_ = 60.0f;
+	float floatingAmplitude = 0.1f;
 };
 

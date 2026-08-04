@@ -72,12 +72,6 @@ void DirectXCommon::PreDraw()
 	commandList_->RSSetScissorRects(1, &scissorRect_);							// Scissorを設定
 	commandList_->SetGraphicsRootSignature(rootSignature_.Get());				// RootSignatureを設定。PSOに設定しているけど別途設定が必要
 	commandList_->SetPipelineState(graphicsPipelineStates_[blendMode_].Get());  // PSOを設定
-
-#ifdef USE_IMGUI
-	ImGui_ImplDX12_NewFrame();
-	ImGui_ImplWin32_NewFrame();
-	ImGui::NewFrame();
-#endif
 }
 
 void DirectXCommon::PostDraw()

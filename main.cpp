@@ -19,9 +19,18 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
             DispatchMessage(&msg);
         }
         else {
+
+#ifdef USE_IMGUI
+            ImGui_ImplDX12_NewFrame();
+            ImGui_ImplWin32_NewFrame();
+            ImGui::NewFrame();
+#endif
+
             // シーンの更新と描画
             gameScene->Update();
             gameScene->Draw();
+
+
         }
     }
 
