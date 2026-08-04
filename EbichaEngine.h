@@ -13,6 +13,7 @@
 #include "Audio.h"
 
 #include "EMath.h"
+#include "TextureManager.h"
 
 class EbichaEngine
 {

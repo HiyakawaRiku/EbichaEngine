@@ -20,7 +20,7 @@ void BaseObject::Update(Camera* camera)
 	}
 }
 
-void BaseObject::Draw(uint32_t textureIndex)
+void BaseObject::Draw(TextureHandle textureHandle)
 {
 	auto commandList = dxCommon_->GetCommandList();
 
@@ -36,7 +36,8 @@ void BaseObject::Draw(uint32_t textureIndex)
 	// WVP用CBufferの場所を設定
 	commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
 	// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]である。
-	commandList->SetGraphicsRootDescriptorTable(2, dxCommon_->GetTextureSrvHandleGPU(textureIndex));
+	D3D12_GPU_DESCRIPTOR_HANDLE srvHandle = TextureManager::GetInstance()->GetSrvHandleGPU(textureHandle);
+	commandList->SetGraphicsRootDescriptorTable(2, srvHandle);
 	commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 	// 描画！（DrawCall/ドローコール）。3頂点で1つのインスタンス。インスタンスについては今後
 	if (indexCount > 0) {

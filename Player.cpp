@@ -7,6 +7,7 @@ void Player::Initialize()
 	model_ = new Model();
 	model_->Initialize("player.obj");
 	model_->transform.translate.y = 1;
+	textureHandle_ = TextureManager::GetInstance()->Load("resources/player.png", DirectXCommon::GetInstance()->GetCommandList());
 }
 
 void Player::Update(Camera* activeCamera_)
@@ -74,5 +75,5 @@ void Player::Update(Camera* activeCamera_)
 
 void Player::Draw()
 {
-	model_->Draw(7);
+	model_->Draw(textureHandle_);
 }

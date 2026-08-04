@@ -69,6 +69,13 @@ public: // メンバ関数
 	static ID3D12Resource* CreateBufferResource(
 		const Microsoft::WRL::ComPtr<ID3D12Device>& device, size_t sizeInBytes);
 
+	static ID3D12Resource* CreateTextureResource(
+		ID3D12Device* device, const DirectX::TexMetadata& metadata);
+
+	static ID3D12Resource* UploadTextureData(
+		ID3D12Resource* texture, const DirectX::ScratchImage& mipImages,
+		ID3D12Device* device, ID3D12GraphicsCommandList* commandList);
+
 	// ゲッター / セッター
 	ID3D12Device* GetDevice() const { return device_.Get(); }
 	ID3D12GraphicsCommandList* GetCommandList() const { return commandList_.Get(); }
@@ -110,15 +117,8 @@ private:
 
 	static DirectX::ScratchImage LoadTexture(const std::string& filePath);
 
-	static ID3D12Resource* CreateTextureResource(
-		ID3D12Device* device, const DirectX::TexMetadata& metadata);
-
 	static Microsoft::WRL::ComPtr<ID3D12Resource> CreateDepthStencilTextureResource(
 		ID3D12Device* device, int32_t width, int32_t height);
-
-	static ID3D12Resource* UploadTextureData(
-		ID3D12Resource* texture, const DirectX::ScratchImage& mipImages,
-		ID3D12Device* device, ID3D12GraphicsCommandList* commandList);
 
 	static D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(
 		ID3D12DescriptorHeap* descriptorHeap, uint32_t descriptorSize, uint32_t index);

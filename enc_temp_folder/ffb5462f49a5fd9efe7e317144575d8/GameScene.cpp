@@ -48,6 +48,15 @@ void GameScene::Initialize() {
 	debugCamera_->Initialize();
 	activeCamera_ = normalCamera_.get();
 
+	// テクスチャの初期化
+	//dxCommon_->InitializeTexture("resources/uvChecker.png", 1);
+	//dxCommon_->InitializeTexture("resources/monsterBall.png", 2);
+	//dxCommon_->InitializeTexture("resources/sky_sphere.png", 3);
+	//dxCommon_->InitializeTexture("resources/ground_leaf.png", 4);
+	//dxCommon_->InitializeTexture("resources/fence.png", 5);
+	//dxCommon_->InitializeTexture("resources/EModel.png", 6);
+	//dxCommon_->InitializeTexture("resources/player.png", 7);
+
 	// 音声ファイルのロード & 再生開始
 	seHandle_ = audio_->LoadAudioSource("Resources/Alarm01.wav");
 	bgmHandle_ = audio_->LoadAudioSource("Resources/420_long_BPM108.mp3");

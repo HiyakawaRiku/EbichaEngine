@@ -9,7 +9,7 @@ public:
 	void Draw();
 public:
 	Model* model_ = nullptr;
-
+	TextureHandle textureHandle_ = TextureManager::kInvalidHandle;
 
 };
 

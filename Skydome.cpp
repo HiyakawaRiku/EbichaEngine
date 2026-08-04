@@ -4,6 +4,7 @@ void Skydome::Initialize()
 {
 	model_ = new Model();
 	model_->Initialize("skydome.obj");
+	textureHandle_ = TextureManager::GetInstance()->Load("resources/sky_sphere.png", DirectXCommon::GetInstance()->GetCommandList());
 }
 
 void Skydome::Update(Camera* activeCamera_)
@@ -13,5 +14,5 @@ void Skydome::Update(Camera* activeCamera_)
 
 void Skydome::Draw()
 {
-	model_->Draw(3);
+	model_->Draw(textureHandle_);
 }

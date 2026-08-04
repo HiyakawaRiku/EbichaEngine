@@ -1,6 +1,7 @@
 #pragma once
 #include "DirectXCommon.h"
 #include "Matrix.h"
+#include "TextureManager.h"
 
 #include <fstream>
 #include <sstream>
@@ -40,7 +41,7 @@ public:
 	Vector4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
 	int32_t lightingType = LightType_None;
 
-	int textureId = 1;
+	TextureHandle textureHandle = TextureManager::kInvalidHandle;
 
 
 	DirectXCommon* dxCommon_ = DirectXCommon::GetInstance();
@@ -66,7 +67,7 @@ public:
 
 	virtual void Initialize();
 	virtual void Update(class Camera* camera);
-	virtual void Draw(uint32_t textureIndex);
+	virtual void Draw(TextureHandle textureHandle);
 	virtual void CreateMaterialResource();
 	virtual void CreateWvpResource();
 	virtual void CreateDirectionalLight();

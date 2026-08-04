@@ -17,6 +17,7 @@ void Ground::Initialize()
 {
 	model_ = new Model();
 	model_->Initialize("plane.obj");
+    textureHandle_ = TextureManager::GetInstance()->Load("resources/ground_leaf.png", DirectXCommon::GetInstance()->GetCommandList());
 }
 
 void Ground::Update(Camera* activeCamera_)
@@ -32,5 +33,5 @@ void Ground::Update(Camera* activeCamera_)
 
 void Ground::Draw()
 {
-	model_->Draw(4);
+	model_->Draw(textureHandle_);
 }

@@ -13,6 +13,7 @@ public:
 
 private:
 	Model* model_ = nullptr;
+	TextureHandle textureHandle_ = TextureManager::kInvalidHandle;
 
 	// カメラのビュープロジェクション
 	const Camera* viewProjection_ = nullptr;
