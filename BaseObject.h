@@ -1,7 +1,7 @@
 #pragma once
 #include "DirectXCommon.h"
-#include "Matrix.h"
 #include "TextureManager.h"
+#include "EMath.h"
 
 #include <fstream>
 #include <sstream>

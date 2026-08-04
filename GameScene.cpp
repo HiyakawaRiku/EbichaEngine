@@ -16,15 +16,6 @@ void GameScene::Initialize() {
 	sprite_ = new Sprite();
 	sprite_->Initialize();
 
-	//sphere_ = new Sphere();
-	//sphere_->Initialize();
-
-	//modelTeapot_ = new Model();
-	//modelTeapot_->Initialize("teapot.obj");
-
-	//modelBunny_ = new Model();
-	//modelBunny_->Initialize("bunny.obj");
-
 	player_ = new Player();
 	player_->Initialize();
 
@@ -38,9 +29,6 @@ void GameScene::Initialize() {
 	followCamera_->Initialize();
 	followCamera_->SetTarget(&player_->GetTransform());
 	player_->SetViewProjection(&followCamera_->GetCamera());
-
-	//modelMultiMesh_ = new Model();
-	//modelMultiMesh_->Initialize("resources", "multiMesh.obj");
 
 	// カメラのセットアップ
 	normalCamera_ = std::make_unique<Camera>();
@@ -65,7 +53,6 @@ void GameScene::Update() {
 	else {
 		//activeCamera_ = normalCamera_.get();
 		activeCamera_=&followCamera_->GetCamera();
-
 	}
 
 	// カメラ更新
@@ -150,16 +137,4 @@ void GameScene::Finalize() {
 	// 動的割当オブジェクトの破棄
 	delete sprite_;
 	sprite_ = nullptr;
-
-	//delete sphere_;
-	//sphere_ = nullptr;
-
-	//delete modelTeapot_;
-	//modelTeapot_ = nullptr;
-
-	//delete modelBunny_;
-	//modelBunny_ = nullptr;
-
-	//delete modelMultiMesh_;
-	//modelMultiMesh_ = nullptr;
 }
