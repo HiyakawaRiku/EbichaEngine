@@ -12,10 +12,8 @@ public:
 	const Transform& GetTransform()const { return modelBody_->transform; }
 
 private:
-	Model* modelBody_ = nullptr;
-	Model* modelHead_ = nullptr;
-	Model* modelL_arm_ = nullptr;
-	Model* modelR_arm_ = nullptr;
+	std::unique_ptr<Model> modelBody_;
+	std::vector<std::unique_ptr<Model>> modelParts_;
 
 	Transform transformBase_;
 	//Transform transformBody_;
@@ -29,5 +27,6 @@ private:
 	const Camera* viewProjection_ = nullptr;
 
 	static inline const float kAcceleration = 0.2f;
+	static inline const float kRotateSpeed = 0.15f;
 };
 

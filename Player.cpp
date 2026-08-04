@@ -7,25 +7,31 @@ void Player::Initialize()
 	transformBase_.Initialize();
 	transformBase_.translate = { 0, 0, 0 };
 
-	modelBody_ = new Model();
+	modelBody_ = std::make_unique<Model>();
 	modelBody_->Initialize("float_Body.obj");
 	modelBody_->transform.translate = { 0.0f, 0.0f, 0.0f };
 	modelBody_->transform.parent = &transformBase_;
 
-	modelHead_ = new Model();
-	modelHead_->Initialize("float_Head.obj");
-	modelHead_->transform.translate = { 0.0f, 1.5f, 0.0f };
-	modelHead_->transform.parent = &modelBody_->transform;
+	struct PartConfig {
+		std::string filename;
+		Vector3 position;
+	};
 
-	modelL_arm_ = new Model();
-	modelL_arm_->Initialize("float_L_arm.obj");
-	modelL_arm_->transform.translate = { -0.5f, 1.0f, 0.0f };
-	modelL_arm_->transform.parent = &modelBody_->transform;
+	const PartConfig partConfigs[] = {
+		{ "float_Head.obj",  {  0.0f, 1.5f, 0.0f } },
+		{ "float_L_arm.obj", { -0.5f, 1.0f, 0.0f } },
+		{ "float_R_arm.obj", {  0.5f, 1.0f, 0.0f } },
+	};
 
-	modelR_arm_ = new Model();
-	modelR_arm_->Initialize("float_R_arm.obj");
-	modelR_arm_->transform.translate = { 0.5f, 1.0f, 0.0f };
-	modelR_arm_->transform.parent = &modelBody_->transform;
+	modelParts_.clear();
+	for (const auto& config : partConfigs) {
+		auto part = std::make_unique<Model>();
+		part->Initialize(config.filename);
+		part->transform.translate = config.position;
+		part->transform.parent = &modelBody_->transform;
+
+		modelParts_.push_back(std::move(part));
+	}
 
 	textureHandle_ = TextureManager::GetInstance()->Load("resources/tex.png", DirectXCommon::GetInstance()->GetCommandList());
 }
@@ -79,7 +85,6 @@ void Player::Update(Camera* activeCamera_)
 		float targetAngle = std::atan2(worldMove.x, worldMove.z);
 
 		// 2. EMath::LerpShortAngle を使って現在角度から目標角度へ滑らかに補間
-		const float kRotateSpeed = 0.15f; // 補間率 (0.0f 〜 1.0f)
 		modelBody_->transform.rotate.y = EMath::LerpShortAngle(
 			modelBody_->transform.rotate.y,
 			targetAngle,
@@ -94,15 +99,15 @@ void Player::Update(Camera* activeCamera_)
 
 
 	modelBody_->Update(activeCamera_);
-	modelHead_->Update(activeCamera_);
-	modelL_arm_->Update(activeCamera_);
-	modelR_arm_->Update(activeCamera_);
+	for (auto& part : modelParts_) {
+		part->Update(activeCamera_);
+	}
 }
 
 void Player::Draw()
 {
 	modelBody_->Draw(textureHandle_);
-	modelHead_->Draw(textureHandle_);
-	modelL_arm_->Draw(textureHandle_);
-	modelR_arm_->Draw(textureHandle_);
+	for (auto& part : modelParts_) {
+		part->Draw(textureHandle_);
+	}
 }
