@@ -15,6 +15,7 @@ public:
 	const Transform& GetTransform()const { return transformBase_; }
 
 private:
+
 	std::unique_ptr<Model> modelBody_;
 	std::vector<std::unique_ptr<Model>> modelParts_;
 

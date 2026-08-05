@@ -5,10 +5,10 @@
 void Player::Initialize()
 {
 	transformBase_.Initialize();
-	transformBase_.translate = { 0, 0, 0 };
+	transformBase_.translate = { 0, 10, 0 };
 
 	modelBody_ = std::make_unique<Model>();
-	modelBody_->Initialize("float_Body.obj");
+	modelBody_->Initialize("Body.obj");
 	modelBody_->transform.translate = { 0.0f, 0.0f, 0.0f };
 	modelBody_->transform.parent = &transformBase_;
 
@@ -18,9 +18,11 @@ void Player::Initialize()
 	};
 
 	const PartConfig partConfigs[] = {
-		{ "float_Head.obj",  {  0.0f, 1.5f, 0.0f } },
-		{ "float_L_arm.obj", { -0.5f, 1.0f, 0.0f } },
-		{ "float_R_arm.obj", {  0.5f, 1.0f, 0.0f } },
+		{ "Head.obj",  {  0.0f, 0.5f, 0.0f } },
+		{ "armL1.obj", { -0.5f, 0.5f, 0.0f } },
+		{ "armR1.obj", {  0.5f, 0.5f, 0.0f } },
+		{ "legL1.obj", {  -0.2f, -0.5f, 0.0f } },
+		{ "legR1.obj", {  0.2f, -0.5f, 0.0f } },
 	};
 
 	modelParts_.clear();
