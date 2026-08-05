@@ -79,6 +79,9 @@ inline Vector3& operator-=(Vector3& lhs, const Vector3& rhs) {
 
 namespace EMath {
 
+	// 1次元（float）の線形補間
+	float Lerp(float start, float end, float t);
+
 	//最短角度補間
 	float LerpShortAngle(float a, float b, float t);
 

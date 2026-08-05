@@ -36,5 +36,9 @@ private:
 	float floatingParameter_ = 0.0f;
 	float frame_ = 60.0f;
 	float floatingAmplitude = 0.1f;
+
+	float walkTimer_ = 0.0f; // 歩行アニメーション用のタイマー
+	static inline const float kWalkSpeed = 0.2f;    // 歩くテンポの速さ
+	static inline const float kWalkAngle = 0.5f;    // 手足を振る角度（ラジアン: 約28度）
 };
 

@@ -1,6 +1,7 @@
 #include "EMath.h"
 #include <cmath>
 #include <numbers>
+#include <algorithm>
 
 Matrix4x4 Add(const Matrix4x4& m1, const Matrix4x4& m2) {
 	Matrix4x4 result;
@@ -357,6 +358,13 @@ Vector3 TransformNormal(const Vector3& v, const Matrix4x4& m) {
 	return result;
 }
 
+float EMath::Lerp(float start, float end, float t)
+{
+	// t を 0.0 ～ 1.0 の範囲に制限（クランプ）
+	t = std::clamp(t, 0.0f, 1.0f);
+
+	return start + (end - start) * t;
+}
 
 float EMath::LerpShortAngle(float a, float b, float t) {
     // C++20 の std::numbers::pi_v<float> または定義した π の定数を使用

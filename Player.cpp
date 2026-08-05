@@ -42,73 +42,77 @@ void Player::Initialize()
 
 void Player::Update(Camera* activeCamera_)
 {
+    //UpdateFloatingGimmick();
 
-	UpdateFloatingGimmick();
+        Vector3 velocity_ = {};
 
-	Vector3 velocity_ = {};
+        // キーボード入力[cite: 1]
+        if (Input::GetInstance()->PushKey(DIK_D) || Input::GetInstance()->PushKey(DIK_A) || Input::GetInstance()->PushKey(DIK_W) || Input::GetInstance()->PushKey(DIK_S)) {
+           
+            Vector3 acceleration{};
+                if (Input::GetInstance()->PushKey(DIK_D)) { acceleration.x += kAcceleration; }
+                else if (Input::GetInstance()->PushKey(DIK_A)) { acceleration.x -= kAcceleration; }
+                else if (Input::GetInstance()->PushKey(DIK_W)) { acceleration.z += kAcceleration; }
+                else if (Input::GetInstance()->PushKey(DIK_S)) { acceleration.z -= kAcceleration; }
+                    velocity_ += acceleration;
+        }
 
-	if (Input::GetInstance()->PushKey(DIK_D) || Input::GetInstance()->PushKey(DIK_A)|| Input::GetInstance()->PushKey(DIK_W) || Input::GetInstance()->PushKey(DIK_S)) {
-		Vector3 acceleration{};
-		if (Input::GetInstance()->PushKey(DIK_D)) {
-			acceleration.x += kAcceleration;
-		}
-		else if (Input::GetInstance()->PushKey(DIK_A)) {
-			acceleration.x -= kAcceleration;
-		}
-		else if (Input::GetInstance()->PushKey(DIK_W)) {
-			acceleration.z += kAcceleration;
-		}
-		else if (Input::GetInstance()->PushKey(DIK_S)) {
-			acceleration.z -= kAcceleration;
-		}
+    float moveX = Input::GetInstance()->GetLeftStickX();
+        float moveZ = Input::GetInstance()->GetLeftStickY();
+        Vector3 localMove = { moveX + velocity_.x, 0.0f, moveZ + velocity_.z };
 
-		velocity_ += acceleration;
-	}
+        // --- 歩行アニメーション処理 ---
+        bool isMoving = (localMove.x != 0.0f || localMove.z != 0.0f);
 
-	//// 十字キー右（長押し移動など）
-	//if (Input::GetInstance()->PushButton(XINPUT_GAMEPAD_DPAD_RIGHT)) {
-	//	// MoveRight()
-	//}
+    if (isMoving) {
+        // 移動中：タイマーを進めて sin 波で手足を前後（X軸回転）に振る
+        walkTimer_ += kWalkSpeed;
+        float swing = std::sin(walkTimer_) * kWalkAngle;
 
-	// 左スティックの傾きで移動
-	float moveX = Input::GetInstance()->GetLeftStickX(); // -1.0 〜 1.0
-	float moveZ = Input::GetInstance()->GetLeftStickY();
+        // 腕と脚を対角（右手と左脚、左手と右脚）に動かす
+        modelParts_[1]->transform.rotate.x = swing; // 左腕
+        modelParts_[2]->transform.rotate.x = -swing; // 右腕（逆位相）
+        modelParts_[3]->transform.rotate.x = -swing; // 左脚（腕と逆）
+        modelParts_[4]->transform.rotate.x = swing; // 右脚（腕と同位相）
+    }
+    else {
+        // 停止時：徐々に初期姿勢（回転0）へ戻す
+        walkTimer_ = 0.0f;
+        for (int i = 1; i <= 4; ++i) {
+            modelParts_[i]->transform.rotate.x = EMath::Lerp(modelParts_[i]->transform.rotate.x, 0.0f, 0.2f);
+        }
+    }
 
-	// 入力によるローカル移動ベクトル（画面の手前/奥、左右）
-	Vector3 localMove = { moveX + velocity_.x, 0.0f, moveZ + velocity_.z };
+    // 移動・回転処理[cite: 1]
+    if (isMoving) {
+       
+        Vector3 worldMove = localMove;
 
-	// 入力がある場合のみ処理
-	if (localMove.x != 0.0f || localMove.z != 0.0f) {
-		Vector3 worldMove = localMove;
+            if (activeCamera_) {
+               
+                float cameraRotateY = activeCamera_->transform_.rotate.y;
+                    Matrix4x4 matRotateY = MakeRotateYMatrix(cameraRotateY);
+                    worldMove = TransformNormal(localMove, matRotateY);
+            }
 
-		// カメラ情報が存在する場合、カメラのY軸回転に合わせて移動ベクトルを回転
-		if (activeCamera_) {
-			float cameraRotateY = activeCamera_->transform_.rotate.y;
-			Matrix4x4 matRotateY = MakeRotateYMatrix(cameraRotateY);
-			worldMove = TransformNormal(localMove, matRotateY);
-		}
+                    float targetAngle = std::atan2(worldMove.x, worldMove.z);
 
-		// 1. 目標角度を算出
-		float targetAngle = std::atan2(worldMove.x, worldMove.z);
+                    modelBody_->transform.rotate.y = EMath::LerpShortAngle(
+                        modelBody_->transform.rotate.y,
+                        targetAngle,
+                        kRotateSpeed
+                    );
 
-		// 2. EMath::LerpShortAngle を使って現在角度から目標角度へ滑らかに補間
-		modelBody_->transform.rotate.y = EMath::LerpShortAngle(
-			modelBody_->transform.rotate.y,
-			targetAngle,
-			kRotateSpeed
-		);
+                    transformBase_.translate += worldMove;
+    }
 
-		// 移動量を位置に加算
-		transformBase_.translate += worldMove;
-	}
+    transformBase_.UpdateMatrix();
 
-	//modelBody_->transform.UpdateMatrix();
-	transformBase_.UpdateMatrix();
-
-	modelBody_->Update(activeCamera_);
-	for (auto& part : modelParts_) {
-		part->Update(activeCamera_);
-	}
+        modelBody_->Update(activeCamera_);
+        for (auto& part : modelParts_) {
+           
+            part->Update(activeCamera_);
+        }
 }
 
 void Player::Draw()
