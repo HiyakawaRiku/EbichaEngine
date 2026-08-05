@@ -36,7 +36,7 @@ void FollowCamera::Update()
 	// 追従対象がいれば
 	if (target_) {
 		// 追従対象からカメラまでのオフセット
-		Vector3 offset = { 0.0f, 2.0f, -10.0f };
+		Vector3 offset = { 0.0f, 4.0f, -20.0f };
 
 		Matrix4x4 matRotate = MakeIdentity4x4(); // もしくは適切な初期化
 		matRotate = MakeRotateYMatrix(viewProjection_.transform_.rotate.y);

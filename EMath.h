@@ -77,10 +77,22 @@ inline Vector3& operator-=(Vector3& lhs, const Vector3& rhs) {
 	return lhs;
 }
 
+inline Vector3 operator*(const Vector3& v, float s) {
+	return Vector3{ v.x * s, v.y * s, v.z * s };
+}
+
+// float * Vector3 のオーバーロード（順序が逆でもOKにする）
+inline Vector3 operator*(float s, const Vector3& v) {
+	return Vector3{ v.x * s, v.y * s, v.z * s };
+}
+
 namespace EMath {
 
 	// 1次元（float）の線形補間
 	float Lerp(float start, float end, float t);
+
+	// 3次元ベクトル（Vector3）の線形補間
+	Vector3 Lerp(const Vector3& start, const Vector3& end, float t);
 
 	//最短角度補間
 	float LerpShortAngle(float a, float b, float t);

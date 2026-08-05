@@ -366,6 +366,19 @@ float EMath::Lerp(float start, float end, float t)
 	return start + (end - start) * t;
 }
 
+// 3次元ベクトル（Vector3）の線形補間
+Vector3 EMath::Lerp(const Vector3& start, const Vector3& end, float t)
+{
+	t = std::clamp(t, 0.0f, 1.0f);
+
+	Vector3 result;
+	result.x = start.x + (end.x - start.x) * t;
+	result.y = start.y + (end.y - start.y) * t;
+	result.z = start.z + (end.z - start.z) * t;
+
+	return result;
+}
+
 float EMath::LerpShortAngle(float a, float b, float t) {
     // C++20 の std::numbers::pi_v<float> または定義した π の定数を使用
     constexpr float kPi = std::numbers::pi_v<float>;

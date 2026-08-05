@@ -5,7 +5,7 @@
 void Player::Initialize()
 {
 	transformBase_.Initialize();
-	transformBase_.translate = { 0, 10, 0 };
+	transformBase_.translate = { 0, 1.5f, 0 };
 
 	modelBody_ = std::make_unique<Model>();
 	modelBody_->Initialize("Body.obj");
@@ -42,77 +42,17 @@ void Player::Initialize()
 
 void Player::Update(Camera* activeCamera_)
 {
-    //UpdateFloatingGimmick();
+	//UpdateFloatingGimmick();
 
-        Vector3 velocity_ = {};
+	BehaviorRootUpdate(activeCamera_);
 
-        // キーボード入力[cite: 1]
-        if (Input::GetInstance()->PushKey(DIK_D) || Input::GetInstance()->PushKey(DIK_A) || Input::GetInstance()->PushKey(DIK_W) || Input::GetInstance()->PushKey(DIK_S)) {
-           
-            Vector3 acceleration{};
-                if (Input::GetInstance()->PushKey(DIK_D)) { acceleration.x += kAcceleration; }
-                else if (Input::GetInstance()->PushKey(DIK_A)) { acceleration.x -= kAcceleration; }
-                else if (Input::GetInstance()->PushKey(DIK_W)) { acceleration.z += kAcceleration; }
-                else if (Input::GetInstance()->PushKey(DIK_S)) { acceleration.z -= kAcceleration; }
-                    velocity_ += acceleration;
-        }
+	transformBase_.UpdateMatrix();
 
-    float moveX = Input::GetInstance()->GetLeftStickX();
-        float moveZ = Input::GetInstance()->GetLeftStickY();
-        Vector3 localMove = { moveX + velocity_.x, 0.0f, moveZ + velocity_.z };
+	modelBody_->Update(activeCamera_);
+	for (auto& part : modelParts_) {
 
-        // --- 歩行アニメーション処理 ---
-        bool isMoving = (localMove.x != 0.0f || localMove.z != 0.0f);
-
-    if (isMoving) {
-        // 移動中：タイマーを進めて sin 波で手足を前後（X軸回転）に振る
-        walkTimer_ += kWalkSpeed;
-        float swing = std::sin(walkTimer_) * kWalkAngle;
-
-        // 腕と脚を対角（右手と左脚、左手と右脚）に動かす
-        modelParts_[1]->transform.rotate.x = swing; // 左腕
-        modelParts_[2]->transform.rotate.x = -swing; // 右腕（逆位相）
-        modelParts_[3]->transform.rotate.x = -swing; // 左脚（腕と逆）
-        modelParts_[4]->transform.rotate.x = swing; // 右脚（腕と同位相）
-    }
-    else {
-        // 停止時：徐々に初期姿勢（回転0）へ戻す
-        walkTimer_ = 0.0f;
-        for (int i = 1; i <= 4; ++i) {
-            modelParts_[i]->transform.rotate.x = EMath::Lerp(modelParts_[i]->transform.rotate.x, 0.0f, 0.2f);
-        }
-    }
-
-    // 移動・回転処理[cite: 1]
-    if (isMoving) {
-       
-        Vector3 worldMove = localMove;
-
-            if (activeCamera_) {
-               
-                float cameraRotateY = activeCamera_->transform_.rotate.y;
-                    Matrix4x4 matRotateY = MakeRotateYMatrix(cameraRotateY);
-                    worldMove = TransformNormal(localMove, matRotateY);
-            }
-
-                    float targetAngle = std::atan2(worldMove.x, worldMove.z);
-
-                    modelBody_->transform.rotate.y = EMath::LerpShortAngle(
-                        modelBody_->transform.rotate.y,
-                        targetAngle,
-                        kRotateSpeed
-                    );
-
-                    transformBase_.translate += worldMove;
-    }
-
-    transformBase_.UpdateMatrix();
-
-        modelBody_->Update(activeCamera_);
-        for (auto& part : modelParts_) {
-           
-            part->Update(activeCamera_);
-        }
+		part->Update(activeCamera_);
+	}
 }
 
 void Player::Draw()
@@ -141,4 +81,67 @@ void Player::UpdateFloatingGimmick()
 	ImGui::Begin("Player");
 	ImGui::SliderFloat("amplitude", &floatingAmplitude, 0.1f, 1.0f);
 	ImGui::End();
+}
+
+void Player::BehaviorRootUpdate(Camera* activeCamera_)
+{
+	// ----------------------------------------------------
+	// 1. 移動入力の取得
+	// ----------------------------------------------------
+	Vector3 velocity_ = {};
+	if (Input::GetInstance()->PushKey(DIK_D) || Input::GetInstance()->PushKey(DIK_A) || Input::GetInstance()->PushKey(DIK_W) || Input::GetInstance()->PushKey(DIK_S)) {
+
+		Vector3 acceleration{};
+		if (Input::GetInstance()->PushKey(DIK_D)) { acceleration.x += kAcceleration; }
+		else if (Input::GetInstance()->PushKey(DIK_A)) { acceleration.x -= kAcceleration; }
+		else if (Input::GetInstance()->PushKey(DIK_W)) { acceleration.z += kAcceleration; }
+		else if (Input::GetInstance()->PushKey(DIK_S)) { acceleration.z -= kAcceleration; }
+		velocity_ += acceleration;
+	}
+
+	float moveX = Input::GetInstance()->GetLeftStickX();
+	float moveZ = Input::GetInstance()->GetLeftStickY();
+	Vector3 localMove = { moveX + velocity_.x, 0.0f, moveZ + velocity_.z };
+
+	// ----------------------------------------------------
+	// 4. 移動 & 歩行アニメーション処理
+	// ----------------------------------------------------
+	bool isMoving = (localMove.x != 0.0f || localMove.z != 0.0f);
+
+	if (isMoving) {
+		walkTimer_ += kWalkSpeed;
+		float swing = std::sin(walkTimer_) * kWalkAngle;
+
+		if (!isAttacking_) {
+			modelParts_[1]->transform.rotate.x = swing; // 左腕[cite: 1]
+			modelParts_[2]->transform.rotate.x = -swing; // 右腕[cite: 1]
+		}
+		modelParts_[3]->transform.rotate.x = -swing; // 左脚[cite: 1]
+		modelParts_[4]->transform.rotate.x = swing; // 右脚[cite: 1]
+
+		Vector3 worldMove = localMove;
+		if (activeCamera_) {
+			float cameraRotateY = activeCamera_->transform_.rotate.y;
+			Matrix4x4 matRotateY = MakeRotateYMatrix(cameraRotateY);
+			worldMove = TransformNormal(localMove, matRotateY);
+		}
+
+		if (!isAttacking_) {
+			float targetAngle = std::atan2(worldMove.x, worldMove.z);
+			modelBody_->transform.rotate.y = EMath::LerpShortAngle(
+				modelBody_->transform.rotate.y,
+				targetAngle,
+				kRotateSpeed
+			);
+		}
+
+		transformBase_.translate += worldMove;
+	}
+	else {
+		walkTimer_ = 0.0f;
+		for (int i = 1; i <= 4; ++i) {
+			if ((i == 1 || i == 2) && isAttacking_) continue;
+			modelParts_[i]->transform.rotate.x = EMath::Lerp(modelParts_[i]->transform.rotate.x, 0.0f, 0.2f);
+		}
+	}
 }
