@@ -68,7 +68,9 @@ public:
 
 	virtual void Initialize();
 	virtual void Update(class Camera* camera);
+	virtual void Update();
 	virtual void Draw(TextureHandle textureHandle);
+	virtual void Draw(Transform transform,class Camera* camera,TextureHandle textureHandle);
 	virtual void CreateMaterialResource();
 	virtual void CreateWvpResource();
 	virtual void CreateDirectionalLight();

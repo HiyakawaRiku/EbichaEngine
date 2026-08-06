@@ -139,9 +139,26 @@ void Player::BehaviorRootUpdate(Camera* activeCamera_)
 	}
 	else {
 		walkTimer_ = 0.0f;
+
+		// 待機タイマーの更新
+		idleTimer_ += kIdleSpeed;
+		float idleSin = std::sin(idleTimer_);
+
+		// 1. 体全体（modelBody_）を少し上下させて息づかいを表現
+		modelBody_->transform.translate.y = idleSin * kIdleBreathing;
+
+		// 2. 手足を初期姿勢に補間しつつ、腕をわずかに前後・開閉させる
 		for (int i = 1; i <= 4; ++i) {
 			if ((i == 1 || i == 2) && isAttacking_) continue;
+
+			// 基本位置に補間 ( Lerp )
 			modelParts_[i]->transform.rotate.x = EMath::Lerp(modelParts_[i]->transform.rotate.x, 0.0f, 0.2f);
+		}
+
+		// 3. 待機中の腕の微振動（呼吸に合わせて開閉・前後に揺らす）
+		if (!isAttacking_) {
+			modelParts_[1]->transform.rotate.z = idleSin * kIdleArmAngle; // 左腕の揺れ
+			modelParts_[2]->transform.rotate.z = -idleSin * kIdleArmAngle; // 右腕の揺れ
 		}
 	}
 }

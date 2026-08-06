@@ -22,8 +22,53 @@ void BaseObject::Update(Camera* camera)
 	}
 }
 
+void BaseObject::Update()
+{
+}
+
 void BaseObject::Draw(TextureHandle textureHandle)
 {
+	auto commandList = dxCommon_->GetCommandList();
+
+	commandList->IASetVertexBuffers(0, 1, &vertexBufferView);    // VBVを設定
+	if (indexCount > 0) {
+		commandList->IASetIndexBuffer(&indexBufferView);
+	}
+
+	// 形状を設定。PSOに設定しているものとはまた別。同じものを設定すると考えておけば良い
+	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	//マテリアルCBufferの場所を設定
+	commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+	// WVP用CBufferの場所を設定
+	commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
+	// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]である。
+	D3D12_GPU_DESCRIPTOR_HANDLE srvHandle = TextureManager::GetInstance()->GetSrvHandleGPU(textureHandle);
+	commandList->SetGraphicsRootDescriptorTable(2, srvHandle);
+	commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+	// 描画！（DrawCall/ドローコール）。3頂点で1つのインスタンス。インスタンスについては今後
+	if (indexCount > 0) {
+		commandList->DrawIndexedInstanced(indexCount, instanceCount_, 0, 0, 0);
+	}
+	else {
+		commandList->DrawInstanced(vertexCount, instanceCount_, 0, 0);
+	}
+}
+
+void BaseObject::Draw(Transform transform, Camera* camera, TextureHandle textureHandle)
+{
+	// 1. 引数で受け取った Transform を使って行列を計算・更新
+	Transform currentTransform = transform;
+	currentTransform.UpdateMatrix();
+
+	if (wvpData && camera) {
+		*wvpData = camera->CalculateWVP(currentTransform);
+	}
+
+	if (materialData) {
+		materialData->color = this->color;
+		materialData->lightingType = this->lightingType;
+	}
+
 	auto commandList = dxCommon_->GetCommandList();
 
 	commandList->IASetVertexBuffers(0, 1, &vertexBufferView);    // VBVを設定

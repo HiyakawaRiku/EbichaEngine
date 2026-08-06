@@ -56,5 +56,11 @@ private:
 	bool isAttacking_ = false;
 	float attackTimer_ = 0.0f;
 	const float kAttackDuration = 40.0f; // 攻撃の全体の長さ（30フレーム = 約0.5秒）
+
+	// --- 待機アニメーション用 ---
+	float idleTimer_ = 0.0f;
+	static inline const float kIdleSpeed = 0.05f;  // 息づかいのテンポ（ゆっくり）
+	static inline const float kIdleBreathing = 0.03f; // 体の上下の振幅
+	static inline const float kIdleArmAngle = 0.05f;   // 腕の揺れ角度
 };
 
