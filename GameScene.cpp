@@ -12,12 +12,12 @@ void GameScene::Initialize() {
 	// オーディオの初期化
 	audio_->Initialize();
 
-	sprite_ = std::make_unique<Sprite>();
-	sprite_->Initialize();
-	sprite_->transform.translate = { 100.0f, 50.0f, 0.0f };
+	//sprite_ = std::make_unique<Sprite>();
+	//sprite_->Initialize();
+	//sprite_->transform.translate = { 100.0f, 50.0f, 0.0f };
 
-	sphere_ = std::make_unique<Sphere>();
-	sphere_->Initialize();
+	//sphere_ = std::make_unique<Sphere>();
+	//sphere_->Initialize();
 
 	player_ = new Player();
 	player_->Initialize();
@@ -64,14 +64,13 @@ void GameScene::Update() {
 	if (activeCamera_ != normalCamera_.get()) {
 		activeCamera_->Update();
 	}
-	sprite_->uvTransform.translate.x += 1.0f;
 	player_->Update(activeCamera_);
 	skydome_->Update(activeCamera_);
 	ground_->Update(activeCamera_);
 
 	// オブジェクト更新
-	sprite_->Update(activeCamera_);
-	sphere_->Update(activeCamera_);
+	//sprite_->Update(activeCamera_);
+	//sphere_->Update(activeCamera_);
 	//modelTeapot_->Update(activeCamera_);
 	//modelBunny_->Update(activeCamera_);
 	//modelMultiMesh_->Update(activeCamera_);
@@ -112,7 +111,7 @@ void GameScene::Draw() {
 
 	// 各オブジェクトの描画
 	//sprite_->Draw(1);
-	sphere_->Draw(1);
+	//sphere_->Draw(1);
 	//modelTeapot_->Draw(1);
 	//modelBunny_->Draw(1);
 	//modelMultiMesh_->Draw(1);

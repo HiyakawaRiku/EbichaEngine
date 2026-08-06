@@ -43,7 +43,6 @@ private:
     // ゲームオブジェクト（生のポインタ管理）
     std::unique_ptr<Sprite> sprite_;
     std::unique_ptr<Sphere> sphere_;
-    //Sphere* sphere_ = nullptr;
     //Model* modelTeapot_ = nullptr;
     //Model* modelBunny_ = nullptr;
     //Model* modelMultiMesh_ = nullptr;
