@@ -42,17 +42,27 @@ void Player::Initialize()
 
 void Player::Update(Camera* activeCamera_)
 {
-	//UpdateFloatingGimmick();
-
 	BehaviorRootUpdate(activeCamera_);
 
 	transformBase_.UpdateMatrix();
 
 	modelBody_->Update(activeCamera_);
 	for (auto& part : modelParts_) {
-
 		part->Update(activeCamera_);
 	}
+
+	// ImGui によるパラメータ調整ウィンドウ
+	ImGui::Begin("Player Jump Settings");
+	ImGui::SliderFloat("Initial Velocity", &jumpInitialVelocity_, 0.1f, 1.5f);
+	ImGui::SliderFloat("Gravity", &gravity_, 0.005f, 0.1f);
+	ImGui::SliderFloat("Squash Amount", &jumpSquashAmount_, 0.0f, 0.6f);
+	ImGui::SliderFloat("Ground Y", &jumpGroundY_, 0.0f, 5.0f);
+
+	// ImGui上から直接テストジャンプをトリガーできるボタン
+	if (ImGui::Button("Test Jump") && !isJumping_) {
+		BehaviorJumpInitialize();
+	}
+	ImGui::End();
 }
 
 void Player::Draw()
@@ -85,6 +95,17 @@ void Player::UpdateFloatingGimmick()
 
 void Player::BehaviorRootUpdate(Camera* activeCamera_)
 {
+
+	// BehaviorRootUpdate 内で入力検知
+	if (Input::GetInstance()->TriggerKey(DIK_SPACE) && !isJumping_) {
+		BehaviorJumpInitialize();
+	}
+
+	// ジャンプ中であれば更新処理を呼ぶ
+	if (isJumping_) {
+		BehaviorJumpUpdate();
+	}
+
 	// ----------------------------------------------------
 	// 1. 移動入力の取得
 	// ----------------------------------------------------
@@ -159,6 +180,78 @@ void Player::BehaviorRootUpdate(Camera* activeCamera_)
 		if (!isAttacking_) {
 			modelParts_[1]->transform.rotate.z = idleSin * kIdleArmAngle; // 左腕の揺れ
 			modelParts_[2]->transform.rotate.z = -idleSin * kIdleArmAngle; // 右腕の揺れ
+		}
+	}
+}
+
+
+void Player::BehaviorJumpInitialize()
+{
+	isJumping_ = true;
+	jumpTimer_ = 0.0f;
+	jumpVelocityY_ = jumpInitialVelocity_; // 初速を設定
+
+	// 予備動作（踏み込み）: 設定したつぶれ具合に応じてスケールを変更
+	modelBody_->transform.scale = {
+		1.0f + jumpSquashAmount_,
+		1.0f - jumpSquashAmount_,
+		1.0f + jumpSquashAmount_
+	};
+}
+
+void Player::BehaviorJumpUpdate()
+{
+	if (!isJumping_) return;
+
+	jumpTimer_ += 1.0f;
+
+	// 1. 物理移動（Y座標の更新）
+	transformBase_.translate.y += jumpVelocityY_;
+	jumpVelocityY_ -= gravity_; // 重力適用
+
+	// 2. 着地判定 & アニメーション
+	if (transformBase_.translate.y <= jumpGroundY_) {
+		transformBase_.translate.y = jumpGroundY_;
+		jumpVelocityY_ = 0.0f;
+
+		// --- 着地フェーズ ---
+		// 衝撃による潰れ（`jumpSquashAmount_`分つぶす）
+		modelBody_->transform.scale.x = EMath::Lerp(modelBody_->transform.scale.x, 1.0f + jumpSquashAmount_, 0.3f);
+		modelBody_->transform.scale.y = EMath::Lerp(modelBody_->transform.scale.y, 1.0f - jumpSquashAmount_, 0.3f);
+		modelBody_->transform.scale.z = EMath::Lerp(modelBody_->transform.scale.z, 1.0f + jumpSquashAmount_, 0.3f);
+
+		// 手足をまっすぐ戻す
+		for (int i = 1; i <= 4; ++i) {
+			modelParts_[i]->transform.rotate.x = EMath::Lerp(modelParts_[i]->transform.rotate.x, 0.0f, 0.3f);
+			modelParts_[i]->transform.rotate.z = EMath::Lerp(modelParts_[i]->transform.rotate.z, 0.0f, 0.3f);
+		}
+
+		// しばらくしたら立ち姿勢のスケールに戻してジャンプ終了
+		if (jumpTimer_ > 12.0f) {
+			modelBody_->transform.scale = { 1.0f, 1.0f, 1.0f };
+			isJumping_ = false;
+		}
+	}
+	else {
+		// --- 空中フェーズ ---
+		// 潰れた体を空中で細長く伸ばす
+		modelBody_->transform.scale.x = EMath::Lerp(modelBody_->transform.scale.x, 1.0f - (jumpSquashAmount_ * 0.5f), 0.1f);
+		modelBody_->transform.scale.y = EMath::Lerp(modelBody_->transform.scale.y, 1.0f + (jumpSquashAmount_ * 0.5f), 0.1f);
+		modelBody_->transform.scale.z = EMath::Lerp(modelBody_->transform.scale.z, 1.0f - (jumpSquashAmount_ * 0.5f), 0.1f);
+
+		if (jumpVelocityY_ > 0.0f) {
+			// 上昇中: 腕を広げ、脚を引く
+			modelParts_[1]->transform.rotate.z = EMath::Lerp(modelParts_[1]->transform.rotate.z, 0.6f, 0.2f); // 左腕
+			modelParts_[2]->transform.rotate.z = EMath::Lerp(modelParts_[2]->transform.rotate.z, -0.6f, 0.2f); // 右腕
+			modelParts_[3]->transform.rotate.x = EMath::Lerp(modelParts_[3]->transform.rotate.x, -0.4f, 0.2f); // 左脚
+			modelParts_[4]->transform.rotate.x = EMath::Lerp(modelParts_[4]->transform.rotate.x, -0.4f, 0.2f); // 右脚
+		}
+		else {
+			// 落下中: 着地準備姿勢
+			modelParts_[1]->transform.rotate.x = EMath::Lerp(modelParts_[1]->transform.rotate.x, 0.3f, 0.2f);
+			modelParts_[2]->transform.rotate.x = EMath::Lerp(modelParts_[2]->transform.rotate.x, 0.3f, 0.2f);
+			modelParts_[3]->transform.rotate.x = EMath::Lerp(modelParts_[3]->transform.rotate.x, 0.5f, 0.2f);
+			modelParts_[4]->transform.rotate.x = EMath::Lerp(modelParts_[4]->transform.rotate.x, 0.5f, 0.2f);
 		}
 	}
 }

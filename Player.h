@@ -62,5 +62,23 @@ private:
 	static inline const float kIdleSpeed = 0.05f;  // 息づかいのテンポ（ゆっくり）
 	static inline const float kIdleBreathing = 0.03f; // 体の上下の振幅
 	static inline const float kIdleArmAngle = 0.05f;   // 腕の揺れ角度
+
+private:
+	// --- ジャンプアニメーション用 ---
+	float jumpTimer_ = 0.0f;
+	float jumpVelocityY_ = 0.0f;
+	bool isJumping_ = false;
+
+	static inline const float kJumpInitialVelocity = 0.4f; // 初速
+	static inline const float kGravity = 0.02f;             // 重力
+	static inline const float kJumpLandDuration = 10.0f;   // 着地硬直フレーム数
+
+private:
+
+	// ImGui調整可能パラメータ
+	float jumpInitialVelocity_ = 0.4f;  // ジャンプ初速（高さ）
+	float gravity_ = 0.02f;              // 重力
+	float jumpSquashAmount_ = 0.3f;      // つぶれる強さ（0.0で変形なし、0.3でスケールが1.3/0.7になる）
+	float jumpGroundY_ = 1.5f;           // 地面の高さ基準
 };
 
