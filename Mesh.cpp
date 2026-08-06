@@ -1,6 +1,6 @@
-#include "Triangle.h"
+#include "Mesh.h"
 
-void Triangle::Initialize(Vector4 vertex0, Vector4 vertex1, Vector4 vertex2)
+void Mesh::Initialize(Vector4 vertex0, Vector4 vertex1, Vector4 vertex2)
 {
 	CreateVertexResource();
 	CreateVertexData(vertex0, vertex1, vertex2);
@@ -11,7 +11,7 @@ void Triangle::Initialize(Vector4 vertex0, Vector4 vertex1, Vector4 vertex2)
 	CreateDirectionalLight();
 }
 
-void Triangle::CreateVertexResource()
+void Mesh::CreateVertexResource()
 {
 	vertexResource_ = dxCommon_->CreateBufferResource(dxCommon_->GetDevice(), sizeof(VertexData) * 3);
 
@@ -20,7 +20,7 @@ void Triangle::CreateVertexResource()
 	vertexBufferView_.StrideInBytes = sizeof(VertexData);
 }
 
-void Triangle::CreateVertexData(Vector4 vertex0, Vector4 vertex1, Vector4 vertex2)
+void Mesh::CreateVertexData(Vector4 vertex0, Vector4 vertex1, Vector4 vertex2)
 {
 	VertexData* vertexData = nullptr;
 	vertexResource_->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
@@ -39,7 +39,7 @@ void Triangle::CreateVertexData(Vector4 vertex0, Vector4 vertex1, Vector4 vertex
 	vertexData[2].normal = { 0.0f, 0.0f, -1.0f };
 }
 
-void Triangle::CreateMaterialResource()
+void Mesh::CreateMaterialResource()
 {
 	materialResource_ = dxCommon_->CreateBufferResource(dxCommon_->GetDevice(), sizeof(Material));
 	materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&materialData_));
@@ -48,14 +48,14 @@ void Triangle::CreateMaterialResource()
 	materialData_->uvTransform = MakeIdentity4x4();
 }
 
-void Triangle::CreateWvpResource()
+void Mesh::CreateWvpResource()
 {
 	wvpResource_ = dxCommon_->CreateBufferResource(dxCommon_->GetDevice(), sizeof(TransformationMatrix));
 	wvpResource_->Map(0, nullptr, reinterpret_cast<void**>(&wvpData_));
 	wvpData_->WVP = MakeIdentity4x4();
 }
 
-void Triangle::CreateDirectionalLight()
+void Mesh::CreateDirectionalLight()
 {
 	directionalLightResource_ = dxCommon_->CreateBufferResource(dxCommon_->GetDevice(), sizeof(DirectionalLight));
 	directionalLightResource_->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData_));
@@ -64,7 +64,7 @@ void Triangle::CreateDirectionalLight()
 	directionalLightData_->intensity = 1.0f;
 }
 
-void Triangle::Draw(const Transform& transform, Camera* camera, TextureHandle textureHandle)
+void Mesh::Draw(const Transform& transform, Camera* camera, TextureHandle textureHandle)
 {
 	// 1. 行列とマテリアルの更新
 	Transform currentTransform = transform;

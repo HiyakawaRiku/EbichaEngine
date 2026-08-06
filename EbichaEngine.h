@@ -4,7 +4,7 @@
 #include "Input.h"
 #include "DebugRenderer.h"
 #include "DebugCamera.h"
-#include "Triangle.h"
+#include "Mesh.h"
 #include "Sprite.h"
 #include "Camera.h"
 #include "Model.h"

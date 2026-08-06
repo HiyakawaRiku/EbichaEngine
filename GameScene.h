@@ -41,7 +41,7 @@ private:
     Audio* audio_ = nullptr;
 
     // ゲームオブジェクト（生のポインタ管理）
-    Sprite* sprite_ = nullptr;
+    std::unique_ptr<Sprite> sprite_;
     //Sphere* sphere_ = nullptr;
     //Model* modelTeapot_ = nullptr;
     //Model* modelBunny_ = nullptr;

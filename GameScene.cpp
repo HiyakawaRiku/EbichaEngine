@@ -12,9 +12,9 @@ void GameScene::Initialize() {
 	// オーディオの初期化
 	audio_->Initialize();
 
-	// オブジェクトの生成と初期化
-	sprite_ = new Sprite();
+	sprite_ = std::make_unique<Sprite>();
 	sprite_->Initialize();
+	sprite_->transform.translate = { 100.0f, 50.0f, 0.0f };
 
 	player_ = new Player();
 	player_->Initialize();
@@ -88,11 +88,11 @@ void GameScene::Update() {
 		debugCamera_->DrawFrustum(normalCamera_.get());
 	}
 
-	// UV Transform の更新計算
-	Matrix4x4 uvTransformMatrix = MakeScaleMatrix(uvTransformSprite_.scale);
-	uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(uvTransformSprite_.rotate.z));
-	uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(uvTransformSprite_.translate));
-	sprite_->materialData->uvTransform = uvTransformMatrix;
+	//// UV Transform の更新計算
+	//Matrix4x4 uvTransformMatrix = MakeScaleMatrix(uvTransformSprite_.scale);
+	//uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(uvTransformSprite_.rotate.z));
+	//uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(uvTransformSprite_.translate));
+	//sprite_->materialData->uvTransform = uvTransformMatrix;
 }
 
 void GameScene::Draw() {
@@ -108,7 +108,7 @@ void GameScene::Draw() {
 #endif
 
 	// 各オブジェクトの描画
-	//sprite_->Draw(1);
+	sprite_->Draw(1);
 	//sphere_->Draw(1);
 	//modelTeapot_->Draw(1);
 	//modelBunny_->Draw(1);
@@ -133,8 +133,4 @@ void GameScene::Finalize() {
 		audio_->Unload(seHandle_);
 		audio_->Finalize();
 	}
-
-	// 動的割当オブジェクトの破棄
-	delete sprite_;
-	sprite_ = nullptr;
 }

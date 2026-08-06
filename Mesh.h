@@ -5,7 +5,7 @@
 #include "Transform.h"
 #include "Camera.h"
 
-class Triangle {
+class Mesh {
 public:
 	// 初期化（頂点座標のセットとバッファ生成）
 	void Initialize(Vector4 vertex0, Vector4 vertex1, Vector4 vertex2);
