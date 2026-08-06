@@ -1,7 +1,6 @@
 #include "Player.h"
 #include <cmath>
 
-
 void Player::Initialize()
 {
 	transformBase_.Initialize();
@@ -21,7 +20,7 @@ void Player::Initialize()
 		{ "Head.obj",  {  0.0f, 0.5f, 0.0f } },
 		{ "armL1.obj", { -0.5f, 0.5f, 0.0f } },
 		{ "armR1.obj", {  0.5f, 0.5f, 0.0f } },
-		{ "legL1.obj", {  -0.2f, -0.5f, 0.0f } },
+		{ "legL1.obj", { -0.2f, -0.5f, 0.0f } },
 		{ "legR1.obj", {  0.2f, -0.5f, 0.0f } },
 	};
 
@@ -46,10 +45,8 @@ void Player::Update(Camera* activeCamera_)
 
 	transformBase_.UpdateMatrix();
 
-	modelBody_->Update(activeCamera_);
-	for (auto& part : modelParts_) {
-		part->Update(activeCamera_);
-	}
+	// カメラ参照の更新保持
+	viewProjection_ = activeCamera_;
 
 	// ImGui によるパラメータ調整ウィンドウ
 	ImGui::Begin("Player Jump Settings");
@@ -67,9 +64,26 @@ void Player::Update(Camera* activeCamera_)
 
 void Player::Draw()
 {
-	modelBody_->Draw(textureHandle_);
+	Camera* camera = viewProjection_;
+
+	// 1. まずルート（全体の位置）の行列を更新
+	transformBase_.UpdateMatrix();
+
+	// 2. 親である胴体（modelBody_）の行列を更新＆描画
+	if (modelBody_) {
+		// 胴体の transform.parent (&transformBase_) を考慮して行列を更新
+		modelBody_->transform.UpdateMatrix();
+		modelBody_->Draw(viewProjection_, textureHandle_);
+	}
+
+	// 3. 子であるパーツ（modelParts_）の行列を更新＆描画
+	// ★親（modelBody_）の matWorld が確定した後にパーツを描画するのがポイント★
 	for (auto& part : modelParts_) {
-		part->Draw(textureHandle_);
+		if (part) {
+			// 親（modelBody_->transform）の最新の matWorld を使って自身の行列を更新
+			part->transform.UpdateMatrix();
+			part->Draw(viewProjection_, textureHandle_);
+		}
 	}
 }
 
@@ -95,7 +109,6 @@ void Player::UpdateFloatingGimmick()
 
 void Player::BehaviorRootUpdate(Camera* activeCamera_)
 {
-
 	// BehaviorRootUpdate 内で入力検知
 	if (Input::GetInstance()->TriggerKey(DIK_SPACE) && !isJumping_) {
 		BehaviorJumpInitialize();
@@ -134,11 +147,11 @@ void Player::BehaviorRootUpdate(Camera* activeCamera_)
 		float swing = std::sin(walkTimer_) * kWalkAngle;
 
 		if (!isAttacking_) {
-			modelParts_[1]->transform.rotate.x = swing; // 左腕[cite: 1]
-			modelParts_[2]->transform.rotate.x = -swing; // 右腕[cite: 1]
+			modelParts_[1]->transform.rotate.x = swing;  // 左腕[cite: 7]
+			modelParts_[2]->transform.rotate.x = -swing; // 右腕[cite: 7]
 		}
-		modelParts_[3]->transform.rotate.x = -swing; // 左脚[cite: 1]
-		modelParts_[4]->transform.rotate.x = swing; // 右脚[cite: 1]
+		modelParts_[3]->transform.rotate.x = -swing; // 左脚[cite: 7]
+		modelParts_[4]->transform.rotate.x = swing;  // 右脚[cite: 7]
 
 		Vector3 worldMove = localMove;
 		if (activeCamera_) {
@@ -178,12 +191,11 @@ void Player::BehaviorRootUpdate(Camera* activeCamera_)
 
 		// 3. 待機中の腕の微振動（呼吸に合わせて開閉・前後に揺らす）
 		if (!isAttacking_) {
-			modelParts_[1]->transform.rotate.z = idleSin * kIdleArmAngle; // 左腕の揺れ
+			modelParts_[1]->transform.rotate.z = idleSin * kIdleArmAngle;  // 左腕の揺れ
 			modelParts_[2]->transform.rotate.z = -idleSin * kIdleArmAngle; // 右腕の揺れ
 		}
 	}
 }
-
 
 void Player::BehaviorJumpInitialize()
 {
@@ -241,7 +253,7 @@ void Player::BehaviorJumpUpdate()
 
 		if (jumpVelocityY_ > 0.0f) {
 			// 上昇中: 腕を広げ、脚を引く
-			modelParts_[1]->transform.rotate.z = EMath::Lerp(modelParts_[1]->transform.rotate.z, 0.6f, 0.2f); // 左腕
+			modelParts_[1]->transform.rotate.z = EMath::Lerp(modelParts_[1]->transform.rotate.z, 0.6f, 0.2f);  // 左腕
 			modelParts_[2]->transform.rotate.z = EMath::Lerp(modelParts_[2]->transform.rotate.z, -0.6f, 0.2f); // 右腕
 			modelParts_[3]->transform.rotate.x = EMath::Lerp(modelParts_[3]->transform.rotate.x, -0.4f, 0.2f); // 左脚
 			modelParts_[4]->transform.rotate.x = EMath::Lerp(modelParts_[4]->transform.rotate.x, -0.4f, 0.2f); // 右脚

@@ -22,7 +22,8 @@ public:
 	void BehaviorJumpInitialize();
 	void BehaviorJumpUpdate();
 
-	void SetViewProjection(const Camera* viewProjection) { viewProjection_ = viewProjection; }
+	// Cameraの型を Camera* に統一して安全性を向上
+	void SetViewProjection(Camera* viewProjection) { viewProjection_ = viewProjection; }
 	const Transform& GetTransform()const { return transformBase_; }
 
 private:
@@ -31,15 +32,11 @@ private:
 	std::vector<std::unique_ptr<Model>> modelParts_;
 
 	Transform transformBase_;
-	//Transform transformBody_;
-	//Transform transformHead_;
-	//Transform transformL_arm_;
-	//Transform transformR_arm_;
 
 	TextureHandle textureHandle_ = TextureManager::kInvalidHandle;
 
-	// カメラのビュープロジェクション
-	const Camera* viewProjection_ = nullptr;
+	// カメラ参照（非constに統一）
+	Camera* viewProjection_ = nullptr;
 
 	static inline const float kAcceleration = 0.2f;
 	static inline const float kRotateSpeed = 0.15f;
@@ -81,4 +78,3 @@ private:
 	float jumpSquashAmount_ = 0.3f;      // つぶれる強さ（0.0で変形なし、0.3でスケールが1.3/0.7になる）
 	float jumpGroundY_ = 1.5f;           // 地面の高さ基準
 };
-

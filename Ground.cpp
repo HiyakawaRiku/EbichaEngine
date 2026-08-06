@@ -2,36 +2,49 @@
 #include <numbers>
 
 namespace MathUtils {
-    // deg -> rad (θ)
-    constexpr float ToRadians(float degrees) {
-        return degrees * (std::numbers::pi_v<float> / 180.0f);
-    }
+	// deg -> rad (θ)
+	constexpr float ToRadians(float degrees) {
+		return degrees * (std::numbers::pi_v<float> / 180.0f);
+	}
 
-    // rad (θ) -> deg
-    constexpr float ToDegrees(float radians) {
-        return radians * (180.0f / std::numbers::pi_v<float>);
-    }
+	// rad (θ) -> deg
+	constexpr float ToDegrees(float radians) {
+		return radians * (180.0f / std::numbers::pi_v<float>);
+	}
+}
+
+Ground::~Ground()
+{
+	delete model_;
+	model_ = nullptr;
 }
 
 void Ground::Initialize()
 {
 	model_ = new Model();
 	model_->Initialize("plane.obj");
-    textureHandle_ = TextureManager::GetInstance()->Load("resources/ground_leaf.png", DirectXCommon::GetInstance()->GetCommandList());
+	textureHandle_ = TextureManager::GetInstance()->Load("resources/ground_leaf.png", DirectXCommon::GetInstance()->GetCommandList());
 }
 
-void Ground::Update(Camera* activeCamera_)
+void Ground::Update(Camera* activeCamera)
 {
-    float rotationDeg = 90.0f; // 度数法で指定
-    float theta = MathUtils::ToRadians(rotationDeg); // ラジアン(θ)に変換
-    model_->transform.rotate.x = theta;
-	model_->transform.scale.x = 100;
-	model_->transform.scale.y = 100;
+	// カメラ参照を保持
+	activeCamera_ = activeCamera;
 
-	model_->Update(activeCamera_);
+	float rotationDeg = 90.0f; // 度数法で指定
+	float theta = MathUtils::ToRadians(rotationDeg); // ラジアン(θ)に変換
+
+	model_->transform.rotate.x = theta;
+	model_->transform.scale.x = 100.0f;
+	model_->transform.scale.y = 100.0f;
+
+	// 旧 BaseObject の Update(activeCamera_) 呼出しは不要になったため削除
 }
 
 void Ground::Draw()
 {
-	model_->Draw(textureHandle_);
+	if (model_) {
+		// 新しい Model::Draw(Camera*, TextureHandle) を呼び出す
+		model_->Draw(activeCamera_, textureHandle_);
+	}
 }

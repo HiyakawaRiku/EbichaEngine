@@ -1,5 +1,11 @@
 #include "Skydome.h"
 
+Skydome::~Skydome()
+{
+	delete model_;
+	model_ = nullptr;
+}
+
 void Skydome::Initialize()
 {
 	model_ = new Model();
@@ -7,12 +13,18 @@ void Skydome::Initialize()
 	textureHandle_ = TextureManager::GetInstance()->Load("resources/sky_sphere.png", DirectXCommon::GetInstance()->GetCommandList());
 }
 
-void Skydome::Update(Camera* activeCamera_)
+void Skydome::Update(Camera* activeCamera)
 {
-	model_->Update(activeCamera_);
+	// カメラ参照を保持
+	activeCamera_ = activeCamera;
+
+	// 旧 BaseObject の Update(activeCamera_) 呼出しは不要になったため削除
 }
 
 void Skydome::Draw()
 {
-	model_->Draw(textureHandle_);
+	if (model_) {
+		// 新しい Model::Draw(Camera*, TextureHandle) を呼び出す
+		model_->Draw(activeCamera_, textureHandle_);
+	}
 }
