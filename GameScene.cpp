@@ -61,7 +61,7 @@ void GameScene::Update() {
 	if (activeCamera_ != normalCamera_.get()) {
 		activeCamera_->Update();
 	}
-
+	sprite_->uvTransform.translate.x += 1.0f;
 	player_->Update(activeCamera_);
 	skydome_->Update(activeCamera_);
 	ground_->Update(activeCamera_);
@@ -92,7 +92,7 @@ void GameScene::Update() {
 	//Matrix4x4 uvTransformMatrix = MakeScaleMatrix(uvTransformSprite_.scale);
 	//uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(uvTransformSprite_.rotate.z));
 	//uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(uvTransformSprite_.translate));
-	//sprite_->materialData->uvTransform = uvTransformMatrix;
+	//sprite_->GetMaterialData()->uvTransform = uvTransformMatrix;
 }
 
 void GameScene::Draw() {
@@ -108,7 +108,7 @@ void GameScene::Draw() {
 #endif
 
 	// 各オブジェクトの描画
-	sprite_->Draw(1);
+	//sprite_->Draw(1);
 	//sphere_->Draw(1);
 	//modelTeapot_->Draw(1);
 	//modelBunny_->Draw(1);
