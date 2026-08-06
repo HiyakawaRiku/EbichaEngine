@@ -56,43 +56,23 @@ void BaseObject::Draw(TextureHandle textureHandle)
 
 void BaseObject::Draw(Transform transform, Camera* camera, TextureHandle textureHandle)
 {
-	// 1. 引数で受け取った Transform を使って行列を計算・更新
-	Transform currentTransform = transform;
-	currentTransform.UpdateMatrix();
+	// 1. 一時的に Transform を差し替えて Update 相当の計算をする
+	Transform oldTransform = this->transform;
+	this->transform = transform;
 
 	if (wvpData && camera) {
-		*wvpData = camera->CalculateWVP(currentTransform);
+		*wvpData = camera->CalculateWVP(this->transform);
 	}
-
 	if (materialData) {
 		materialData->color = this->color;
 		materialData->lightingType = this->lightingType;
 	}
 
-	auto commandList = dxCommon_->GetCommandList();
+	// 2. 共通の Draw(textureHandle) をそのまま呼び出す（処理の二重管理を防ぐ）
+	Draw(textureHandle);
 
-	commandList->IASetVertexBuffers(0, 1, &vertexBufferView);    // VBVを設定
-	if (indexCount > 0) {
-		commandList->IASetIndexBuffer(&indexBufferView);
-	}
-
-	// 形状を設定。PSOに設定しているものとはまた別。同じものを設定すると考えておけば良い
-	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	//マテリアルCBufferの場所を設定
-	commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
-	// WVP用CBufferの場所を設定
-	commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
-	// SRVのDescriptorTableの先頭を設定。2はrootParameter[2]である。
-	D3D12_GPU_DESCRIPTOR_HANDLE srvHandle = TextureManager::GetInstance()->GetSrvHandleGPU(textureHandle);
-	commandList->SetGraphicsRootDescriptorTable(2, srvHandle);
-	commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
-	// 描画！（DrawCall/ドローコール）。3頂点で1つのインスタンス。インスタンスについては今後
-	if (indexCount > 0) {
-		commandList->DrawIndexedInstanced(indexCount, instanceCount_, 0, 0, 0);
-	}
-	else {
-		commandList->DrawInstanced(vertexCount, instanceCount_, 0, 0);
-	}
+	// 3. 元の Transform に戻しておく（副作用を防ぐ）
+	this->transform = oldTransform;
 }
 
 void BaseObject::CreateMaterialResource()
