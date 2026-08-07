@@ -55,7 +55,7 @@ void DirectXCommon::PreDraw()
 	commandList_->ResourceBarrier(1, &barrier_);								// TransitionBarrierを張る
 
 	// 描画先と深度バッファの設定
-	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvHeap_->GetCPUDescriptorHandleForHeapStart();
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvHeap_->GetCPUDescriptorHandle(0);
 	commandList_->OMSetRenderTargets(1, &rtvHandles_[backBufferIndex], false, &dsvHandle);
 
 	// 画面クリア
@@ -64,7 +64,7 @@ void DirectXCommon::PreDraw()
 	commandList_->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 	// SRVDescriptorHeapの設定
-	ID3D12DescriptorHeap* descriptorHeaps[] = { srvHeap_.Get() };
+	ID3D12DescriptorHeap* descriptorHeaps[] = { srvHeap_->GetHeap() };
 	commandList_->SetDescriptorHeaps(1, descriptorHeaps);
 
 	// パイプライン状態等の設定
@@ -228,25 +228,58 @@ void DirectXCommon::InitializeCommand()
 	assert(SUCCEEDED(hr));
 }
 
+//void DirectXCommon::CreateFinalRenderTargets()
+//{
+//	rtvHeap_ = DirectXUtils::CreateDescriptorHeap(device_.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, kBackBufferCount, false);
+//	srvHeap_ = DirectXUtils::CreateDescriptorHeap(device_.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 128, true);
+//	dsvHeap_ = DirectXUtils::CreateDescriptorHeap(device_.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
+//
+//	for (UINT i = 0; i < kBackBufferCount; ++i) {
+//		HRESULT hr = swapChain_->GetBuffer(i, IID_PPV_ARGS(&swapChainResources_[i]));
+//		assert(SUCCEEDED(hr));
+//	}
+//
+//	rtvDesc_.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB; // 出力結果をSRGBに変換して書き込む
+//	rtvDesc_.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D; // 2dテクスチャとして書き込む
+//
+//	D3D12_CPU_DESCRIPTOR_HANDLE rtvStartHandle = rtvHeap_->GetCPUDescriptorHandleForHeapStart();
+//	UINT descriptorSizeRTV = device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+//
+//	for (UINT i = 0; i < kBackBufferCount; ++i) {
+//		rtvHandles_[i].ptr = rtvStartHandle.ptr + (descriptorSizeRTV * i);
+//		device_->CreateRenderTargetView(swapChainResources_[i].Get(), &rtvDesc_, rtvHandles_[i]);
+//	}
+//
+//	depthStencilResource_ = DirectXUtils::CreateDepthStencilTextureResource(device_.Get(), winApp_->kWindowWidth, winApp_->kWindowHeight);
+//
+//	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc{};
+//	dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+//	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+//	device_->CreateDepthStencilView(depthStencilResource_.Get(), &dsvDesc, dsvHeap_->GetCPUDescriptorHandleForHeapStart());
+//}
+
 void DirectXCommon::CreateFinalRenderTargets()
 {
-	rtvHeap_ = DirectXUtils::CreateDescriptorHeap(device_.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, kBackBufferCount, false);
-	srvHeap_ = DirectXUtils::CreateDescriptorHeap(device_.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 128, true);
-	dsvHeap_ = DirectXUtils::CreateDescriptorHeap(device_.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
+	// DescriptorHeap のインスタンス化と初期化
+	rtvHeap_ = std::make_unique<DescriptorHeap>();
+	rtvHeap_->Initialize(device_.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, kBackBufferCount, false);
+
+	srvHeap_ = std::make_unique<DescriptorHeap>();
+	srvHeap_->Initialize(device_.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 128, true);
+
+	dsvHeap_ = std::make_unique<DescriptorHeap>();
+	dsvHeap_->Initialize(device_.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
 
 	for (UINT i = 0; i < kBackBufferCount; ++i) {
 		HRESULT hr = swapChain_->GetBuffer(i, IID_PPV_ARGS(&swapChainResources_[i]));
 		assert(SUCCEEDED(hr));
 	}
 
-	rtvDesc_.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB; // 出力結果をSRGBに変換して書き込む
-	rtvDesc_.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D; // 2dテクスチャとして書き込む
-
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvStartHandle = rtvHeap_->GetCPUDescriptorHandleForHeapStart();
-	UINT descriptorSizeRTV = device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	rtvDesc_.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+	rtvDesc_.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
 
 	for (UINT i = 0; i < kBackBufferCount; ++i) {
-		rtvHandles_[i].ptr = rtvStartHandle.ptr + (descriptorSizeRTV * i);
+		rtvHandles_[i] = rtvHeap_->GetCPUDescriptorHandle(i); // 単純にインデックスを指定して取得可能
 		device_->CreateRenderTargetView(swapChainResources_[i].Get(), &rtvDesc_, rtvHandles_[i]);
 	}
 
@@ -255,7 +288,7 @@ void DirectXCommon::CreateFinalRenderTargets()
 	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc{};
 	dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-	device_->CreateDepthStencilView(depthStencilResource_.Get(), &dsvDesc, dsvHeap_->GetCPUDescriptorHandleForHeapStart());
+	device_->CreateDepthStencilView(depthStencilResource_.Get(), &dsvDesc, dsvHeap_->GetCPUDescriptorHandle(0));
 }
 
 void DirectXCommon::InitializeTexture(const std::string& filePath, uint32_t index)
@@ -279,8 +312,8 @@ void DirectXCommon::InitializeTexture(const std::string& filePath, uint32_t inde
 	srvDesc_.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc_.Texture2D.MipLevels = UINT(metadata.mipLevels);
 
-	textureSrvHandleCPU[index - 1] = DirectXUtils::GetCPUDescriptorHandle(srvHeap_.Get(), descriptorSizeSRV, index);
-	textureSrvHandleGPU[index - 1] = DirectXUtils::GetGPUDescriptorHandle(srvHeap_.Get(), descriptorSizeSRV, index);
+	textureSrvHandleCPU[index - 1] = DirectXUtils::GetCPUDescriptorHandle(srvHeap_->GetHeap(), descriptorSizeSRV, index);
+	textureSrvHandleGPU[index - 1] = DirectXUtils::GetGPUDescriptorHandle(srvHeap_->GetHeap(), descriptorSizeSRV, index);
 
 	device_->CreateShaderResourceView(textureResource, &srvDesc_, textureSrvHandleCPU[index - 1]);
 }
@@ -503,9 +536,9 @@ void DirectXCommon::InitializeImgui()
 	ImGui_ImplDX12_Init(device_.Get(),
 		swapChainDesc_.BufferCount,
 		rtvDesc_.Format,
-		srvHeap_.Get(),
-		srvHeap_->GetCPUDescriptorHandleForHeapStart(),
-		srvHeap_->GetGPUDescriptorHandleForHeapStart());
+		srvHeap_->GetHeap(),
+		srvHeap_->GetCPUDescriptorHandle(0),
+		srvHeap_->GetGPUDescriptorHandle(0));
 	ImGuiIO& io = ImGui::GetIO();
 	io.Fonts->Build();
 #endif

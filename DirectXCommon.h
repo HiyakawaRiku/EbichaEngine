@@ -2,6 +2,7 @@
 #include "WinApp.h"
 
 #include "DirectXUtils.h"
+#include "DescriptorHeap.h"
 
 #include "Input.h"
 
@@ -44,9 +45,14 @@ public: // メンバ関数
 	// ゲッター / セッター
 	ID3D12Device* GetDevice() const { return device_.Get(); }
 	ID3D12GraphicsCommandList* GetCommandList() const { return commandList_.Get(); }
-	ID3D12DescriptorHeap* GetSrvHeap() const { return srvHeap_.Get(); }
-	ID3D12DescriptorHeap* GetRtvHeap() const { return rtvHeap_.Get(); }
-	ID3D12DescriptorHeap* GetDsvHeap() const { return dsvHeap_.Get(); }
+	//ID3D12DescriptorHeap* GetSrvHeap() const { return srvHeap_.Get(); }
+	//ID3D12DescriptorHeap* GetRtvHeap() const { return rtvHeap_.Get(); }
+	//ID3D12DescriptorHeap* GetDsvHeap() const { return dsvHeap_.Get(); }
+
+	// ゲッターの更新 (既存コードとの互換性を維持)
+	ID3D12DescriptorHeap* GetSrvHeap() const { return srvHeap_->GetHeap(); }
+	ID3D12DescriptorHeap* GetRtvHeap() const { return rtvHeap_->GetHeap(); }
+	ID3D12DescriptorHeap* GetDsvHeap() const { return dsvHeap_->GetHeap(); }
 
 	D3D12_CPU_DESCRIPTOR_HANDLE GetTextureSrvHandleCPU(uint32_t index) const { return textureSrvHandleCPU[index - 1]; }
 	D3D12_GPU_DESCRIPTOR_HANDLE GetTextureSrvHandleGPU(uint32_t index) const { return textureSrvHandleGPU[index - 1]; }
@@ -96,9 +102,13 @@ private:
 	Microsoft::WRL::ComPtr<IDXGISwapChain4> swapChain_;
 
 	// 記述子ヒープ
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvHeap_;
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvHeap_;
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvHeap_;
+	//Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvHeap_;
+	//Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvHeap_;
+	//Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvHeap_;
+
+	std::unique_ptr<DescriptorHeap> rtvHeap_;
+	std::unique_ptr<DescriptorHeap> srvHeap_;
+	std::unique_ptr<DescriptorHeap> dsvHeap_;
 
 	// ディスクリプタ設定および保持構造体
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc_{};

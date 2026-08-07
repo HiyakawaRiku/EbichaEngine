@@ -103,6 +103,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="DebugCamera.cpp" />
     <ClCompile Include="DebugRenderer.cpp" />
+    <ClCompile Include="DescriptorHeap.cpp" />
     <ClCompile Include="DirectXCommon.cpp" />
     <ClCompile Include="DirectXUtils.cpp" />
     <ClCompile Include="EbichaEngine.cpp" />
@@ -146,6 +147,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
   <ItemGroup>
     <ClInclude Include="Audio.h" />
     <ClInclude Include="BaseCharacter.h" />
+    <ClInclude Include="DescriptorHeap.h" />
     <ClInclude Include="DirectXUtils.h" />
     <ClInclude Include="Struct.h" />
     <ClInclude Include="Camera.h" />
