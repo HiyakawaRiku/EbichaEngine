@@ -27,6 +27,16 @@ public:
 
 	void InitializeTexture(const std::string& filePath, uint32_t index);
 
+	void CreateInstancingSrv(
+		uint32_t index,
+		ID3D12Resource* instancingResource,
+		uint32_t numInstance,
+		size_t structureByteStride
+	);
+
+	D3D12_CPU_DESCRIPTOR_HANDLE GetInstancingSrvHandleCPU(uint32_t index) const { return instancingSrvHandleCPU[index - 1]; }
+	D3D12_GPU_DESCRIPTOR_HANDLE GetInstancingSrvHandleGPU(uint32_t index) const { return instancingSrvHandleGPU[index - 1]; }
+
 	// ゲッター / セッター
 	ID3D12Device* GetDevice() const { return device_.Get(); }
 	ID3D12GraphicsCommandList* GetCommandList() const { return commandContext_->GetCommandList(); }
@@ -40,6 +50,7 @@ public:
 	void SetBlendMode(BlendMode blendMode) { blendMode_ = blendMode; }
 	BlendMode GetBlendMode() const { return blendMode_; }
 	const char* GetBlendModeNames() const { return blendModeNames_; }
+	void SetPipelineType(PipelineType pipelineType) { pipelineType_ = pipelineType; }
 
 private:
 	DirectXCommon() = default;
@@ -53,7 +64,7 @@ private:
 	// 状態変数
 	const char* blendModeNames_ = "None\0Normal\0Add\0Subtract\0Multiply\0Screen\0\0";
 	BlendMode blendMode_ = BlendMode::kNone;
-
+	PipelineType pipelineType_ = PipelineType::kObject3D;
 	WinApp* winApp_ = nullptr;
 
 	// DXGI・デバイス
@@ -71,6 +82,9 @@ private:
 	// テクスチャ用デスクリプタハンドル
 	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU[kMaxTextureIndex]{};
 	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU[kMaxTextureIndex]{};
+
+	D3D12_CPU_DESCRIPTOR_HANDLE instancingSrvHandleCPU[kMaxTextureIndex]{};
+	D3D12_GPU_DESCRIPTOR_HANDLE instancingSrvHandleGPU[kMaxTextureIndex]{};
 
 	// ビューポート・シザー領域
 	D3D12_VIEWPORT viewport_{};

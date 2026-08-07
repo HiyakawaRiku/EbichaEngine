@@ -43,6 +43,17 @@ void Ground::Update(Camera* activeCamera)
 
 void Ground::Draw()
 {
+	//// 1. 位置をずらした Transform の配列を作る
+	//std::vector<Transform> transforms(10);
+	//for (size_t i = 0; i < transforms.size(); ++i) {
+	//	transforms[i].scale = { 1.0f, 1.0f, 1.0f };
+	//	transforms[i].rotate = { 0.0f, 0.0f, 0.0f };
+	//	transforms[i].translate = { i * 0.1f, i * 0.1f, i * 0.1f }; // 横に2刻みで並べる
+	//}
+
+	//// 2. 1回の描画呼び出しで一括描画！
+	//model_->DrawInstanced(transforms, activeCamera_, textureHandle_);
+
 	if (model_) {
 		// 新しい Model::Draw(Camera*, TextureHandle) を呼び出す
 		model_->Draw(activeCamera_, textureHandle_);

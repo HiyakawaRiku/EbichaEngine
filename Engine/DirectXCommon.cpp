@@ -70,7 +70,7 @@ void DirectXCommon::PreDraw()
 	commandList->RSSetViewports(1, &viewport_);
 	commandList->RSSetScissorRects(1, &scissorRect_);
 	commandList->SetGraphicsRootSignature(pipelineManager_->GetRootSignature());
-	commandList->SetPipelineState(pipelineManager_->GetPipelineState(blendMode_));
+	commandList->SetPipelineState(pipelineManager_->GetPipelineState(pipelineType_, blendMode_));
 }
 
 void DirectXCommon::PostDraw()
@@ -117,6 +117,37 @@ void DirectXCommon::InitializeTexture(const std::string& filePath, uint32_t inde
 	textureSrvHandleGPU[index - 1] = srvHeap_->GetGPUDescriptorHandle(index);
 
 	device_->CreateShaderResourceView(textureResource, &srvDesc, textureSrvHandleCPU[index - 1]);
+}
+
+void DirectXCommon::CreateInstancingSrv(
+	uint32_t index,
+	ID3D12Resource* instancingResource,
+	uint32_t numInstance,
+	size_t structureByteStride)
+{
+	assert(index > 0 && index <= kMaxTextureIndex); // インデックスの有効範囲チェック
+	assert(instancingResource != nullptr);
+
+	// 1. SRVの設定構造体を作成 (画像の内容と同一)
+	D3D12_SHADER_RESOURCE_VIEW_DESC instancingSrvDesc{};
+	instancingSrvDesc.Format = DXGI_FORMAT_UNKNOWN;
+	instancingSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	instancingSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+	instancingSrvDesc.Buffer.FirstElement = 0;
+	instancingSrvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+	instancingSrvDesc.Buffer.NumElements = numInstance;
+	instancingSrvDesc.Buffer.StructureByteStride = static_cast<UINT>(structureByteStride);
+
+	// 2. DescriptorHeapから指定インデックスの CPU / GPU ハンドルを取得
+	instancingSrvHandleCPU[index - 1] = srvHeap_->GetCPUDescriptorHandle(index);
+	instancingSrvHandleGPU[index - 1] = srvHeap_->GetGPUDescriptorHandle(index);
+
+	// 3. SRVの生成
+	device_->CreateShaderResourceView(
+		instancingResource,
+		&instancingSrvDesc,
+		instancingSrvHandleCPU[index - 1]
+	);
 }
 
 void DirectXCommon::InitializeDXGIDevice()

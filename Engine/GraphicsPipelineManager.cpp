@@ -30,7 +30,14 @@ void GraphicsPipelineManager::CreateRootSignature(ID3D12Device* device) {
     descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
     descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-    D3D12_ROOT_PARAMETER rootParameters[4] = {};
+    // インスタンスデータ用 SRV の Descriptor Range を作成
+    D3D12_DESCRIPTOR_RANGE instanceSrvRange[1] = {};
+    instanceSrvRange[0].BaseShaderRegister = 0; // register(t1)
+    instanceSrvRange[0].NumDescriptors = 1;
+    instanceSrvRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    instanceSrvRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+    D3D12_ROOT_PARAMETER rootParameters[5] = {};
     rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
     rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
     rootParameters[0].Descriptor.ShaderRegister = 0;
@@ -47,6 +54,11 @@ void GraphicsPipelineManager::CreateRootSignature(ID3D12Device* device) {
     rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
     rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
     rootParameters[3].Descriptor.ShaderRegister = 1;
+
+    rootParameters[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    rootParameters[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+    rootParameters[4].DescriptorTable.pDescriptorRanges = instanceSrvRange;
+    rootParameters[4].DescriptorTable.NumDescriptorRanges = _countof(instanceSrvRange);
 
     descriptionRootSignature.pParameters = rootParameters;
     descriptionRootSignature.NumParameters = _countof(rootParameters);
@@ -122,13 +134,13 @@ void GraphicsPipelineManager::CreateGraphicsPipelines(ID3D12Device* device) {
     hr = dxcUtils->CreateDefaultIncludeHandler(&includeHandler);
     assert(SUCCEEDED(hr));
 
-    Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = DirectXUtils::CompileShader(
-        L"Object3D.VS.hlsl", L"vs_6_0", dxcUtils, dxcCompiler, includeHandler);
-    assert(vertexShaderBlob != nullptr);
+    // Object3D 用[cite: 5]
+    Microsoft::WRL::ComPtr<IDxcBlob> objVSBlob = DirectXUtils::CompileShader(L"Object3D.VS.hlsl", L"vs_6_0", dxcUtils, dxcCompiler, includeHandler); 
+        Microsoft::WRL::ComPtr<IDxcBlob> objPSBlob = DirectXUtils::CompileShader(L"Object3D.PS.hlsl", L"ps_6_0", dxcUtils, dxcCompiler, includeHandler); 
 
-    Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = DirectXUtils::CompileShader(
-        L"Object3D.PS.hlsl", L"ps_6_0", dxcUtils, dxcCompiler, includeHandler);
-    assert(pixelShaderBlob != nullptr);
+        // Particle 用
+        Microsoft::WRL::ComPtr<IDxcBlob> particleVSBlob = DirectXUtils::CompileShader(L"Particle.VS.hlsl", L"vs_6_0", dxcUtils, dxcCompiler, includeHandler);
+    Microsoft::WRL::ComPtr<IDxcBlob> particlePSBlob = DirectXUtils::CompileShader(L"Particle.PS.hlsl", L"ps_6_0", dxcUtils, dxcCompiler, includeHandler);
 
     D3D12_INPUT_ELEMENT_DESC inputElementDescs[3] = {};
     inputElementDescs[0].SemanticName = "POSITION";
@@ -159,8 +171,6 @@ void GraphicsPipelineManager::CreateGraphicsPipelines(ID3D12Device* device) {
     D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc{};
     graphicsPipelineStateDesc.pRootSignature = rootSignature_.Get();
     graphicsPipelineStateDesc.InputLayout = inputLayoutDesc;
-    graphicsPipelineStateDesc.VS = { vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize() };
-    graphicsPipelineStateDesc.PS = { pixelShaderBlob->GetBufferPointer(), pixelShaderBlob->GetBufferSize() };
     graphicsPipelineStateDesc.RasterizerState = rasterizerDesc;
     graphicsPipelineStateDesc.NumRenderTargets = 1;
     graphicsPipelineStateDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
@@ -170,11 +180,18 @@ void GraphicsPipelineManager::CreateGraphicsPipelines(ID3D12Device* device) {
     graphicsPipelineStateDesc.DepthStencilState = depthStencilDesc;
     graphicsPipelineStateDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
-    for (uint32_t i = 0; i < static_cast<uint32_t>(BlendMode::kCount); ++i) {
-        BlendMode mode = static_cast<BlendMode>(i);
-        graphicsPipelineStateDesc.BlendState = CreateBlendDesc(mode);
-        hr = device->CreateGraphicsPipelineState(&graphicsPipelineStateDesc,
-            IID_PPV_ARGS(&graphicsPipelineStates_[i]));
-        assert(SUCCEEDED(hr));
+    for (uint32_t b = 0; b < static_cast<uint32_t>(BlendMode::kCount); ++b) {
+        BlendMode mode = static_cast<BlendMode>(b);
+        graphicsPipelineStateDesc.BlendState = CreateBlendDesc(mode); 
+
+            // Object3D PSO[cite: 5]
+            graphicsPipelineStateDesc.VS = { objVSBlob->GetBufferPointer(), objVSBlob->GetBufferSize() }; 
+            graphicsPipelineStateDesc.PS = { objPSBlob->GetBufferPointer(), objPSBlob->GetBufferSize() }; 
+            device->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&graphicsPipelineStates_[static_cast<size_t>(PipelineType::kObject3D)][b]));
+
+            // Particle PSO
+            graphicsPipelineStateDesc.VS = { particleVSBlob->GetBufferPointer(), particleVSBlob->GetBufferSize() };
+        graphicsPipelineStateDesc.PS = { particlePSBlob->GetBufferPointer(), particlePSBlob->GetBufferSize() };
+        device->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&graphicsPipelineStates_[static_cast<size_t>(PipelineType::kParticle)][b]));
     }
 }

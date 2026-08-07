@@ -6,6 +6,12 @@
 #include <array>
 #include <string>
 
+enum class PipelineType {
+    kObject3D, // 通常描画用
+    kParticle, // インスタンシング描画用
+    kCount
+};
+
 // ブレンドモード定義 (DirectXCommon.hからこちらに移動・共有しても構いません)
 enum class BlendMode {
     kNone,
@@ -15,6 +21,15 @@ enum class BlendMode {
     kMultiply,
     kScreen,
     kCount,
+};
+
+enum class RootParameterIndex {
+    kMaterial = 0,         // register(b0) : Pixel Shader
+    kWVP = 1,              // register(b0) : Vertex Shader
+    kTexture = 2,          // register(t0) : Descriptor Table
+    kDirectionalLight = 3, // register(b1) : Pixel Shader
+    kParticleInstance = 4, // register(t1) : StructuredBuffer (Vertex Shader) ★追加
+    kCount
 };
 
 class GraphicsPipelineManager {
@@ -27,8 +42,8 @@ public:
 
     // ゲッター
     ID3D12RootSignature* GetRootSignature() const { return rootSignature_.Get(); }
-    ID3D12PipelineState* GetPipelineState(BlendMode blendMode) const {
-        return graphicsPipelineStates_[static_cast<size_t>(blendMode)].Get();
+    ID3D12PipelineState* GetPipelineState(PipelineType pipelineType, BlendMode blendMode) const {
+        return graphicsPipelineStates_[static_cast<size_t>(pipelineType)][static_cast<size_t>(blendMode)].Get();
     }
 
 private:
@@ -38,5 +53,5 @@ private:
 
 private:
     Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature_;
-    std::array<Microsoft::WRL::ComPtr<ID3D12PipelineState>, static_cast<size_t>(BlendMode::kCount)> graphicsPipelineStates_;
+    std::array<std::array<Microsoft::WRL::ComPtr<ID3D12PipelineState>, static_cast<size_t>(BlendMode::kCount)>, static_cast<size_t>(PipelineType::kCount)> graphicsPipelineStates_;
 };

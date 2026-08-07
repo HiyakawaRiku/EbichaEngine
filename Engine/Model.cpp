@@ -1,4 +1,5 @@
 #include "Model.h"
+#include <algorithm>
 
 void Model::Initialize(const std::string& filename)
 {
@@ -10,6 +11,8 @@ void Model::Initialize(const std::string& filename)
 	CreateMaterialResource();
 	CreateWvpResource();
 	CreateDirectionalLight();
+	// ★追加: インスタンシング用リソースとSRVの生成
+	CreateInstanceResource();
 }
 
 void Model::CreateModelSphere()
@@ -55,6 +58,32 @@ void Model::CreateDirectionalLight()
 	directionalLightData_->intensity = 1.0f;
 }
 
+void Model::CreateInstanceResource()
+{
+	// 資料通りのリソース生成 (TransformationMatrix を kMaxInstanceCount 分確保)[cite: 7]
+	instanceResource_ = DirectXUtils::CreateBufferResource(
+		dxCommon_->GetDevice(),
+		sizeof(TransformationMatrix) * kMaxInstanceCount
+	);
+
+		// 書き込むためのアドレスを取得 (Map)[cite: 7]
+		instanceResource_->Map(0, nullptr, reinterpret_cast<void**>(&instanceData_));
+
+		// 初期化として単位行列を書き込んでおく[cite: 7]
+		for (uint32_t index = 0; index < kMaxInstanceCount; ++index) {
+			instanceData_[index].WVP = MakeIdentity4x4();
+				instanceData_[index].World = MakeIdentity4x4(); 
+		}
+
+	// DirectXCommonの関数を使ってSRVを生成
+	dxCommon_->CreateInstancingSrv(
+		instanceSrvIndex_,
+		instanceResource_.Get(),
+		kMaxInstanceCount,
+		sizeof(TransformationMatrix)
+	);
+}
+
 // 1. 自身の this->transform を使って描画する関数
 void Model::Draw(Camera* camera, TextureHandle textureHandle)
 {
@@ -95,6 +124,57 @@ void Model::Draw(const Transform& transform, Camera* camera, TextureHandle textu
 
 	// 描画呼出し
 	commandList->DrawInstanced(vertexCount_, instanceCount_, 0, 0);
+}
+
+void Model::DrawInstanced(const std::vector<Transform>& transforms, Camera* camera, TextureHandle textureHandle)
+{
+	uint32_t instanceCount = static_cast<uint32_t>(transforms.size());
+	if (instanceCount == 0) return;
+
+	if (instanceCount > kMaxInstanceCount) {
+		instanceCount = kMaxInstanceCount;
+	}
+
+	// カメラの View 行列と Projection 行列を事前取得[cite: 10]
+	Matrix4x4 viewMatrix = MakeIdentity4x4();
+	Matrix4x4 projectionMatrix = MakeIdentity4x4();
+	if (camera) {
+		viewMatrix = camera->GetViewMatrix(); 
+			projectionMatrix = camera->GetProjectionMatrix(); 
+	}
+	Matrix4x4 viewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
+
+	// 各インスタンスの行列を計算して Resource（マップ済みバッファ）へ書き込む
+	for (uint32_t i = 0; i < instanceCount; ++i) {
+		Transform currentTransform = transforms[i];
+		currentTransform.UpdateMatrix();
+
+		Matrix4x4 worldMatrix = currentTransform.matWorld; // アフィニティ行列[cite: 9]
+
+		// 資料通りのデータ書き込み
+		instanceData_[i].World = worldMatrix;
+		instanceData_[i].WVP = Multiply(worldMatrix, viewProjectionMatrix);
+	}
+
+	auto commandList = dxCommon_->GetCommandList(); 
+
+		// 頂点バッファ・トポロジ設定[cite: 7]
+		commandList->IASetVertexBuffers(0, 1, &vertexBufferView_); 
+		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); 
+
+		// パイプライン・定数バッファ等のバインド[cite: 7]
+		commandList->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress()); 
+
+		D3D12_GPU_DESCRIPTOR_HANDLE srvHandle = TextureManager::GetInstance()->GetSrvHandleGPU(textureHandle); 
+		commandList->SetGraphicsRootDescriptorTable(2, srvHandle); 
+		commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress()); 
+
+		// ★有効化: インスタンスデータ (StructuredBuffer の SRV) をルートパラメータ4番にセット
+		D3D12_GPU_DESCRIPTOR_HANDLE instancingSrvHandleGPU = dxCommon_->GetInstancingSrvHandleGPU(instanceSrvIndex_);
+	commandList->SetGraphicsRootDescriptorTable(4, instancingSrvHandleGPU);
+
+	// ★第2引数にインスタンス数を渡して描画[cite: 7]
+	commandList->DrawInstanced(vertexCount_, instanceCount, 0, 0); 
 }
 
 // --- 以下 LoadMaterialTemplateFile / LoadObjFile は元の処理のまま ---
