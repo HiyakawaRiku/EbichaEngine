@@ -2,8 +2,7 @@
 #include "DirectXCommon.h"
 #include "EMath.h"
 #include "Transform.h"
-
-
+#include <random>
 
 struct VertexData {
 	Vector4 position;
@@ -33,4 +32,9 @@ struct DirectionalLight {
 	Vector4 color;
 	Vector3 direction;
 	float intensity;
+};
+
+struct Particle {
+	Transform transform;
+	Vector3 velocity;
 };

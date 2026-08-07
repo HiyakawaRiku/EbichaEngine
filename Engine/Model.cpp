@@ -126,7 +126,7 @@ void Model::Draw(const Transform& transform, Camera* camera, TextureHandle textu
 	commandList->DrawInstanced(vertexCount_, instanceCount_, 0, 0);
 }
 
-void Model::DrawInstanced(const std::vector<Transform>& transforms, Camera* camera, TextureHandle textureHandle)
+void Model::DrawInstanced(const std::vector<Particle>& transforms, Camera* camera, TextureHandle textureHandle)
 {
 	uint32_t instanceCount = static_cast<uint32_t>(transforms.size());
 	if (instanceCount == 0) return;
@@ -146,7 +146,7 @@ void Model::DrawInstanced(const std::vector<Transform>& transforms, Camera* came
 
 	// 各インスタンスの行列を計算して Resource（マップ済みバッファ）へ書き込む
 	for (uint32_t i = 0; i < instanceCount; ++i) {
-		Transform currentTransform = transforms[i];
+		Transform currentTransform = transforms[i].transform;
 		currentTransform.UpdateMatrix();
 
 		Matrix4x4 worldMatrix = currentTransform.matWorld; // アフィニティ行列[cite: 9]
@@ -156,7 +156,7 @@ void Model::DrawInstanced(const std::vector<Transform>& transforms, Camera* came
 		instanceData_[i].WVP = Multiply(worldMatrix, viewProjectionMatrix);
 	}
 
-	auto commandList = dxCommon_->GetCommandList(); 
+	auto commandList = dxCommon_->GetCommandList();
 
 		// 頂点バッファ・トポロジ設定[cite: 7]
 		commandList->IASetVertexBuffers(0, 1, &vertexBufferView_); 

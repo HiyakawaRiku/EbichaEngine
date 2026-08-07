@@ -45,7 +45,7 @@ public:
 	void Draw(const Transform& transform, Camera* camera, TextureHandle textureHandle);
 
 	// インスタンス数を指定して描画する関数を追加
-	void DrawInstanced(const std::vector<Transform>& transforms, Camera* camera, TextureHandle textureHandle);
+	void DrawInstanced(const std::vector<Particle>& transforms, Camera* camera, TextureHandle textureHandle);
 
 private:
 	void CreateModelSphere();
@@ -81,7 +81,9 @@ private:
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> instanceResource_;
 	TransformationMatrix* instanceData_ = nullptr;
-	uint32_t instanceSrvIndex_ = 10;
+	uint32_t instanceSrvIndex_ = 100;
+
+	GraphicsPipelineManager graphicsPipelineManager_;
 
 };
 

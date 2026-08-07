@@ -100,6 +100,8 @@ void GameScene::Update() {
 }
 
 void GameScene::Draw() {
+
+	dxCommon_->SetPipelineType(PipelineType::kParticle);
 	// 描画前処理
 	dxCommon_->PreDraw();
 
@@ -127,13 +129,21 @@ void GameScene::Draw() {
 
 	skydome_->Draw();
 	ground_->Draw();
-	player_->Draw();
+	//player_->Draw();
 
 	// デバッグレンダラーの描画適用
 	DebugRenderer::Flush(activeCamera_);
 
 	// 描画後処理
 	dxCommon_->PostDraw();
+
+	//dxCommon_->SetPipelineType(PipelineType::kParticle);
+	//// 描画前処理
+	//dxCommon_->PreDraw();
+
+	//ground_->Draw();
+
+	//dxCommon_->PostDraw();
 }
 
 void GameScene::Finalize() {

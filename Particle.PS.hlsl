@@ -11,16 +11,7 @@ struct Material
     float4x4 uvTransform;
 };
 
-struct DirectionalLight
-{
-    float4 color;
-    float3 direction;
-    float intensity;
-};
-
-
 ConstantBuffer<Material> gMaterial : register(b0);
-ConstantBuffer<DirectionalLight> gDirectionalLight : register(b1);
 
 struct PixelShaderOutput
 {
