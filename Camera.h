@@ -1,5 +1,5 @@
 #pragma once
-#include "BaseObject.h"
+#include "Struct.h"
 
 class Camera
 {
