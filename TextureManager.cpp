@@ -38,8 +38,8 @@ TextureHandle TextureManager::Load(const std::string& filePath, ID3D12GraphicsCo
     const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
 
     // 1. テクスチャリソース作成
-    ID3D12Resource* textureResource = DirectXCommon::CreateTextureResource(device_, metadata);
-    ID3D12Resource* intermediateResource = DirectXCommon::UploadTextureData(textureResource, mipImages, device_, commandList);
+    ID3D12Resource* textureResource = DirectXUtils::CreateTextureResource(device_, metadata);
+    ID3D12Resource* intermediateResource = DirectXUtils::UploadTextureData(textureResource, mipImages, device_, commandList);
 
     // 2. ディスクリプタハンドルの算出
     TextureHandle handle = static_cast<TextureHandle>(textures_.size());
