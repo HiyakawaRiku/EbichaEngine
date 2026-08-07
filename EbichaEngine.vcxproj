@@ -54,6 +54,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <AdditionalIncludeDirectories>$(ProjectDir)externals/DirectXTex;$(ProjectDir)externals/imgui;$(ProjectDir)Engine;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -83,6 +84,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <AdditionalIncludeDirectories>$(ProjectDir)externals/DirectXTex;$(ProjectDir)externals/imgui;$(ProjectDir)Engine;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -98,17 +100,27 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Audio.cpp" />
     <ClCompile Include="BaseCharacter.cpp" />
-    <ClCompile Include="Camera.cpp" />
-    <ClCompile Include="CommandContext.cpp" />
-    <ClCompile Include="DebugCamera.cpp" />
-    <ClCompile Include="DebugRenderer.cpp" />
-    <ClCompile Include="DescriptorHeap.cpp" />
-    <ClCompile Include="DirectXCommon.cpp" />
-    <ClCompile Include="DirectXUtils.cpp" />
-    <ClCompile Include="EbichaEngine.cpp" />
-    <ClCompile Include="EMath.cpp" />
+    <ClCompile Include="Engine\Audio.cpp" />
+    <ClCompile Include="Engine\Camera.cpp" />
+    <ClCompile Include="Engine\CommandContext.cpp" />
+    <ClCompile Include="Engine\DebugCamera.cpp" />
+    <ClCompile Include="Engine\DebugRenderer.cpp" />
+    <ClCompile Include="Engine\DescriptorHeap.cpp" />
+    <ClCompile Include="Engine\DirectXCommon.cpp" />
+    <ClCompile Include="Engine\DirectXUtils.cpp" />
+    <ClCompile Include="Engine\EbichaEngine.cpp" />
+    <ClCompile Include="Engine\EMath.cpp" />
+    <ClCompile Include="Engine\GraphicsPipelineManager.cpp" />
+    <ClCompile Include="Engine\Input.cpp" />
+    <ClCompile Include="Engine\Mesh.cpp" />
+    <ClCompile Include="Engine\Model.cpp" />
+    <ClCompile Include="Engine\Sphere.cpp" />
+    <ClCompile Include="Engine\Sprite.cpp" />
+    <ClCompile Include="Engine\SwapChainManager.cpp" />
+    <ClCompile Include="Engine\TextureManager.cpp" />
+    <ClCompile Include="Engine\Transform.cpp" />
+    <ClCompile Include="Engine\WinApp.cpp" />
     <ClCompile Include="externals\imgui\imgui.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
@@ -132,36 +144,35 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </ClCompile>
     <ClCompile Include="FollowCamera.cpp" />
     <ClCompile Include="GameScene.cpp" />
-    <ClCompile Include="GraphicsPipelineManager.cpp" />
     <ClCompile Include="Ground.cpp" />
-    <ClCompile Include="Input.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="Skydome.cpp" />
-    <ClCompile Include="SwapChainManager.cpp" />
-    <ClCompile Include="TextureManager.cpp" />
-    <ClCompile Include="Transform.cpp" />
-    <ClCompile Include="Mesh.cpp" />
-    <ClCompile Include="Model.cpp" />
-    <ClCompile Include="Sphere.cpp" />
-    <ClCompile Include="Sprite.cpp" />
-    <ClCompile Include="WinApp.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Audio.h" />
     <ClInclude Include="BaseCharacter.h" />
-    <ClInclude Include="CommandContext.h" />
-    <ClInclude Include="DescriptorHeap.h" />
-    <ClInclude Include="DirectXUtils.h" />
-    <ClInclude Include="GraphicsPipelineManager.h" />
-    <ClInclude Include="Struct.h" />
-    <ClInclude Include="Camera.h" />
-    <ClInclude Include="DebugCamera.h" />
-    <ClInclude Include="DebugManager.h" />
-    <ClInclude Include="DebugRenderer.h" />
-    <ClInclude Include="DirectXCommon.h" />
-    <ClInclude Include="EbichaEngine.h" />
-    <ClInclude Include="EMath.h" />
+    <ClInclude Include="Engine\Audio.h" />
+    <ClInclude Include="Engine\Camera.h" />
+    <ClInclude Include="Engine\CommandContext.h" />
+    <ClInclude Include="Engine\DebugCamera.h" />
+    <ClInclude Include="Engine\DebugManager.h" />
+    <ClInclude Include="Engine\DebugRenderer.h" />
+    <ClInclude Include="Engine\DescriptorHeap.h" />
+    <ClInclude Include="Engine\DirectXCommon.h" />
+    <ClInclude Include="Engine\DirectXUtils.h" />
+    <ClInclude Include="Engine\EbichaEngine.h" />
+    <ClInclude Include="Engine\EMath.h" />
+    <ClInclude Include="Engine\GraphicsPipelineManager.h" />
+    <ClInclude Include="Engine\Input.h" />
+    <ClInclude Include="Engine\Mesh.h" />
+    <ClInclude Include="Engine\Model.h" />
+    <ClInclude Include="Engine\Sphere.h" />
+    <ClInclude Include="Engine\Sprite.h" />
+    <ClInclude Include="Engine\Struct.h" />
+    <ClInclude Include="Engine\SwapChainManager.h" />
+    <ClInclude Include="Engine\TextureManager.h" />
+    <ClInclude Include="Engine\Transform.h" />
+    <ClInclude Include="Engine\WinApp.h" />
     <ClInclude Include="externals\imgui\imconfig.h" />
     <ClInclude Include="externals\imgui\imgui.h" />
     <ClInclude Include="externals\imgui\imgui_impl_dx12.h" />
@@ -173,17 +184,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="FollowCamera.h" />
     <ClInclude Include="GameScene.h" />
     <ClInclude Include="Ground.h" />
-    <ClInclude Include="Input.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="Skydome.h" />
-    <ClInclude Include="SwapChainManager.h" />
-    <ClInclude Include="TextureManager.h" />
-    <ClInclude Include="Transform.h" />
-    <ClInclude Include="Mesh.h" />
-    <ClInclude Include="Model.h" />
-    <ClInclude Include="Sphere.h" />
-    <ClInclude Include="Sprite.h" />
-    <ClInclude Include="WinApp.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="DebugLine.PS.hlsl">

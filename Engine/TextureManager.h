@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include <d3d12.h>
 #include <wrl.h>
-#include "externals/DirectXTex/DirectXTex.h"
+#include "DirectXTex.h"
 
 // テクスチャ識別用のハンドル型
 using TextureHandle = uint32_t;
