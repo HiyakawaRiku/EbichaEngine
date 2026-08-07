@@ -2,6 +2,7 @@
 #include "WinApp.h"
 
 #include "DirectXUtils.h"
+#include "SwapChainManager.h"
 #include "GraphicsPipelineManager.h"
 #include "DescriptorHeap.h"
 
@@ -57,15 +58,16 @@ private:
 
 	// 初期化サブメソッド
 	void InitializeDXGIDevice();
-	void CreateSwapChain();
+	//void CreateSwapChain();
 	void InitializeCommand();
-	void CreateFinalRenderTargets();
+	//void CreateFinalRenderTargets();
 	void CreateFence();
 	//void InitializePSO();
 	void InitializeViewport();
 	void InitializeImgui();
 
-	// パイプライン管理用マネージャーの所有
+	// マネージャーの所有
+	std::unique_ptr<SwapChainManager> swapChainManager_;
 	std::unique_ptr<GraphicsPipelineManager> pipelineManager_;
 
 	// PSO構築用の内部補助メソッド
@@ -92,7 +94,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> commandList_;
 	Microsoft::WRL::ComPtr<ID3D12CommandAllocator> commandAllocator_;
 	Microsoft::WRL::ComPtr<ID3D12CommandQueue> commandQueue_;
-	Microsoft::WRL::ComPtr<IDXGISwapChain4> swapChain_;
+	//Microsoft::WRL::ComPtr<IDXGISwapChain4> swapChain_;
 
 	// 記述子ヒープ
 	//Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvHeap_;
@@ -104,20 +106,20 @@ private:
 	std::unique_ptr<DescriptorHeap> dsvHeap_;
 
 	// ディスクリプタ設定および保持構造体
-	DXGI_SWAP_CHAIN_DESC1 swapChainDesc_{};
-	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc_{};
+	//DXGI_SWAP_CHAIN_DESC1 swapChainDesc_{};
+	//D3D12_RENDER_TARGET_VIEW_DESC rtvDesc_{};
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc_{};
 
 	// レンダリングターゲット・リソース
-	Microsoft::WRL::ComPtr<ID3D12Resource> swapChainResources_[kBackBufferCount] = { nullptr };
-	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles_[kBackBufferCount]{};
-	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource_;
+	//Microsoft::WRL::ComPtr<ID3D12Resource> swapChainResources_[kBackBufferCount] = { nullptr };
+	//D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles_[kBackBufferCount]{};
+	//Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource_;
 
 	// テクスチャ用デスクリプタハンドル
 	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU[kMaxTextureIndex]{};
 	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU[kMaxTextureIndex]{};
 
-	D3D12_RESOURCE_BARRIER barrier_{};
+	//D3D12_RESOURCE_BARRIER barrier_{};
 	Microsoft::WRL::ComPtr<ID3D12Fence> fence_;
 	HANDLE fenceEvent_ = nullptr;
 	UINT64 fenceVal_ = 0;
