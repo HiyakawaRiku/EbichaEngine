@@ -131,6 +131,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </ClCompile>
     <ClCompile Include="FollowCamera.cpp" />
     <ClCompile Include="GameScene.cpp" />
+    <ClCompile Include="GraphicsPipelineManager.cpp" />
     <ClCompile Include="Ground.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="main.cpp" />
@@ -149,6 +150,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="BaseCharacter.h" />
     <ClInclude Include="DescriptorHeap.h" />
     <ClInclude Include="DirectXUtils.h" />
+    <ClInclude Include="GraphicsPipelineManager.h" />
     <ClInclude Include="Struct.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="DebugCamera.h" />

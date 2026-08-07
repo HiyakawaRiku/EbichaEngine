@@ -2,20 +2,10 @@
 #include "WinApp.h"
 
 #include "DirectXUtils.h"
+#include "GraphicsPipelineManager.h"
 #include "DescriptorHeap.h"
 
 #include "Input.h"
-
-enum BlendMode {
-	kBlendModeNone,
-	kBlendModeNormal,
-	kBlendModeAdd,
-	kBlendModeSubtract,
-	kBlendModeMultiply,
-	kBlendModeScreen,
-	kCountOfBlendMode,
-};
-
 
 class DirectXCommon {
 public: // メンバ関数
@@ -71,14 +61,17 @@ private:
 	void InitializeCommand();
 	void CreateFinalRenderTargets();
 	void CreateFence();
-	void InitializePSO();
+	//void InitializePSO();
 	void InitializeViewport();
 	void InitializeImgui();
 
+	// パイプライン管理用マネージャーの所有
+	std::unique_ptr<GraphicsPipelineManager> pipelineManager_;
+
 	// PSO構築用の内部補助メソッド
-	void CreateRootSignature();
-	void CreateGraphicsPipelines();
-	D3D12_BLEND_DESC CreateBlendDesc(BlendMode mode) const;
+	//void CreateRootSignature();
+	//void CreateGraphicsPipelines();
+	//D3D12_BLEND_DESC CreateBlendDesc(BlendMode mode) const;
 
 	// 同期処理
 	void WaitForGPU();
@@ -88,7 +81,7 @@ private:
 private:
 	// 状態変数
 	const char* blendModeNames_ = "None\0Normal\0Add\0Subtract\0Multiply\0Screen\0\0";
-	BlendMode blendMode_ = BlendMode::kBlendModeNone;
+	BlendMode blendMode_ = BlendMode::kNone;
 
 	// アプリケーション参照
 	WinApp* winApp_ = nullptr;
@@ -123,10 +116,6 @@ private:
 	// テクスチャ用デスクリプタハンドル
 	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU[kMaxTextureIndex]{};
 	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU[kMaxTextureIndex]{};
-
-	// パイプライン・同期関連
-	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature_;
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineStates_[BlendMode::kCountOfBlendMode];
 
 	D3D12_RESOURCE_BARRIER barrier_{};
 	Microsoft::WRL::ComPtr<ID3D12Fence> fence_;
