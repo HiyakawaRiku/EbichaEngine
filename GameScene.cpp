@@ -28,6 +28,9 @@ void GameScene::Initialize() {
 	ground_ = new Ground();
 	ground_->Initialize();
 
+	particle_ = new Particle();
+	particle_->Initialize();
+
 	followCamera_ = new FollowCamera();
 	followCamera_->Initialize();
 	followCamera_->SetTarget(&player_->GetTransform());
@@ -67,6 +70,7 @@ void GameScene::Update() {
 	player_->Update(activeCamera_);
 	skydome_->Update(activeCamera_);
 	ground_->Update(activeCamera_);
+	particle_->Update(activeCamera_);
 
 	// オブジェクト更新
 	//sprite_->Update(activeCamera_);
@@ -129,7 +133,9 @@ void GameScene::Draw() {
 
 	skydome_->Draw();
 	ground_->Draw();
-	//player_->Draw();
+	player_->Draw();
+
+	particle_->Draw();
 
 	// デバッグレンダラーの描画適用
 	DebugRenderer::Flush(activeCamera_);

@@ -45,7 +45,7 @@ public:
 	void Draw(const Transform& transform, Camera* camera, TextureHandle textureHandle);
 
 	// インスタンス数を指定して描画する関数を追加
-	void DrawInstanced(const std::vector<Particle>& transforms, Camera* camera, TextureHandle textureHandle);
+	void DrawInstanced(const std::vector<ParticleData>& particles, Camera* camera, TextureHandle textureHandle);
 
 private:
 	void CreateModelSphere();
@@ -80,7 +80,7 @@ private:
 	static const uint32_t kMaxInstanceCount = 1000; // 最大インスタンス数
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> instanceResource_;
-	TransformationMatrix* instanceData_ = nullptr;
+	ParticleForGPU* instanceData_ = nullptr;
 	uint32_t instanceSrvIndex_ = 100;
 
 	GraphicsPipelineManager graphicsPipelineManager_;

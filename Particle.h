@@ -1,10 +1,10 @@
 #pragma once
 #include "EbichaEngine.h"
+#include "Struct.h"
 
-class Ground
-{
+class Particle {
 public:
-	~Ground(); // デストラクタを追加（delete忘れ防止）
+	~Particle(); // デストラクタを追加（delete忘れ防止）
 
 	void Initialize();
 	void Update(Camera* activeCamera_);
@@ -16,4 +16,7 @@ private:
 	Camera* activeCamera_ = nullptr; // カメラ参照を保持用に追加
 
 	const float kDeltaTime = 1.0f / 60.0f;
+
+	std::vector<ParticleData> particles_;
 };
+

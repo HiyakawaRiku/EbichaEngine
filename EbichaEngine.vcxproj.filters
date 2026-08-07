@@ -126,6 +126,9 @@
     <ClCompile Include="Engine\WinApp.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
+    <ClCompile Include="Particle.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="externals\imgui\imconfig.h">
@@ -235,6 +238,9 @@
     </ClInclude>
     <ClInclude Include="Engine\WinApp.h">
       <Filter>Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Particle.h">
+      <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

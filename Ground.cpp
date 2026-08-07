@@ -1,19 +1,6 @@
 #include "Ground.h"
 #include <numbers>
 
-std::random_device seedGenerator;
-std::mt19937 randomEngine(seedGenerator());
-
-Particle MakeNewParticle(std::mt19937& randomEngine) {
-	std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
-	Particle particle;
-	particle.transform.scale = { 1.0f, 1.0f, 1.0f };
-	particle.transform.rotate = { 0.0f, 0.0f, 0.0f };
-	particle.transform.translate = { distribution(randomEngine), distribution(randomEngine), distribution(randomEngine) };
-	particle.velocity = { distribution(randomEngine), distribution(randomEngine), distribution(randomEngine) };
-	return particle;
-}
-
 namespace MathUtils {
 	// deg -> rad (θ)
 	constexpr float ToRadians(float degrees) {
@@ -37,13 +24,6 @@ void Ground::Initialize()
 	model_ = new Model();
 	model_->Initialize("plane.obj");
 	textureHandle_ = TextureManager::GetInstance()->Load("resources/ground_leaf.png", DirectXCommon::GetInstance()->GetCommandList());
-
-	particles_.resize(10);
-	for (size_t i = 0; i < particles_.size(); ++i) {
-		particles_[i] = MakeNewParticle(randomEngine);
-	}
-
-	
 }
 
 void Ground::Update(Camera* activeCamera)
@@ -57,20 +37,13 @@ void Ground::Update(Camera* activeCamera)
 	model_->transform.rotate.x = theta;
 	model_->transform.scale.x = 100.0f;
 	model_->transform.scale.y = 100.0f;
-
-	for (auto& particle : particles_) {
-		particle.transform.translate += particle.velocity * kDeltaTime;
-	}
 }
 
 void Ground::Draw()
 {
 
-	// 2. 1回の描画呼び出しで一括描画！
-	model_->DrawInstanced(particles_, activeCamera_, textureHandle_);
-
-	//if (model_) {
-	//	// 新しい Model::Draw(Camera*, TextureHandle) を呼び出す
-	//	model_->Draw(activeCamera_, textureHandle_);
-	//}
+	if (model_) {
+		// 新しい Model::Draw(Camera*, TextureHandle) を呼び出す
+		model_->Draw(activeCamera_, textureHandle_);
+	}
 }

@@ -34,7 +34,15 @@ struct DirectionalLight {
 	float intensity;
 };
 
-struct Particle {
+struct ParticleData
+{
 	Transform transform;
 	Vector3 velocity;
+	Vector4 color;
+};
+
+struct ParticleForGPU {
+	Matrix4x4 WVP;
+	Matrix4x4 World;
+	Vector4 color;
 };

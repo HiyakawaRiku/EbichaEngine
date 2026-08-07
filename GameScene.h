@@ -8,6 +8,7 @@
 #include "Skydome.h"
 #include "Ground.h"
 #include "FollowCamera.h"
+#include "Particle.h"
 
 class GameScene {
 public:
@@ -69,4 +70,5 @@ private:
     Skydome* skydome_ = nullptr;
     Ground* ground_ = nullptr;
     FollowCamera* followCamera_ = nullptr;
+    Particle* particle_ = nullptr;
 };
