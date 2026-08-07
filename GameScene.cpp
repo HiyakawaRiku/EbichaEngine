@@ -78,6 +78,8 @@ void GameScene::Update() {
 	// デバッググリッド設定
 	DebugRenderer::AddGrid(100.0f, 10, { 0.5f, 0.5f, 0.5f, 1.0f });
 
+
+
 	// キー操作による処理
 	if (input_->PushKey(DIK_P)) {
 		activeCamera_->transform_.rotate.x -= 0.03f;
@@ -105,6 +107,12 @@ void GameScene::Draw() {
 	ImGui::Begin("Settings");
 
 	ImGui::Checkbox("Change Camera", &useDebugCamera_);
+
+	int currentIndex = static_cast<int>(blendMode_);
+	if (ImGui::Combo("Blend Mode", &currentIndex,blendModeNames_)) {
+		blendMode_ = static_cast<BlendMode>(currentIndex);
+		DirectXCommon::GetInstance()->SetBlendMode(blendMode_);
+	};
 
 	ImGui::End();
 #endif
