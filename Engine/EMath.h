@@ -15,6 +15,25 @@ struct Vector3 {
 	Vector3 operator+(const Vector3& rhs) const {
 		return Vector3{ x + rhs.x, y + rhs.y, z + rhs.z };
 	}
+
+	Vector3& operator+=(const Vector3& rhs) {
+		x += rhs.x;
+		y += rhs.y;
+		z += rhs.z;
+		return *this;
+	}
+
+	// Vector3 * float
+	Vector3 operator*(float scalar) const {
+		return { x * scalar, y * scalar, z * scalar };
+	}
+
+	Vector3& operator*=(float scalar) {
+		x *= scalar;
+		y *= scalar;
+		z *= scalar;
+		return *this;
+	}
 };
 
 struct Vector4 {
@@ -66,25 +85,6 @@ Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float botto
 
 // ベクトル変換
 Vector3 TransformNormal(const Vector3& v, const Matrix4x4& m);
-
-inline Vector3& operator+=(Vector3& lhs, const Vector3& rhs) {
-	lhs.x += rhs.x; lhs.y += rhs.y; lhs.z += rhs.z;
-	return lhs;
-}
-
-inline Vector3& operator-=(Vector3& lhs, const Vector3& rhs) {
-	lhs.x -= rhs.x; lhs.y -= rhs.y; lhs.z -= rhs.z;
-	return lhs;
-}
-
-inline Vector3 operator*(const Vector3& v, float s) {
-	return Vector3{ v.x * s, v.y * s, v.z * s };
-}
-
-// float * Vector3 のオーバーロード（順序が逆でもOKにする）
-inline Vector3 operator*(float s, const Vector3& v) {
-	return Vector3{ v.x * s, v.y * s, v.z * s };
-}
 
 namespace EMath {
 

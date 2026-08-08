@@ -127,7 +127,7 @@ void Model::Draw(const Transform& transform, Camera* camera, TextureHandle textu
 	commandList->DrawInstanced(vertexCount_, instanceCount_, 0, 0);
 }
 
-void Model::DrawInstanced(const std::vector<ParticleData>& particles, Camera* camera, TextureHandle textureHandle)
+void Model::DrawInstanced(std::vector<ParticleData>& particles, Camera* camera, TextureHandle textureHandle)
 {
 	uint32_t instanceCount = static_cast<uint32_t>(particles.size());
 	if (instanceCount == 0) return;
@@ -145,17 +145,30 @@ void Model::DrawInstanced(const std::vector<ParticleData>& particles, Camera* ca
 	}
 	Matrix4x4 viewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
 
+	uint32_t numInstance = 0;
 	// 各インスタンスの行列を計算して Resource（マップ済みバッファ）へ書き込む
 	for (uint32_t i = 0; i < instanceCount; ++i) {
+		if (particles[i].lifeTime <= particles[i].currentTime) {
+			continue;
+		}
+
 		Transform currentTransform = particles[i].transform;
 		currentTransform.UpdateMatrix();
 
 		Matrix4x4 worldMatrix = currentTransform.matWorld; // アフィニティ行列[cite: 9]
 
 		// 資料通りのデータ書き込み
-		instanceData_[i].World = worldMatrix;
-		instanceData_[i].WVP = Multiply(worldMatrix, viewProjectionMatrix);
-		instanceData_[i].color = particles[i].color;
+		particles[i].transform.translate += particles[i].velocity * kDeltaTime;
+		particles[i].currentTime += kDeltaTime;
+		instanceData_[numInstance].World = worldMatrix;
+		instanceData_[numInstance].WVP = Multiply(worldMatrix, viewProjectionMatrix);
+		instanceData_[numInstance].color = particles[i].color;
+		float alpha = 1.0f - (particles[i].currentTime / particles[i].lifeTime);
+		instanceData_[numInstance].color.x = alpha;
+		instanceData_[numInstance].color.y = alpha;
+		instanceData_[numInstance].color.z = alpha;
+		instanceData_[numInstance].color.w = alpha;
+		++numInstance;
 	}
 
 	auto commandList = dxCommon_->GetCommandList();
@@ -176,7 +189,7 @@ void Model::DrawInstanced(const std::vector<ParticleData>& particles, Camera* ca
 	commandList->SetGraphicsRootDescriptorTable(4, instancingSrvHandleGPU);
 
 	// ★第2引数にインスタンス数を渡して描画[cite: 7]
-	commandList->DrawInstanced(vertexCount_, instanceCount, 0, 0);
+	commandList->DrawInstanced(UINT(modelData_.vertices.size()), numInstance, 0, 0);
 }
 
 // --- 以下 LoadMaterialTemplateFile / LoadObjFile は元の処理のまま ---

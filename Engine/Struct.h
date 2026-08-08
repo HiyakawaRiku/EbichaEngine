@@ -39,6 +39,8 @@ struct ParticleData
 	Transform transform;
 	Vector3 velocity;
 	Vector4 color;
+	float lifeTime;
+	float currentTime;
 };
 
 struct ParticleForGPU {
@@ -46,3 +48,5 @@ struct ParticleForGPU {
 	Matrix4x4 World;
 	Vector4 color;
 };
+
+const float kDeltaTime = 1.0f / 60.0f;

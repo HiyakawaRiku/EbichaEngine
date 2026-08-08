@@ -15,8 +15,7 @@ private:
 	TextureHandle textureHandle_ = TextureManager::kInvalidHandle;
 	Camera* activeCamera_ = nullptr; // カメラ参照を保持用に追加
 
-	const float kDeltaTime = 1.0f / 60.0f;
-
 	std::vector<ParticleData> particles_;
+	const uint32_t kNumMaxInstance = 10;
 };
 
