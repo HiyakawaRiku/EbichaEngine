@@ -167,6 +167,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="Engine\Input.h" />
     <ClInclude Include="Engine\Mesh.h" />
     <ClInclude Include="Engine\Model.h" />
+    <ClInclude Include="Engine\Physics3D.h" />
     <ClInclude Include="Engine\Sphere.h" />
     <ClInclude Include="Engine\Sprite.h" />
     <ClInclude Include="Engine\Struct.h" />

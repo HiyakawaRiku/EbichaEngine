@@ -2,18 +2,45 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 
+#include <cmath>
+#include <limits>
+#include <algorithm>
+#include <array>
+
 struct Vector2 {
 	float x, y;
 };
 
-struct Vector3 {
-	float x;
-	float y;
-	float z;
+// =================================================================
+// 基礎算術構造体 (自作エンジン向け軽量ベクトル・行列)
+// =================================================================
 
-	// + 演算子のオーバーロードを追加
-	Vector3 operator+(const Vector3& rhs) const {
-		return Vector3{ x + rhs.x, y + rhs.y, z + rhs.z };
+struct Vector3 {
+	float x{ 0.0f }, y{ 0.0f }, z{ 0.0f };
+
+	Vector3 operator+(const Vector3& v) const { return { x + v.x, y + v.y, z + v.z }; }
+	Vector3 operator-(const Vector3& v) const { return { x - v.x, y - v.y, z - v.z }; }
+	Vector3 operator*(float s) const { return { x * s, y * s, z * s }; }
+	Vector3 operator/(float s) const { return { x / s, y / s, z / s }; }
+
+	float lengthSq() const { return x * x + y * y + z * z; }
+	float length() const { return std::sqrt(lengthSq()); }
+
+	Vector3 normalized() const {
+		float len = length();
+		return len > 0.00001f ? *this / len : Vector3{ 0, 0, 0 };
+	}
+
+	static float dot(const Vector3& a, const Vector3& b) {
+		return a.x * b.x + a.y * b.y + a.z * b.z;
+	}
+
+	static Vector3 cross(const Vector3& a, const Vector3& b) {
+		return {
+			a.y * b.z - a.z * b.y,
+			a.z * b.x - a.x * b.z,
+			a.x * b.y - a.y * b.x
+		};
 	}
 
 	Vector3& operator+=(const Vector3& rhs) {
@@ -21,11 +48,6 @@ struct Vector3 {
 		y += rhs.y;
 		z += rhs.z;
 		return *this;
-	}
-
-	// Vector3 * float
-	Vector3 operator*(float scalar) const {
-		return { x * scalar, y * scalar, z * scalar };
 	}
 
 	Vector3& operator*=(float scalar) {
@@ -49,8 +71,14 @@ struct Matrix3x3 {
 	float m[3][3];
 };
 
+// 4x4行列（OBB判定用）
 struct Matrix4x4 {
-	float m[4][4];
+	float m[4][4]{};
+
+	// 3x3部分（回転・スケール）を行ベクトルとして取得
+	Vector3 getAxis(int index) const {
+		return { m[0][index], m[1][index], m[2][index] };
+	}
 };
 
 Matrix4x4 Add(const Matrix4x4& m1, const Matrix4x4& m2);

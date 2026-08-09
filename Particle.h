@@ -9,6 +9,10 @@ struct Emitter {
 	float frequencyTime;//頻度用時刻
 };
 
+struct AccelerationField {
+	Vector3 acceleration;
+};
+
 class Particle {
 public:
 	~Particle(); // デストラクタを追加（delete忘れ防止）
