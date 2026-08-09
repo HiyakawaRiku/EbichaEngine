@@ -127,7 +127,7 @@ void Model::Draw(const Transform& transform, Camera* camera, TextureHandle textu
 	commandList->DrawInstanced(vertexCount_, instanceCount_, 0, 0);
 }
 
-void Model::DrawInstanced(std::vector<ParticleData>& particles, Camera* camera, TextureHandle textureHandle)
+void Model::DrawInstanced(std::list<ParticleData>& particles, Camera* camera, TextureHandle textureHandle)
 {
 	uint32_t instanceCount = static_cast<uint32_t>(particles.size());
 	if (instanceCount == 0) return;
@@ -139,34 +139,47 @@ void Model::DrawInstanced(std::vector<ParticleData>& particles, Camera* camera, 
 	// カメラの View 行列と Projection 行列を事前取得[cite: 10]
 	Matrix4x4 viewMatrix = MakeIdentity4x4();
 	Matrix4x4 projectionMatrix = MakeIdentity4x4();
+	Matrix4x4 backToFrontMatrix = MakeIdentity4x4();
 	if (camera) {
 		viewMatrix = camera->GetViewMatrix();
 		projectionMatrix = camera->GetProjectionMatrix();
+
+		backToFrontMatrix = viewMatrix;
+		backToFrontMatrix.m[3][0] = 0.0f; // 平行移動成分をクリア
+		backToFrontMatrix.m[3][1] = 0.0f;
+		backToFrontMatrix.m[3][2] = 0.0f;
+		backToFrontMatrix = Inverse(backToFrontMatrix);
 	}
 	Matrix4x4 viewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
 
 	uint32_t numInstance = 0;
 	// 各インスタンスの行列を計算して Resource（マップ済みバッファ）へ書き込む
-	for (uint32_t i = 0; i < instanceCount; ++i) {
-		if (particles[i].lifeTime <= particles[i].currentTime) {
+	for (auto& particle : particles) {
+		if (particle.lifeTime <= particle.currentTime) {
 			continue;
 		}
 
-		Transform currentTransform = particles[i].transform;
+		Transform currentTransform = particle.transform;
 		currentTransform.UpdateMatrix();
 
-		Matrix4x4 worldMatrix = currentTransform.matWorld; // アフィニティ行列[cite: 9]
+		// 【ビルボードを考慮したワールド行列の作成】
+		// Transform の Scale と Translate を使って行列を作成
+		Matrix4x4 scaleMatrix = MakeScaleMatrix(particle.transform.scale);
+		Matrix4x4 translateMatrix = MakeTranslateMatrix(particle.transform.translate);
+
+		// SRT の R（回転）の部分に、ビルボード行列（backToFrontMatrix）を適用する
+		// （パーティクル固有のZ軸回転などがあれば backToFrontMatrix と乗算します）
+		Matrix4x4 worldMatrix = Multiply(scaleMatrix, Multiply(backToFrontMatrix, translateMatrix));
+
+		//Matrix4x4 worldMatrix = currentTransform.matWorld; // アフィニティ行列[cite: 9]
 
 		// 資料通りのデータ書き込み
-		particles[i].transform.translate += particles[i].velocity * kDeltaTime;
-		particles[i].currentTime += kDeltaTime;
+		particle.transform.translate += particle.velocity * kDeltaTime;
+		particle.currentTime += kDeltaTime;
 		instanceData_[numInstance].World = worldMatrix;
 		instanceData_[numInstance].WVP = Multiply(worldMatrix, viewProjectionMatrix);
-		instanceData_[numInstance].color = particles[i].color;
-		float alpha = 1.0f - (particles[i].currentTime / particles[i].lifeTime);
-		instanceData_[numInstance].color.x = alpha;
-		instanceData_[numInstance].color.y = alpha;
-		instanceData_[numInstance].color.z = alpha;
+		instanceData_[numInstance].color = particle.color;
+		float alpha = 1.0f - (particle.currentTime / particle.lifeTime);
 		instanceData_[numInstance].color.w = alpha;
 		++numInstance;
 	}

@@ -165,7 +165,12 @@ void GraphicsPipelineManager::CreateGraphicsPipelines(ID3D12Device* device) {
 
     D3D12_DEPTH_STENCIL_DESC depthStencilDesc{};
     depthStencilDesc.DepthEnable = true;
-    depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+    if (depthMask) {
+        depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+    }
+    else {
+        depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+    }
     depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 
     D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc{};
@@ -184,14 +189,34 @@ void GraphicsPipelineManager::CreateGraphicsPipelines(ID3D12Device* device) {
         BlendMode mode = static_cast<BlendMode>(b);
         graphicsPipelineStateDesc.BlendState = CreateBlendDesc(mode); 
 
-            // Object3D PSO[cite: 5]
-            graphicsPipelineStateDesc.VS = { objVSBlob->GetBufferPointer(), objVSBlob->GetBufferSize() }; 
-            graphicsPipelineStateDesc.PS = { objPSBlob->GetBufferPointer(), objPSBlob->GetBufferSize() }; 
-            device->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&graphicsPipelineStates_[static_cast<size_t>(PipelineType::kObject3D)][b]));
+        for (uint32_t dw = 0; dw < static_cast<uint32_t>(DepthWrite::kCount); ++dw) {
+            DepthWrite depthWrite = static_cast<DepthWrite>(dw);
 
-            // Particle PSO
+            // DepthStencilDesc の動的設定
+            D3D12_DEPTH_STENCIL_DESC depthStencilDesc{};
+            depthStencilDesc.DepthEnable = true;
+            depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+            depthStencilDesc.DepthWriteMask = (depthWrite == DepthWrite::kEnable)
+                ? D3D12_DEPTH_WRITE_MASK_ALL
+                : D3D12_DEPTH_WRITE_MASK_ZERO;
+
+            graphicsPipelineStateDesc.DepthStencilState = depthStencilDesc;
+
+            // --- Object3D PSO ---[cite: 5]
+            graphicsPipelineStateDesc.VS = { objVSBlob->GetBufferPointer(), objVSBlob->GetBufferSize() };
+            graphicsPipelineStateDesc.PS = { objPSBlob->GetBufferPointer(), objPSBlob->GetBufferSize() };
+            device->CreateGraphicsPipelineState(
+                &graphicsPipelineStateDesc,
+                IID_PPV_ARGS(&graphicsPipelineStates_[static_cast<size_t>(PipelineType::kObject3D)][b][dw])
+            );
+
+            // --- Particle PSO ---[cite: 5]
             graphicsPipelineStateDesc.VS = { particleVSBlob->GetBufferPointer(), particleVSBlob->GetBufferSize() };
-        graphicsPipelineStateDesc.PS = { particlePSBlob->GetBufferPointer(), particlePSBlob->GetBufferSize() };
-        device->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&graphicsPipelineStates_[static_cast<size_t>(PipelineType::kParticle)][b]));
+            graphicsPipelineStateDesc.PS = { particlePSBlob->GetBufferPointer(), particlePSBlob->GetBufferSize() };
+            device->CreateGraphicsPipelineState(
+                &graphicsPipelineStateDesc,
+                IID_PPV_ARGS(&graphicsPipelineStates_[static_cast<size_t>(PipelineType::kParticle)][b][dw])
+            );
+        }
     }
 }

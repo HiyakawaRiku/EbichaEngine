@@ -45,7 +45,7 @@ public:
 	void Draw(const Transform& transform, Camera* camera, TextureHandle textureHandle);
 
 	// インスタンス数を指定して描画する関数を追加
-	void DrawInstanced(std::vector<ParticleData>& particles, Camera* camera, TextureHandle textureHandle);
+	void DrawInstanced(std::list<ParticleData>& particles, Camera* camera, TextureHandle textureHandle);
 
 private:
 	void CreateModelSphere();

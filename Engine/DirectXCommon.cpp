@@ -150,6 +150,17 @@ void DirectXCommon::CreateInstancingSrv(
 	);
 }
 
+void DirectXCommon::SetPipeline(PipelineType pipelineType, BlendMode blendMode, DepthWrite depthWrite)
+{
+	ID3D12GraphicsCommandList* commandList = commandContext_->GetCommandList();
+
+	// パイプライン・ビューポート設定
+	commandList->RSSetViewports(1, &viewport_);
+	commandList->RSSetScissorRects(1, &scissorRect_);
+	commandList->SetGraphicsRootSignature(pipelineManager_->GetRootSignature());
+	commandList->SetPipelineState(pipelineManager_->GetPipelineState(pipelineType, blendMode, depthWrite));
+}
+
 void DirectXCommon::InitializeDXGIDevice()
 {
 	// (DXGI Device 生成処理：既存のコードそのまま)

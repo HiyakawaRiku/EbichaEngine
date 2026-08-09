@@ -62,7 +62,7 @@ private:
     uint32_t seHandle_ = 0;
     uint32_t bgmHandle_ = 0;
 
-    BlendMode blendMode_ = BlendMode::kNone;
+    BlendMode blendMode_ = BlendMode::kNormal;
     const char* blendModeNames_ = "none\0normal\0add\0subtract\0multiply\0screen\0\0";
 
 private:

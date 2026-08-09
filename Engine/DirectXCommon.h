@@ -52,6 +52,9 @@ public:
 	const char* GetBlendModeNames() const { return blendModeNames_; }
 	void SetPipelineType(PipelineType pipelineType) { pipelineType_ = pipelineType; }
 
+	// パイプライン・ブレンドモードをコマンドリストにセットする処理
+	void SetPipeline(PipelineType pipelineType, BlendMode blendMode, DepthWrite depthWrite = DepthWrite::kEnable);
+
 private:
 	DirectXCommon() = default;
 	~DirectXCommon() = default;

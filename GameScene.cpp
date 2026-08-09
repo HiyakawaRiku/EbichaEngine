@@ -47,6 +47,8 @@ void GameScene::Initialize() {
 	bgmHandle_ = audio_->LoadAudioSource("Resources/420_long_BPM108.mp3");
 	//bgmHandle_ = audio_->LoadAudioSource("Resources/koi.mp3");
 	audio_->PlayWave(bgmHandle_, true, 0.5f);
+	dxCommon_->SetBlendMode(blendMode_);
+	
 }
 
 void GameScene::Update() {
@@ -105,7 +107,7 @@ void GameScene::Update() {
 
 void GameScene::Draw() {
 
-	dxCommon_->SetPipelineType(PipelineType::kParticle);
+	dxCommon_->SetPipelineType(PipelineType::kObject3D);
 	// 描画前処理
 	dxCommon_->PreDraw();
 
@@ -129,11 +131,13 @@ void GameScene::Draw() {
 	//modelTeapot_->Draw(1);
 	//modelBunny_->Draw(1);
 	//modelMultiMesh_->Draw(1);
-
+	dxCommon_->SetPipeline(PipelineType::kObject3D, blendMode_, DepthWrite::kEnable);
 
 	skydome_->Draw();
 	ground_->Draw();
 	player_->Draw();
+
+	dxCommon_->SetPipeline(PipelineType::kParticle, BlendMode::kAdd, DepthWrite::kDisable);
 
 	particle_->Draw();
 
@@ -143,13 +147,7 @@ void GameScene::Draw() {
 	// 描画後処理
 	dxCommon_->PostDraw();
 
-	//dxCommon_->SetPipelineType(PipelineType::kParticle);
-	//// 描画前処理
-	//dxCommon_->PreDraw();
 
-	//ground_->Draw();
-
-	//dxCommon_->PostDraw();
 }
 
 void GameScene::Finalize() {
