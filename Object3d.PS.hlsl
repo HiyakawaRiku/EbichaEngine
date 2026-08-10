@@ -3,7 +3,6 @@
 Texture2D<float4> gTexture : register(t0);
 SamplerState gSampler : register(s0);
 
-
 struct Material
 {
     float4 color;
@@ -35,49 +34,60 @@ struct PixelShaderOutput
 
 PixelShaderOutput main(VertexShaderOutput input)
 {
+    // UV変換とテクスチャサンプリング
     float4 transformedUV = mul(float4(input.texcoord, 0.0f, 1.0f), gMaterial.uvTransform);
     float4 textureColor = gTexture.Sample(gSampler, transformedUV.xy);
-    float3 toEye = normalize(gCamera.worldPosition - input.worldPosition);
-    float3 reflectLight = reflect(gDirectionalLight.direction, normalize(input.normal));
-    
-    float RdotE = dot(reflectLight, toEye);
-    float specularPow = pow(saturate(RdotE), gMaterial.shininess);
-    
-    if (textureColor.a <= 0.5)
+
+    // Alpha Cutoff (Alpha Test)
+    if (textureColor.a <= 0.5f)
     {
         discard;
     }
-    
+
     PixelShaderOutput output;
-    
-    // 0: ライトなし (ライティング計算を行わない)
+
+    // 0: ライティングなし (Unlit)
     if (gMaterial.lightingType == 0)
     {
         output.color = textureColor * gMaterial.color;
+        return output;
     }
-    else
+
+    // ベクトルの正規化
+    float3 N = normalize(input.normal);
+    float3 L = normalize(-gDirectionalLight.direction); // 光源に向かうベクトル
+    float3 V = normalize(gCamera.worldPosition - input.worldPosition); // 視線に向かうベクトル
+
+    // 拡散反射係数 (NdotL)
+    float NdotL = dot(N, L);
+    float lightFactor = 0.0f;
+
+    if (gMaterial.lightingType == 1)
     {
-        float NdotL = saturate(dot(normalize(input.normal), -gDirectionalLight.direction));
-        float lightFactor = 1.0f;
-
-        if (gMaterial.lightingType == 1)
-        {
-            // 1: ランバート (Lambert)
-            lightFactor = saturate(NdotL);
-        }
-        else if (gMaterial.lightingType == 2)
-        {
-            // 2: ハーフランバート (Half-Lambert)
-            float halfLambert = NdotL * 0.5f + 0.5f;
-            lightFactor = halfLambert * halfLambert; // pow(halfLambert, 2.0f)
-        }
-        
-        float3 diffuse = gMaterial.color.rgb * textureColor.rgb * gDirectionalLight.color.rgb * lightFactor * gDirectionalLight.intensity;
-        float3 specular = gDirectionalLight.color.rgb * gDirectionalLight.intensity * specularPow * float3(1.0f, 1.0f, 1.0f);
-
-        output.color.rgb = diffuse + specular;
-        output.color.a = gMaterial.color.a * textureColor.a;
+        // 1: ランバート (Lambert)
+        lightFactor = saturate(NdotL);
     }
+    else if (gMaterial.lightingType == 2)
+    {
+        // 2: ハーフランバート (Half-Lambert)
+        float halfLambert = NdotL * 0.5f + 0.5f;
+        lightFactor = halfLambert * halfLambert;
+    }
+
+    // --- 鏡面反射 (Specular) の計算 (Blinn-Phong) ---
+    float3 H = normalize(L + V); // ハーフベクトル
+    float NdotH = saturate(dot(N, H));
+    
+    // NdotL > 0 (光が当たる表面) の場合のみハイライトを出す
+    float specularPow = (NdotL > 0.0f) ? pow(NdotH, gMaterial.shininess) : 0.0f;
+
+    // ライティングの結合
+    float3 lightColor = gDirectionalLight.color.rgb * gDirectionalLight.intensity;
+    float3 diffuse = gMaterial.color.rgb * textureColor.rgb * lightColor * lightFactor;
+    float3 specular = lightColor * specularPow;
+
+    output.color.rgb = diffuse + specular;
+    output.color.a = gMaterial.color.a * textureColor.a;
 
     return output;
 }
