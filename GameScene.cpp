@@ -48,6 +48,8 @@ void GameScene::Initialize() {
 	//bgmHandle_ = audio_->LoadAudioSource("Resources/koi.mp3");
 	audio_->PlayWave(bgmHandle_, true, 0.5f);
 	dxCommon_->SetBlendMode(blendMode_);
+
+	textureHandle_ = TextureManager::GetInstance()->Load("resources/monsterBall.png", dxCommon_->GetCommandList());
 	
 }
 
@@ -76,7 +78,7 @@ void GameScene::Update() {
 
 	// オブジェクト更新
 	//sprite_->Update(activeCamera_);
-	//sphere_->Update(activeCamera_);
+	sphere_->Update(activeCamera_);
 	//modelTeapot_->Update(activeCamera_);
 	//modelBunny_->Update(activeCamera_);
 	//modelMultiMesh_->Update(activeCamera_);
@@ -115,6 +117,7 @@ void GameScene::Draw() {
 	ImGui::Begin("Settings");
 
 	ImGui::Checkbox("Change Camera", &useDebugCamera_);
+	ImGui::DragFloat3("position", &sphere_->transform.translate.x, 1.0f);
 
 	int currentIndex = static_cast<int>(blendMode_);
 	if (ImGui::Combo("Blend Mode", &currentIndex,blendModeNames_)) {
@@ -127,7 +130,7 @@ void GameScene::Draw() {
 
 	// 各オブジェクトの描画
 	//sprite_->Draw(1);
-	//sphere_->Draw(1);
+	sphere_->Draw(textureHandle_);
 	//modelTeapot_->Draw(1);
 	//modelBunny_->Draw(1);
 	//modelMultiMesh_->Draw(1);

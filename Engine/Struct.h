@@ -49,4 +49,8 @@ struct ParticleForGPU {
 	Vector4 color;
 };
 
+struct CameraForGpu {
+	Vector3 worldPosition;
+};
+
 const float kDeltaTime = 1.0f / 60.0f;

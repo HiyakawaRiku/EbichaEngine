@@ -36,6 +36,7 @@ public:
     void Finalize();
 
 private:
+
     // エンジンの各ポインタ（シングルトン参照）
     DirectXCommon* dxCommon_ = nullptr;
     Input* input_ = nullptr;
@@ -61,13 +62,13 @@ private:
     // オーディオハンドル
     uint32_t seHandle_ = 0;
     uint32_t bgmHandle_ = 0;
+    TextureHandle textureHandle_;
 
     BlendMode blendMode_ = BlendMode::kNormal;
     const char* blendModeNames_ = "none\0normal\0add\0subtract\0multiply\0screen\0\0";
 
 private:
     Player* player_=nullptr;
-    Sphere* sphere_ = nullptr;
     Skydome* skydome_ = nullptr;
     Ground* ground_ = nullptr;
     FollowCamera* followCamera_ = nullptr;
