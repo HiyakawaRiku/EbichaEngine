@@ -7,10 +7,12 @@ struct Emitter {
 	uint32_t count;
 	float frequency;//発生頻度
 	float frequencyTime;//頻度用時刻
+	Vector3 velocity;
 };
 
 struct AccelerationField {
 	Vector3 acceleration;
+	AABB area;
 };
 
 class Particle {
@@ -28,7 +30,7 @@ private:
 	Camera* activeCamera_ = nullptr; // カメラ参照を保持用に追加
 
 	std::list<ParticleData> particles_;
-	const uint32_t kNumMaxInstance = 10;
-
+	AccelerationField accelerationField;
+	bool isUpdate=false;
 };
 

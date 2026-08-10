@@ -4,7 +4,7 @@
 std::random_device seedGenerator;
 std::mt19937 randomEngine(seedGenerator());
 
-ParticleData MakeNewParticle(std::mt19937& randomEngine,const Vector3& translate) {
+ParticleData MakeNewParticle(std::mt19937& randomEngine, const Vector3& translate) {
 	std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
 	std::uniform_real_distribution<float> distColor(0.0f, 1.0f);
 	std::uniform_real_distribution<float> distTime(1.0f, 3.0f);
@@ -23,9 +23,9 @@ ParticleData MakeNewParticle(std::mt19937& randomEngine,const Vector3& translate
 std::list<ParticleData> Emit(const Emitter& emitter, std::mt19937& randomEngine) {
 	std::list<ParticleData> particles;
 	for (uint32_t count = 0; count < emitter.count; ++count) {
-		particles.push_back(MakeNewParticle(randomEngine,emitter.transform.translate));
+		particles.push_back(MakeNewParticle(randomEngine, emitter.transform.translate));
 	}
-		return particles;
+	return particles;
 }
 
 namespace MathUtils {
@@ -52,15 +52,20 @@ void Particle::Initialize()
 	model_->Initialize("plane.obj");
 	textureHandle_ = TextureManager::GetInstance()->Load("resources/circle.png", DirectXCommon::GetInstance()->GetCommandList());
 
-	particles_.resize(kNumMaxInstance);
-	for (size_t i = 0; i < kNumMaxInstance; ++i) {
-		particles_.push_back(MakeNewParticle(randomEngine, emitter.transform.translate));
+	emitter.transform = { {0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
+	emitter.count = 10;
+	emitter.frequency = 0.1f;
+	emitter.frequencyTime = 0.0f;
+	emitter.velocity = { 1.0f,1.0f,1.0f };
+
+	particles_.clear();
+	for (uint32_t i = 0; i < emitter.count; ++i) {
+		particles_.push_back(MakeNewParticle(randomEngine, emitter.transform.translate)); //[cite: 5]
 	}
 
-	emitter.transform={ {0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f},{1.0f,1.0f,1.0f} };
-	emitter.count = 100;
-	emitter.frequency = 0.5f;
-	emitter.frequencyTime = 0.0f;
+	accelerationField.acceleration = { 15.0f,0.0f,0.0f };
+	accelerationField.area.min = { -10.0f,-10.0f,-10.0f };
+	accelerationField.area.max = { 10.0f,10.0f,10.0f };
 
 }
 
@@ -69,14 +74,41 @@ void Particle::Update(Camera* activeCamera)
 	// カメラ参照を保持
 	activeCamera_ = activeCamera;
 
+	// エミッターのタイマー更新と発生処理
 	emitter.frequencyTime += kDeltaTime;
 	if (emitter.frequency <= emitter.frequencyTime) {
-	particles_.splice(particles_.end(), Emit(emitter, randomEngine));
-	emitter.frequencyTime -= emitter.frequency;
+		particles_.splice(particles_.end(), Emit(emitter, randomEngine));
+		emitter.frequencyTime -= emitter.frequency;
+	}
+
+	// 資料通りの iterator を使用した for ループ処理[cite: 5]
+	for (std::list<ParticleData>::iterator particleIterator = particles_.begin();
+		particleIterator != particles_.end(); ) { //[cite: 5]
+
+		// 寿命が切れたパーティクルを削除（erase）する場合のパターン
+		if ((*particleIterator).currentTime >= (*particleIterator).lifeTime) {
+			particleIterator = particles_.erase(particleIterator); // 削除して次のイテレータを取得
+			continue;
+		}
+
+		if (isUpdate) {
+
+			if (Physics3D::IsCollision(accelerationField.area, (*particleIterator).transform.translate)) {
+				(*particleIterator).velocity += accelerationField.acceleration * kDeltaTime;
+			}
+		}
+
+		// 移動・経過時間の更新処理
+		(*particleIterator).transform.translate += (*particleIterator).velocity * kDeltaTime;
+		(*particleIterator).currentTime += kDeltaTime;
+		++particleIterator;
+
 	}
 
 	ImGui::Begin("Particle");
 	ImGui::DragFloat3("EmitterTranslate", &emitter.transform.translate.x, 0.01f, -100.0f, 100.0f);
+	ImGui::DragFloat3("EmitterTranslat", &accelerationField.acceleration.x, 0.01f, -100.0f, 100.0f);
+	ImGui::Checkbox("update", &isUpdate);
 	ImGui::End();
 }
 

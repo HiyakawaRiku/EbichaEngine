@@ -67,7 +67,6 @@ private:
 
 private:
     Player* player_=nullptr;
-    Sphere* sphere_ = nullptr;
     Skydome* skydome_ = nullptr;
     Ground* ground_ = nullptr;
     FollowCamera* followCamera_ = nullptr;

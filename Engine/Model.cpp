@@ -129,14 +129,9 @@ void Model::Draw(const Transform& transform, Camera* camera, TextureHandle textu
 
 void Model::DrawInstanced(std::list<ParticleData>& particles, Camera* camera, TextureHandle textureHandle)
 {
-	uint32_t instanceCount = static_cast<uint32_t>(particles.size());
-	if (instanceCount == 0) return;
+	if (particles.empty()) return;
 
-	if (instanceCount > kMaxInstanceCount) {
-		instanceCount = kMaxInstanceCount;
-	}
-
-	// カメラの View 行列と Projection 行列を事前取得[cite: 10]
+	// カメラの View 行列と Projection 行列を事前取得[cite: 5]
 	Matrix4x4 viewMatrix = MakeIdentity4x4();
 	Matrix4x4 projectionMatrix = MakeIdentity4x4();
 	Matrix4x4 backToFrontMatrix = MakeIdentity4x4();
@@ -145,7 +140,7 @@ void Model::DrawInstanced(std::list<ParticleData>& particles, Camera* camera, Te
 		projectionMatrix = camera->GetProjectionMatrix();
 
 		backToFrontMatrix = viewMatrix;
-		backToFrontMatrix.m[3][0] = 0.0f; // 平行移動成分をクリア
+		backToFrontMatrix.m[3][0] = 0.0f;
 		backToFrontMatrix.m[3][1] = 0.0f;
 		backToFrontMatrix.m[3][2] = 0.0f;
 		backToFrontMatrix = Inverse(backToFrontMatrix);
@@ -153,56 +148,55 @@ void Model::DrawInstanced(std::list<ParticleData>& particles, Camera* camera, Te
 	Matrix4x4 viewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
 
 	uint32_t numInstance = 0;
+
 	// 各インスタンスの行列を計算して Resource（マップ済みバッファ）へ書き込む
 	for (auto& particle : particles) {
-		if (particle.lifeTime <= particle.currentTime) {
-			continue;
+
+		// ★資料のポイント: GPUの最大確保数を超えないようにガード処理を追加[cite: 4, 6]
+		if (numInstance < kMaxInstanceCount) { //[cite: 6]
+
+			if (particle.lifeTime <= particle.currentTime) {
+				continue;
+			}
+
+			// ビルボードを考慮したワールド行列の作成
+			Matrix4x4 scaleMatrix = MakeScaleMatrix(particle.transform.scale);
+			Matrix4x4 translateMatrix = MakeTranslateMatrix(particle.transform.translate);
+			Matrix4x4 worldMatrix = Multiply(scaleMatrix, Multiply(backToFrontMatrix, translateMatrix));
+
+			// データの書き込み[cite: 5, 6]
+			instanceData_[numInstance].World = worldMatrix; //[cite: 5]
+			instanceData_[numInstance].WVP = Multiply(worldMatrix, viewProjectionMatrix); //[cite: 5, 6]
+			instanceData_[numInstance].color = particle.color; //[cite: 5]
+			float alpha = 1.0f - (particle.currentTime / particle.lifeTime); //[cite: 5]
+			instanceData_[numInstance].color.w = alpha; //[cite: 5]
+
+			++numInstance; // カウントアップ[cite: 5, 6]
 		}
-
-		Transform currentTransform = particle.transform;
-		currentTransform.UpdateMatrix();
-
-		// 【ビルボードを考慮したワールド行列の作成】
-		// Transform の Scale と Translate を使って行列を作成
-		Matrix4x4 scaleMatrix = MakeScaleMatrix(particle.transform.scale);
-		Matrix4x4 translateMatrix = MakeTranslateMatrix(particle.transform.translate);
-
-		// SRT の R（回転）の部分に、ビルボード行列（backToFrontMatrix）を適用する
-		// （パーティクル固有のZ軸回転などがあれば backToFrontMatrix と乗算します）
-		Matrix4x4 worldMatrix = Multiply(scaleMatrix, Multiply(backToFrontMatrix, translateMatrix));
-
-		//Matrix4x4 worldMatrix = currentTransform.matWorld; // アフィニティ行列[cite: 9]
-
-		// 資料通りのデータ書き込み
-		particle.transform.translate += particle.velocity * kDeltaTime;
-		particle.currentTime += kDeltaTime;
-		instanceData_[numInstance].World = worldMatrix;
-		instanceData_[numInstance].WVP = Multiply(worldMatrix, viewProjectionMatrix);
-		instanceData_[numInstance].color = particle.color;
-		float alpha = 1.0f - (particle.currentTime / particle.lifeTime);
-		instanceData_[numInstance].color.w = alpha;
-		++numInstance;
+		// カウントが kMaxInstanceCount に達した場合は、計算や書き込みを行わずスキップされる[cite: 6]
 	}
 
-	auto commandList = dxCommon_->GetCommandList();
+	if (numInstance == 0) return;
 
-	// 頂点バッファ・トポロジ設定[cite: 7]
-	commandList->IASetVertexBuffers(0, 1, &vertexBufferView_);
-	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	auto commandList = dxCommon_->GetCommandList(); //[cite: 5]
 
-	// パイプライン・定数バッファ等のバインド[cite: 7]
-	commandList->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress());
+	// 頂点バッファ・トポロジ設定[cite: 5]
+	commandList->IASetVertexBuffers(0, 1, &vertexBufferView_); //[cite: 5]
+	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); //[cite: 5]
 
-	D3D12_GPU_DESCRIPTOR_HANDLE srvHandle = TextureManager::GetInstance()->GetSrvHandleGPU(textureHandle);
-	commandList->SetGraphicsRootDescriptorTable(2, srvHandle);
-	commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
+	// パイプライン・定数バッファ等のバインド[cite: 5]
+	commandList->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress()); //[cite: 5]
 
-	// ★有効化: インスタンスデータ (StructuredBuffer の SRV) をルートパラメータ4番にセット
-	D3D12_GPU_DESCRIPTOR_HANDLE instancingSrvHandleGPU = dxCommon_->GetInstancingSrvHandleGPU(instanceSrvIndex_);
-	commandList->SetGraphicsRootDescriptorTable(4, instancingSrvHandleGPU);
+	D3D12_GPU_DESCRIPTOR_HANDLE srvHandle = TextureManager::GetInstance()->GetSrvHandleGPU(textureHandle); //[cite: 5]
+	commandList->SetGraphicsRootDescriptorTable(2, srvHandle); //[cite: 5]
+	commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress()); //[cite: 5]
 
-	// ★第2引数にインスタンス数を渡して描画[cite: 7]
-	commandList->DrawInstanced(UINT(modelData_.vertices.size()), numInstance, 0, 0);
+	// インスタンスデータ (StructuredBuffer の SRV) をルートパラメータ4番にセット[cite: 5]
+	D3D12_GPU_DESCRIPTOR_HANDLE instancingSrvHandleGPU = dxCommon_->GetInstancingSrvHandleGPU(instanceSrvIndex_); //[cite: 5]
+	commandList->SetGraphicsRootDescriptorTable(4, instancingSrvHandleGPU); //[cite: 5]
+
+	// 実際の描画数を渡して描画呼出し[cite: 5]
+	commandList->DrawInstanced(UINT(modelData_.vertices.size()), numInstance, 0, 0); //[cite: 5]
 }
 
 // --- 以下 LoadMaterialTemplateFile / LoadObjFile は元の処理のまま ---

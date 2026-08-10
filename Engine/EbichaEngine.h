@@ -14,6 +14,7 @@
 #include "EMath.h"
 #include "Transform.h"
 #include "TextureManager.h"
+#include "Physics3D.h"
 
 class EbichaEngine
 {
