@@ -8,7 +8,7 @@ public:
     virtual TransformationMatrix CalculateWVP(const Transform& objectTransform);
     virtual TransformationMatrix CalculateWVP2D(const Transform& objectTransform);
 
-    virtual void Initialize() {}
+    virtual void Initialize() { CreateCameraResource(); }
     virtual void Update() {}
 
     Transform transform_{ {1.0f,1.0f,1.0f},{0.1f,0.0f,0.0f},{0.0f,5.0f,-20.0f} };
@@ -23,6 +23,16 @@ public:
         return MakePerspectiveFovMatrix(0.45f, float(app->kWindowWidth) / float(app->kWindowHeight), 0.1f, 100.0f);
     }
 
+    // ★追加: ConstantBufferリソースを取得するゲッター
+    ID3D12Resource* GetCameraResource() const { return cameraResource_.Get(); }
+
+private:
+    void CreateCameraResource();
+
 protected:
     WinApp* app_ = WinApp::GetInstance();
+
+    // ★追加: 定数バッファリソースとマップ先ポインタ
+    Microsoft::WRL::ComPtr<ID3D12Resource> cameraResource_;
+    CameraForGPU* cameraData_ = nullptr;
 };

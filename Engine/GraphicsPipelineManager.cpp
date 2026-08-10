@@ -37,7 +37,7 @@ void GraphicsPipelineManager::CreateRootSignature(ID3D12Device* device) {
     instanceSrvRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
     instanceSrvRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-    D3D12_ROOT_PARAMETER rootParameters[5] = {};
+    D3D12_ROOT_PARAMETER rootParameters[6] = {};
     rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
     rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
     rootParameters[0].Descriptor.ShaderRegister = 0;
@@ -59,6 +59,10 @@ void GraphicsPipelineManager::CreateRootSignature(ID3D12Device* device) {
     rootParameters[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
     rootParameters[4].DescriptorTable.pDescriptorRanges = instanceSrvRange;
     rootParameters[4].DescriptorTable.NumDescriptorRanges = _countof(instanceSrvRange);
+
+    rootParameters[5].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+    rootParameters[5].ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+    rootParameters[5].Descriptor.ShaderRegister = 2;
 
     descriptionRootSignature.pParameters = rootParameters;
     descriptionRootSignature.NumParameters = _countof(rootParameters);

@@ -29,6 +29,7 @@ enum class RootParameterIndex {
     kTexture = 2,          // register(t0) : Descriptor Table
     kDirectionalLight = 3, // register(b1) : Pixel Shader
     kParticleInstance = 4, // register(t1) : StructuredBuffer (Vertex Shader) ★追加
+    kCamera = 5,
     kCount
 };
 

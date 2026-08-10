@@ -99,7 +99,8 @@ void Sphere::CreateMaterialResource()
 	materialResource_ = DirectXUtils::CreateBufferResource(dxCommon_->GetDevice(), sizeof(Material));
 	materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&materialData_));
 	materialData_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-	materialData_->lightingType = 1; // Lambert有効
+	materialData_->lightingType = 2; // Lambert有効
+	materialData_->shininess = 50.0f;
 	materialData_->uvTransform = MakeIdentity4x4();
 }
 
@@ -143,6 +144,10 @@ void Sphere::Update(Camera* camera)
 
 void Sphere::Draw(TextureHandle textureHandle)
 {
+	ImGui::Begin("pos");
+	ImGui::DragFloat3("pos", &directionalLightData_->direction.x, 0.1f);
+	ImGui::End();
+
 	auto commandList = dxCommon_->GetCommandList();
 
 	commandList->IASetVertexBuffers(0, 1, &vertexBufferView_);
@@ -155,6 +160,10 @@ void Sphere::Draw(TextureHandle textureHandle)
 	D3D12_GPU_DESCRIPTOR_HANDLE srvHandle = TextureManager::GetInstance()->GetSrvHandleGPU(textureHandle);
 	commandList->SetGraphicsRootDescriptorTable(2, srvHandle);
 	commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
+
+	if (camera_) {
+		commandList->SetGraphicsRootConstantBufferView(5, camera_->GetCameraResource()->GetGPUVirtualAddress());
+	}
 
 	commandList->DrawIndexedInstanced(indexCount_, 1, 0, 0, 0);
 }

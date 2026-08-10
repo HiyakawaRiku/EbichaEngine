@@ -21,6 +21,8 @@ struct Material {
 	int32_t lightingType;
 	float padding[3];
 	Matrix4x4 uvTransform;
+	float shininess; // ★追加
+	float padding2[3]; // アライメント調整
 };
 
 struct TransformationMatrix {
@@ -49,7 +51,7 @@ struct ParticleForGPU {
 	Vector4 color;
 };
 
-struct CameraForGpu {
+struct CameraForGPU {
 	Vector3 worldPosition;
 };
 

@@ -43,3 +43,10 @@ TransformationMatrix Camera::CalculateWVP2D(const Transform& objectTransform)
 	TransformationMatrix result = { worldViewProjectionMatrixSprite, worldMatrixSprite };
 	return result;
 }
+
+void Camera::CreateCameraResource() {
+	DirectXCommon* dxCommon = DirectXCommon::GetInstance();
+	cameraResource_ = DirectXUtils::CreateBufferResource(dxCommon->GetDevice(), sizeof(CameraForGPU));
+	cameraResource_->Map(0, nullptr, reinterpret_cast<void**>(&cameraData_));
+	cameraData_->worldPosition = transform_.translate;
+}

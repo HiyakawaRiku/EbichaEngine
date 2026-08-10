@@ -123,6 +123,10 @@ void Model::Draw(const Transform& transform, Camera* camera, TextureHandle textu
 	commandList->SetGraphicsRootDescriptorTable(2, srvHandle);
 	commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
 
+	if (camera) {
+		commandList->SetGraphicsRootConstantBufferView(5, camera->GetCameraResource()->GetGPUVirtualAddress());
+	}
+
 	// 描画呼出し
 	commandList->DrawInstanced(vertexCount_, instanceCount_, 0, 0);
 }
@@ -194,6 +198,10 @@ void Model::DrawInstanced(std::list<ParticleData>& particles, Camera* camera, Te
 	// インスタンスデータ (StructuredBuffer の SRV) をルートパラメータ4番にセット[cite: 5]
 	D3D12_GPU_DESCRIPTOR_HANDLE instancingSrvHandleGPU = dxCommon_->GetInstancingSrvHandleGPU(instanceSrvIndex_); //[cite: 5]
 	commandList->SetGraphicsRootDescriptorTable(4, instancingSrvHandleGPU); //[cite: 5]
+
+	if (camera) {
+		commandList->SetGraphicsRootConstantBufferView(5, camera->GetCameraResource()->GetGPUVirtualAddress());
+	}
 
 	// 実際の描画数を渡して描画呼出し[cite: 5]
 	commandList->DrawInstanced(UINT(modelData_.vertices.size()), numInstance, 0, 0); //[cite: 5]
