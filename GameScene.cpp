@@ -117,7 +117,8 @@ void GameScene::Draw() {
 	ImGui::Begin("Settings");
 
 	ImGui::Checkbox("Change Camera", &useDebugCamera_);
-	ImGui::DragFloat3("position", &sphere_->transform.translate.x, 1.0f);
+	ImGui::DragFloat3("position", &sphere_->transform.translate.x, 0.1f);
+	ImGui::DragFloat3("position2", &sphere_->transform.scale.x, 0.1f);
 
 	int currentIndex = static_cast<int>(blendMode_);
 	if (ImGui::Combo("Blend Mode", &currentIndex,blendModeNames_)) {

@@ -9,6 +9,9 @@ TransformationMatrix Camera::CalculateWVP(const Transform& objectTransform)
 
 	Matrix4x4 worldMatrix = currentTransform.matWorld;
 
+	Matrix4x4 worldInverse = Inverse(worldMatrix);
+	Matrix4x4 worldInverseTranspose = Transpose(worldInverse);
+
 	// 2. カメラ自身の状態からビュー行列を計算
 	Matrix4x4 cameraMatrix = MakeAffineMatrix(transform_.scale, transform_.rotate, transform_.translate);
 	Matrix4x4 viewMatrix = Inverse(cameraMatrix);
@@ -21,7 +24,7 @@ TransformationMatrix Camera::CalculateWVP(const Transform& objectTransform)
 	Matrix4x4 worldViewProjectionMatrix = Multiply(worldViewMatrix, projectionMatrix);
 
 	// 構造体にまとめて返す
-	TransformationMatrix result = { worldViewProjectionMatrix, worldMatrix };
+	TransformationMatrix result = { worldViewProjectionMatrix, worldMatrix, worldInverseTranspose };
 	return result;
 }
 
