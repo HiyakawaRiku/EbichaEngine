@@ -56,4 +56,21 @@ struct CameraForGPU {
 	Vector3 worldPosition;
 };
 
+struct PointLight {
+	Vector4 color;
+	Vector3 position;
+	float intensity;
+};
+
+struct SpotLight {
+	Vector4 color;
+	Vector3 position;
+	float intensity;
+	Vector3 direction;
+	float distance;
+	float decay;
+	float cosAngle;
+	float padding[2];
+};
+
 const float kDeltaTime = 1.0f / 60.0f;
