@@ -10,6 +10,9 @@ void Sphere::Initialize()
 	CreateMaterialResource();
 	CreateWvpResource();
 	CreateDirectionalLight();
+	// ★追加: ライトの初期化
+	CreatePointLight();
+	CreateSpotLight();
 }
 
 void Sphere::CreateVertexResource()
@@ -120,6 +123,33 @@ void Sphere::CreateDirectionalLight()
 	directionalLightData_->intensity = 1.0f;
 }
 
+// ★追加: PointLight リソース生成
+void Sphere::CreatePointLight()
+{
+	pointLightResource_ = DirectXUtils::CreateBufferResource(dxCommon_->GetDevice(), sizeof(PointLight));
+	pointLightResource_->Map(0, nullptr, reinterpret_cast<void**>(&pointLightData_));
+	pointLightData_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
+	pointLightData_->position = { 0.0f, 2.0f, 0.0f };
+	pointLightData_->intensity = 1.0f;
+	pointLightData_->radius = 10.0f;
+	pointLightData_->decay = 2.0f;
+}
+
+// ★追加: SpotLight リソース生成
+void Sphere::CreateSpotLight()
+{
+	spotLightResource_ = DirectXUtils::CreateBufferResource(dxCommon_->GetDevice(), sizeof(SpotLight));
+	spotLightResource_->Map(0, nullptr, reinterpret_cast<void**>(&spotLightData_));
+	spotLightData_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
+	spotLightData_->position = { 0.0f, 3.0f, 0.0f };
+	spotLightData_->intensity = 2.0f;
+	spotLightData_->direction = { 0.0f, -1.0f, 0.0f };
+	spotLightData_->distance = 10.0f;
+	spotLightData_->decay = 2.0f;
+	spotLightData_->cosAngle = std::cos(DirectX::XMConvertToRadians(30.0f));
+	spotLightData_->cosFalloffStart = std::cos(DirectX::XMConvertToRadians(15.0f));
+}
+
 void Sphere::Update(Camera* camera)
 {
 	camera_ = camera;
@@ -163,6 +193,13 @@ void Sphere::Draw(TextureHandle textureHandle)
 
 	if (camera_) {
 		commandList->SetGraphicsRootConstantBufferView(5, camera_->GetCameraResource()->GetGPUVirtualAddress());
+	}
+
+	if (pointLightResource_) {
+		commandList->SetGraphicsRootConstantBufferView(6, pointLightResource_->GetGPUVirtualAddress()); // b3
+	}
+	if (spotLightResource_) {
+		commandList->SetGraphicsRootConstantBufferView(7, spotLightResource_->GetGPUVirtualAddress()); // b4
 	}
 
 	commandList->DrawIndexedInstanced(indexCount_, 1, 0, 0, 0);

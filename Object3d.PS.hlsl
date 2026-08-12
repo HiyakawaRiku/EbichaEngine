@@ -18,6 +18,28 @@ struct DirectionalLight
     float intensity;
 };
 
+struct PointLight
+{
+    float4 color;
+    float3 position;
+    float intensity;
+    float radius; // 影響範囲（距離による減衰用）
+    float decay; // 減衰率
+    float padding[2];
+};
+
+struct SpotLight
+{
+    float4 color;
+    float3 position;
+    float intensity;
+    float3 direction;
+    float distance;
+    float decay;
+    float cosAngle;
+    float cosFalloffStart;
+};
+
 struct Camera
 {
     float3 worldPosition;
@@ -26,6 +48,8 @@ struct Camera
 ConstantBuffer<Material> gMaterial : register(b0);
 ConstantBuffer<DirectionalLight> gDirectionalLight : register(b1);
 ConstantBuffer<Camera> gCamera : register(b2);
+ConstantBuffer<PointLight> gPointLight : register(b3);
+ConstantBuffer<SpotLight> gSpotLight : register(b4);
 
 struct PixelShaderOutput
 {
@@ -53,40 +77,114 @@ PixelShaderOutput main(VertexShaderOutput input)
         return output;
     }
 
-    // ベクトルの正規化
+    // 共通ベクトルの計算
     float3 N = normalize(input.normal);
-    float3 L = normalize(-gDirectionalLight.direction); // 光源に向かうベクトル
     float3 V = normalize(gCamera.worldPosition - input.worldPosition); // 視線に向かうベクトル
 
-    // 拡散反射係数 (NdotL)
-    float NdotL = dot(N, L);
-    float lightFactor = 0.0f;
+    float3 totalDiffuse = float3(0.0f, 0.0f, 0.0f);
+    float3 totalSpecular = float3(0.0f, 0.0f, 0.0f);
 
-    if (gMaterial.lightingType == 1)
+    // =========================================================
+    // 1. 平行光源 (Directional Light)
+    // =========================================================
     {
-        // 1: ランバート (Lambert)
-        lightFactor = saturate(NdotL);
+        float3 L = normalize(-gDirectionalLight.direction);
+        float NdotL = dot(N, L);
+        float lightFactor = 0.0f;
+
+        if (gMaterial.lightingType == 1) // Lambert
+        {
+            lightFactor = saturate(NdotL);
+        }
+        else if (gMaterial.lightingType == 2) // Half-Lambert
+        {
+            float halfLambert = NdotL * 0.5f + 0.5f;
+            lightFactor = halfLambert * halfLambert;
+        }
+
+        float3 H = normalize(L + V);
+        float NdotH = saturate(dot(N, H));
+        float specularPow = (NdotL > 0.0f) ? pow(NdotH, gMaterial.shininess) : 0.0f;
+
+        float3 lightColor = gDirectionalLight.color.rgb * gDirectionalLight.intensity;
+        totalDiffuse += gMaterial.color.rgb * textureColor.rgb * lightColor * lightFactor;
+        totalSpecular += lightColor * specularPow;
     }
-    else if (gMaterial.lightingType == 2)
+
+    // =========================================================
+    // 2. ポイントライト (Point Light)
+    // =========================================================
     {
-        // 2: ハーフランバート (Half-Lambert)
-        float halfLambert = NdotL * 0.5f + 0.5f;
-        lightFactor = halfLambert * halfLambert;
+        float3 L = normalize(gPointLight.position - input.worldPosition); // ライトへ向かうベクトル
+        float distance = length(gPointLight.position - input.worldPosition); // ライトとの距離
+
+        // 資料に基づく距離減衰の計算
+        float pointFactor = pow(saturate(-distance / gPointLight.radius + 1.0f), gPointLight.decay);
+
+        float NdotL = dot(N, L);
+        float lightFactor = 0.0f;
+
+        if (gMaterial.lightingType == 1) // Lambert
+        {
+            lightFactor = saturate(NdotL);
+        }
+        else if (gMaterial.lightingType == 2) // Half-Lambert
+        {
+            float halfLambert = NdotL * 0.5f + 0.5f;
+            lightFactor = halfLambert * halfLambert;
+        }
+
+        float3 H = normalize(L + V);
+        float NdotH = saturate(dot(N, H));
+        float specularPow = (NdotL > 0.0f) ? pow(NdotH, gMaterial.shininess) : 0.0f;
+
+        float3 lightColor = gPointLight.color.rgb * gPointLight.intensity * pointFactor;
+        totalDiffuse += gMaterial.color.rgb * textureColor.rgb * lightColor * lightFactor;
+        totalSpecular += lightColor * specularPow;
     }
 
-    // --- 鏡面反射 (Specular) の計算 (Blinn-Phong) ---
-    float3 H = normalize(L + V); // ハーフベクトル
-    float NdotH = saturate(dot(N, H));
-    
-    // NdotL > 0 (光が当たる表面) の場合のみハイライトを出す
-    float specularPow = (NdotL > 0.0f) ? pow(NdotH, gMaterial.shininess) : 0.0f;
+    // =========================================================
+    // 3. スポットライト (Spot Light)
+    // =========================================================
+    {
+        float3 L = normalize(gSpotLight.position - input.worldPosition); // ライトへ向かうベクトル
+        float distance = length(gSpotLight.position - input.worldPosition); // ライトとの距離
 
-    // ライティングの結合
-    float3 lightColor = gDirectionalLight.color.rgb * gDirectionalLight.intensity;
-    float3 diffuse = gMaterial.color.rgb * textureColor.rgb * lightColor * lightFactor;
-    float3 specular = lightColor * specularPow;
+        // 距離による減衰 (PointLightと同様)
+        float distanceFactor = pow(saturate(-distance / gSpotLight.distance + 1.0f), gSpotLight.decay);
 
-    output.color.rgb = diffuse + specular;
+        // 角度（Falloff）による減衰の計算
+        // gSpotLight.direction は光の照射方向なので、表面からライトに向かうベクトル -L との余弦を取る
+        float cosAngle = dot(-L, normalize(gSpotLight.direction));
+        float falloffFactor = saturate((cosAngle - gSpotLight.cosAngle) / (gSpotLight.cosFalloffStart - gSpotLight.cosAngle));
+
+        // 最終的なスポットライトの減衰係数
+        float spotFactor = distanceFactor * falloffFactor;
+
+        float NdotL = dot(N, L);
+        float lightFactor = 0.0f;
+
+        if (gMaterial.lightingType == 1) // Lambert
+        {
+            lightFactor = saturate(NdotL);
+        }
+        else if (gMaterial.lightingType == 2) // Half-Lambert
+        {
+            float halfLambert = NdotL * 0.5f + 0.5f;
+            lightFactor = halfLambert * halfLambert;
+        }
+
+        float3 H = normalize(L + V);
+        float NdotH = saturate(dot(N, H));
+        float specularPow = (NdotL > 0.0f) ? pow(NdotH, gMaterial.shininess) : 0.0f;
+
+        float3 lightColor = gSpotLight.color.rgb * gSpotLight.intensity * spotFactor;
+        totalDiffuse += gMaterial.color.rgb * textureColor.rgb * lightColor * lightFactor;
+        totalSpecular += lightColor * specularPow;
+    }
+
+    // 最終カラーの加算出力
+    output.color.rgb = totalDiffuse + totalSpecular;
     output.color.a = gMaterial.color.a * textureColor.a;
 
     return output;

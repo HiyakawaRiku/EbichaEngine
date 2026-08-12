@@ -11,7 +11,11 @@ void Model::Initialize(const std::string& filename)
 	CreateMaterialResource();
 	CreateWvpResource();
 	CreateDirectionalLight();
-	// ★追加: インスタンシング用リソースとSRVの生成
+	// ★追加: ポイントライト・スポットライトの生成
+	CreatePointLight();
+	CreateSpotLight();
+
+	// インスタンシング用リソースとSRVの生成
 	CreateInstanceResource();
 }
 
@@ -85,6 +89,35 @@ void Model::CreateInstanceResource()
 	);
 }
 
+// ★追加: PointLight リソース作成
+void Model::CreatePointLight()
+{
+	pointLightResource_ = DirectXUtils::CreateBufferResource(dxCommon_->GetDevice(), sizeof(PointLight));
+	pointLightResource_->Map(0, nullptr, reinterpret_cast<void**>(&pointLightData_));
+
+	pointLightData_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
+	pointLightData_->position = { 0.0f, 2.0f, 0.0f };
+	pointLightData_->intensity = 1.0f;
+	pointLightData_->radius = 10.0f;
+	pointLightData_->decay = 2.0f;
+}
+
+// ★追加: SpotLight リソース作成
+void Model::CreateSpotLight()
+{
+	spotLightResource_ = DirectXUtils::CreateBufferResource(dxCommon_->GetDevice(), sizeof(SpotLight));
+	spotLightResource_->Map(0, nullptr, reinterpret_cast<void**>(&spotLightData_));
+
+	spotLightData_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
+	spotLightData_->position = { 0.0f, 3.0f, 0.0f };
+	spotLightData_->intensity = 2.0f;
+	spotLightData_->direction = { 0.0f, -1.0f, 0.0f };
+	spotLightData_->distance = 10.0f;
+	spotLightData_->decay = 2.0f;
+	spotLightData_->cosAngle = std::cos(DirectX::XMConvertToRadians(30.0f));
+	spotLightData_->cosFalloffStart = std::cos(DirectX::XMConvertToRadians(15.0f));
+}
+
 // 1. 自身の this->transform を使って描画する関数
 void Model::Draw(Camera* camera, TextureHandle textureHandle)
 {
@@ -122,6 +155,13 @@ void Model::Draw(const Transform& transform, Camera* camera, TextureHandle textu
 	D3D12_GPU_DESCRIPTOR_HANDLE srvHandle = TextureManager::GetInstance()->GetSrvHandleGPU(textureHandle);
 	commandList->SetGraphicsRootDescriptorTable(2, srvHandle);
 	commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
+
+	if (pointLightResource_) {
+		commandList->SetGraphicsRootConstantBufferView(6, pointLightResource_->GetGPUVirtualAddress()); // b3
+	}
+	if (spotLightResource_) {
+		commandList->SetGraphicsRootConstantBufferView(7, spotLightResource_->GetGPUVirtualAddress()); // b4
+	}
 
 	if (camera) {
 		commandList->SetGraphicsRootConstantBufferView(5, camera->GetCameraResource()->GetGPUVirtualAddress());
@@ -201,6 +241,13 @@ void Model::DrawInstanced(std::list<ParticleData>& particles, Camera* camera, Te
 
 	if (camera) {
 		commandList->SetGraphicsRootConstantBufferView(5, camera->GetCameraResource()->GetGPUVirtualAddress());
+	}
+
+	if (pointLightResource_) {
+		commandList->SetGraphicsRootConstantBufferView(6, pointLightResource_->GetGPUVirtualAddress()); // b3
+	}
+	if (spotLightResource_) {
+		commandList->SetGraphicsRootConstantBufferView(7, spotLightResource_->GetGPUVirtualAddress()); // b4
 	}
 
 	// 実際の描画数を渡して描画呼出し[cite: 5]

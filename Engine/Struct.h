@@ -60,6 +60,8 @@ struct PointLight {
 	Vector4 color;
 	Vector3 position;
 	float intensity;
+	float radius;
+	float decay;
 };
 
 struct SpotLight {
@@ -70,6 +72,7 @@ struct SpotLight {
 	float distance;
 	float decay;
 	float cosAngle;
+	float cosFalloffStart;
 	float padding[2];
 };
 

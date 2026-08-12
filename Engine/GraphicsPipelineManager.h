@@ -28,8 +28,10 @@ enum class RootParameterIndex {
     kWVP = 1,              // register(b0) : Vertex Shader
     kTexture = 2,          // register(t0) : Descriptor Table
     kDirectionalLight = 3, // register(b1) : Pixel Shader
-    kParticleInstance = 4, // register(t1) : StructuredBuffer (Vertex Shader) ★追加
-    kCamera = 5,
+    kParticleInstance = 4, // register(t1) : StructuredBuffer (Vertex Shader)
+    kCamera = 5,           // register(b2) : Pixel Shader / Vertex Shader
+    kPointLight = 6,       // register(b3) : Pixel Shader ★追加
+    kSpotLight = 7,        // register(b4) : Pixel Shader ★追加
     kCount
 };
 

@@ -28,7 +28,6 @@ struct ParticleInstanceData {
 
 class Model {
 public:
-	// ★追加: Playerなどで階層構造（親子関係）をつくるための Transform★
 	Transform transform{ {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
 
 	// 色とライト設定
@@ -38,20 +37,22 @@ public:
 	// 初期化
 	void Initialize(const std::string& filename);
 
-	// ★追加: 自身の transform を使って描画する関数
 	void Draw(Camera* camera, TextureHandle textureHandle);
-
-	// 外部から任意の transform を渡して描画する関数
 	void Draw(const Transform& transform, Camera* camera, TextureHandle textureHandle);
-
-	// インスタンス数を指定して描画する関数を追加
 	void DrawInstanced(std::list<ParticleData>& particles, Camera* camera, TextureHandle textureHandle);
+
+	// ★追加: ライト制御用ゲッター
+	PointLight* GetPointLightData() { return pointLightData_; }
+	SpotLight* GetSpotLightData() { return spotLightData_; }
 
 private:
 	void CreateModelSphere();
 	void CreateMaterialResource();
 	void CreateWvpResource();
 	void CreateDirectionalLight();
+	// ★追加: リソース生成関数
+	void CreatePointLight();
+	void CreateSpotLight();
 	void CreateInstanceResource();
 
 private:
@@ -68,25 +69,29 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_;
 	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource_;
 	Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource_;
+	// ★追加: ライトリソース
+	Microsoft::WRL::ComPtr<ID3D12Resource> pointLightResource_;
+	Microsoft::WRL::ComPtr<ID3D12Resource> spotLightResource_;
 
 	// バッファのマップ先ポインタ
 	Material* materialData_ = nullptr;
 	TransformationMatrix* wvpData_ = nullptr;
 	DirectionalLight* directionalLightData_ = nullptr;
+	// ★追加: ライトデータポインタ
+	PointLight* pointLightData_ = nullptr;
+	SpotLight* spotLightData_ = nullptr;
 
 	int instanceCount_ = 3;
 
 private:
-	static const uint32_t kMaxInstanceCount = 1000; // 最大インスタンス数
+	static const uint32_t kMaxInstanceCount = 1000;
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> instanceResource_;
 	ParticleForGPU* instanceData_ = nullptr;
 	uint32_t instanceSrvIndex_ = 100;
 
 	GraphicsPipelineManager graphicsPipelineManager_;
-
 };
 
-// ヘルパー関数
 MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
 ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename);
