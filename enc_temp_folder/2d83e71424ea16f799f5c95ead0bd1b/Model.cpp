@@ -1,8 +1,5 @@
 #include "Model.h"
 #include <algorithm>
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
 
 void Model::Initialize(const std::string& filename)
 {

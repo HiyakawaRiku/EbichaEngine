@@ -22,8 +22,8 @@ Ground::~Ground()
 void Ground::Initialize()
 {
 	model_ = new Model();
-	model_->Initialize("plane.obj");
-	textureHandle_ = TextureManager::GetInstance()->Load("resources/ground_leaf.png", DirectXCommon::GetInstance()->GetCommandList());
+	model_->Initialize("terrain.obj");
+	textureHandle_ = TextureManager::GetInstance()->Load("resources/grass.png", DirectXCommon::GetInstance()->GetCommandList());
 }
 
 void Ground::Update(Camera* activeCamera)
@@ -31,12 +31,12 @@ void Ground::Update(Camera* activeCamera)
 	// カメラ参照を保持
 	activeCamera_ = activeCamera;
 
-	float rotationDeg = 90.0f; // 度数法で指定
-	float theta = MathUtils::ToRadians(rotationDeg); // ラジアン(θ)に変換
+	//float rotationDeg = 90.0f; // 度数法で指定
+	//float theta = MathUtils::ToRadians(rotationDeg); // ラジアン(θ)に変換
 
-	model_->transform.rotate.x = theta;
-	model_->transform.scale.x = 100.0f;
-	model_->transform.scale.y = 100.0f;
+	//model_->transform.rotate.x = theta;
+	//model_->transform.scale.x = 100.0f;
+	//model_->transform.scale.y = 100.0f;
 }
 
 void Ground::Draw()
