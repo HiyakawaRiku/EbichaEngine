@@ -22,7 +22,7 @@ Ground::~Ground()
 void Ground::Initialize()
 {
 	model_ = new Model();
-	model_->Initialize("terrain.obj");
+	model_->Initialize("cube.gltf");
 	textureHandle_ = TextureManager::GetInstance()->Load("resources/grass.png", DirectXCommon::GetInstance()->GetCommandList());
 }
 
@@ -37,6 +37,8 @@ void Ground::Update(Camera* activeCamera)
 	//model_->transform.rotate.x = theta;
 	//model_->transform.scale.x = 100.0f;
 	//model_->transform.scale.y = 100.0f;
+
+	model_->transform.translate.x = 5.0f;
 }
 
 void Ground::Draw()

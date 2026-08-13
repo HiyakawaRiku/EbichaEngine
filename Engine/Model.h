@@ -10,13 +10,24 @@
 #include <fstream>
 #include <sstream>
 
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
 struct MaterialData {
 	std::string textureFilePath;
+};
+
+struct Node {
+	Matrix4x4 localMatrix;
+	std::string name;
+	std::vector<Node> children;
 };
 
 struct ModelData {
 	std::vector<VertexData> vertices;
 	MaterialData material;
+	Node rootNode;
 };
 
 // インスタンスごとに送信するデータ
@@ -94,4 +105,5 @@ private:
 };
 
 MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
-ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename);
+ModelData LoadModelFile(const std::string& directoryPath, const std::string& filename);
+Node ReadNode(aiNode* node);

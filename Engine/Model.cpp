@@ -1,24 +1,18 @@
 #include "Model.h"
 #include <algorithm>
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
 
 void Model::Initialize(const std::string& filename)
 {
-	modelData_ = LoadObjFile("resources", filename);
+	modelData_ = LoadModelFile("resources", filename);
 
 	CreateModelSphere();
 
-	// 定数バッファの生成
 	CreateMaterialResource();
 	CreateWvpResource();
 	CreateDirectionalLight();
-	// ★追加: ポイントライト・スポットライトの生成
 	CreatePointLight();
 	CreateSpotLight();
 
-	// インスタンシング用リソースとSRVの生成
 	CreateInstanceResource();
 }
 
@@ -57,33 +51,29 @@ void Model::CreateDirectionalLight()
 	directionalLightResource_ = DirectXUtils::CreateBufferResource(dxCommon_->GetDevice(), sizeof(DirectionalLight));
 	directionalLightResource_->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData_));
 
-	// 光の色（白）
+
 	directionalLightData_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-	// 光の差し込む向き（斜め前上から照らすように設定）
+
 	directionalLightData_->direction = { 0.5f, -0.7f, 0.5f };
-	// 光の強度（明るさ）
+
 	directionalLightData_->intensity = 1.0f;
 }
 
 void Model::CreateInstanceResource()
 {
-	// 資料通りのリソース生成 (TransformationMatrix を kMaxInstanceCount 分確保)[cite: 7]
 	instanceResource_ = DirectXUtils::CreateBufferResource(
 		dxCommon_->GetDevice(),
 		sizeof(ParticleForGPU) * kMaxInstanceCount
 	);
 
-	// 書き込むためのアドレスを取得 (Map)[cite: 7]
 	instanceResource_->Map(0, nullptr, reinterpret_cast<void**>(&instanceData_));
 
-	// 初期化として単位行列を書き込んでおく[cite: 7]
 	for (uint32_t index = 0; index < kMaxInstanceCount; ++index) {
 		instanceData_[index].WVP = MakeIdentity4x4();
 		instanceData_[index].World = MakeIdentity4x4();
 		instanceData_[index].color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	}
 
-	// DirectXCommonの関数を使ってSRVを生成
 	dxCommon_->CreateInstancingSrv(
 		instanceSrvIndex_,
 		instanceResource_.Get(),
@@ -92,7 +82,6 @@ void Model::CreateInstanceResource()
 	);
 }
 
-// ★追加: PointLight リソース作成
 void Model::CreatePointLight()
 {
 	pointLightResource_ = DirectXUtils::CreateBufferResource(dxCommon_->GetDevice(), sizeof(PointLight));
@@ -105,7 +94,6 @@ void Model::CreatePointLight()
 	pointLightData_->decay = 2.0f;
 }
 
-// ★追加: SpotLight リソース作成
 void Model::CreateSpotLight()
 {
 	spotLightResource_ = DirectXUtils::CreateBufferResource(dxCommon_->GetDevice(), sizeof(SpotLight));
@@ -121,29 +109,34 @@ void Model::CreateSpotLight()
 	spotLightData_->cosFalloffStart = std::cos(DirectX::XMConvertToRadians(15.0f));
 }
 
-// 1. 自身の this->transform を使って描画する関数
 void Model::Draw(Camera* camera, TextureHandle textureHandle)
 {
 	Draw(this->transform, camera, textureHandle);
 }
 
-// 2. 渡された transform を使って描画する関数（★ここを修正★）
 void Model::Draw(const Transform& transform, Camera* camera, TextureHandle textureHandle)
 {
-	// 【重要】引数で渡された transform の行列を更新する
-	// （親の行列 parent が設定されている場合もこれで計算されます）
 	Transform currentTransform = transform;
 	currentTransform.UpdateMatrix();
 
-	// WVP行列の計算と書き込み
 	if (wvpData_ && camera) {
+
+		Matrix4x4 worldMatrix = currentTransform.matWorld;
+
+		Matrix4x4 viewMatrix = camera->GetViewMatrix();
+		Matrix4x4 projectionMatrix = camera->GetProjectionMatrix();
+		Matrix4x4 viewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
+
+		Matrix4x4 rootWorld = Multiply(modelData_.rootNode.localMatrix, worldMatrix);
+
+		wvpData_->World = rootWorld;
+		wvpData_->WVP = Multiply(rootWorld, viewProjectionMatrix);
 		*wvpData_ = camera->CalculateWVP(currentTransform);
 	}
 
 	if (materialData_) {
 		materialData_->color = this->color;
-		// ★テスト用にライティングを 0 (None) にして、テクスチャ本来の色が出るか確認
-		materialData_->lightingType = 0; // LightType_None
+		materialData_->lightingType = 0;
 	}
 
 	// 描画コマンドの発行
@@ -178,7 +171,6 @@ void Model::DrawInstanced(std::list<ParticleData>& particles, Camera* camera, Te
 {
 	if (particles.empty()) return;
 
-	// カメラの View 行列と Projection 行列を事前取得[cite: 5]
 	Matrix4x4 viewMatrix = MakeIdentity4x4();
 	Matrix4x4 projectionMatrix = MakeIdentity4x4();
 	Matrix4x4 backToFrontMatrix = MakeIdentity4x4();
@@ -196,11 +188,9 @@ void Model::DrawInstanced(std::list<ParticleData>& particles, Camera* camera, Te
 
 	uint32_t numInstance = 0;
 
-	// 各インスタンスの行列を計算して Resource（マップ済みバッファ）へ書き込む
 	for (auto& particle : particles) {
 
-		// ★資料のポイント: GPUの最大確保数を超えないようにガード処理を追加[cite: 4, 6]
-		if (numInstance < kMaxInstanceCount) { //[cite: 6]
+		if (numInstance < kMaxInstanceCount) {
 
 			if (particle.lifeTime <= particle.currentTime) {
 				continue;
@@ -211,36 +201,33 @@ void Model::DrawInstanced(std::list<ParticleData>& particles, Camera* camera, Te
 			Matrix4x4 translateMatrix = MakeTranslateMatrix(particle.transform.translate);
 			Matrix4x4 worldMatrix = Multiply(scaleMatrix, Multiply(backToFrontMatrix, translateMatrix));
 
-			// データの書き込み[cite: 5, 6]
-			instanceData_[numInstance].World = worldMatrix; //[cite: 5]
-			instanceData_[numInstance].WVP = Multiply(worldMatrix, viewProjectionMatrix); //[cite: 5, 6]
-			instanceData_[numInstance].color = particle.color; //[cite: 5]
-			float alpha = 1.0f - (particle.currentTime / particle.lifeTime); //[cite: 5]
-			instanceData_[numInstance].color.w = alpha; //[cite: 5]
+			instanceData_[numInstance].World = worldMatrix;
+			instanceData_[numInstance].WVP = Multiply(worldMatrix, viewProjectionMatrix);
+			instanceData_[numInstance].color = particle.color;
+			float alpha = 1.0f - (particle.currentTime / particle.lifeTime);
+			instanceData_[numInstance].color.w = alpha;
 
-			++numInstance; // カウントアップ[cite: 5, 6]
+			++numInstance;
 		}
-		// カウントが kMaxInstanceCount に達した場合は、計算や書き込みを行わずスキップされる[cite: 6]
 	}
 
 	if (numInstance == 0) return;
 
-	auto commandList = dxCommon_->GetCommandList(); //[cite: 5]
+	auto commandList = dxCommon_->GetCommandList(); 
 
 	// 頂点バッファ・トポロジ設定[cite: 5]
-	commandList->IASetVertexBuffers(0, 1, &vertexBufferView_); //[cite: 5]
-	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); //[cite: 5]
+	commandList->IASetVertexBuffers(0, 1, &vertexBufferView_); 
+	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); 
 
 	// パイプライン・定数バッファ等のバインド[cite: 5]
-	commandList->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress()); //[cite: 5]
+	commandList->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress()); 
 
-	D3D12_GPU_DESCRIPTOR_HANDLE srvHandle = TextureManager::GetInstance()->GetSrvHandleGPU(textureHandle); //[cite: 5]
-	commandList->SetGraphicsRootDescriptorTable(2, srvHandle); //[cite: 5]
-	commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress()); //[cite: 5]
+	D3D12_GPU_DESCRIPTOR_HANDLE srvHandle = TextureManager::GetInstance()->GetSrvHandleGPU(textureHandle); 
+	commandList->SetGraphicsRootDescriptorTable(2, srvHandle); 
+	commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress()); 
 
-	// インスタンスデータ (StructuredBuffer の SRV) をルートパラメータ4番にセット[cite: 5]
-	D3D12_GPU_DESCRIPTOR_HANDLE instancingSrvHandleGPU = dxCommon_->GetInstancingSrvHandleGPU(instanceSrvIndex_); //[cite: 5]
-	commandList->SetGraphicsRootDescriptorTable(4, instancingSrvHandleGPU); //[cite: 5]
+	D3D12_GPU_DESCRIPTOR_HANDLE instancingSrvHandleGPU = dxCommon_->GetInstancingSrvHandleGPU(instanceSrvIndex_);
+	commandList->SetGraphicsRootDescriptorTable(4, instancingSrvHandleGPU); 
 
 	if (camera) {
 		commandList->SetGraphicsRootConstantBufferView(5, camera->GetCameraResource()->GetGPUVirtualAddress());
@@ -253,11 +240,8 @@ void Model::DrawInstanced(std::list<ParticleData>& particles, Camera* camera, Te
 		commandList->SetGraphicsRootConstantBufferView(7, spotLightResource_->GetGPUVirtualAddress()); // b4
 	}
 
-	// 実際の描画数を渡して描画呼出し[cite: 5]
-	commandList->DrawInstanced(UINT(modelData_.vertices.size()), numInstance, 0, 0); //[cite: 5]
+	commandList->DrawInstanced(UINT(modelData_.vertices.size()), numInstance, 0, 0); 
 }
-
-// --- 以下 LoadMaterialTemplateFile / LoadObjFile は元の処理のまま ---
 
 MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename) {
 	MaterialData materialData;
@@ -280,7 +264,7 @@ MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const st
 	return materialData;
 }
 
-ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename) {
+ModelData LoadModelFile(const std::string& directoryPath, const std::string& filename) {
 
 	ModelData modelData;
 	std::vector<Vector4> positions;
@@ -288,8 +272,8 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 	std::vector<Vector3> normals;
 	std::string line;
 
-	std::ifstream file(directoryPath + "/" + filename);
-	assert(file.is_open());
+	//std::ifstream file(directoryPath + "/" + filename);
+	//assert(file.is_open());
 	Assimp::Importer importer;
 	std::string filePath = directoryPath + "/" + filename;
 	const aiScene* scene = importer.ReadFile(filePath.c_str(), aiProcess_FlipWindingOrder | aiProcess_FlipUVs);
@@ -328,6 +312,8 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 			modelData.material.textureFilePath = directoryPath + "/" + textureFilePath.C_Str();
 		}
 	}
+
+	modelData.rootNode = ReadNode(scene->mRootNode);
 
 	//while (std::getline(file, line)) {
 	//	std::string identifier;
@@ -387,4 +373,18 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 	//	}
 	//}
 	return modelData;
+}
+
+Node ReadNode(aiNode* node)
+{
+	Node result;
+	aiMatrix4x4 aiLocalMatrix = node->mTransformation;
+	aiLocalMatrix.Transpose();
+	result.localMatrix.m[0][0] = aiLocalMatrix[0][0];
+	result.name = node->mName.C_Str();
+	result.children.resize(node->mNumChildren);
+	for (uint32_t childIndex = 0; childIndex < node->mNumChildren; ++childIndex) {
+		result.children[childIndex] = ReadNode(node->mChildren[childIndex]);
+	}
+	return result;
 }

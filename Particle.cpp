@@ -60,7 +60,7 @@ void Particle::Initialize()
 
 	particles_.clear();
 	for (uint32_t i = 0; i < emitter.count; ++i) {
-		particles_.push_back(MakeNewParticle(randomEngine, emitter.transform.translate)); //[cite: 5]
+		particles_.push_back(MakeNewParticle(randomEngine, emitter.transform.translate)); 
 	}
 
 	accelerationField.acceleration = { 15.0f,0.0f,0.0f };
@@ -83,7 +83,7 @@ void Particle::Update(Camera* activeCamera)
 
 	// 資料通りの iterator を使用した for ループ処理[cite: 5]
 	for (std::list<ParticleData>::iterator particleIterator = particles_.begin();
-		particleIterator != particles_.end(); ) { //[cite: 5]
+		particleIterator != particles_.end(); ) { 
 
 		// 寿命が切れたパーティクルを削除（erase）する場合のパターン
 		if ((*particleIterator).currentTime >= (*particleIterator).lifeTime) {

@@ -116,7 +116,7 @@ void GameScene::Draw() {
 #ifdef _DEBUG
 	ImGui::Begin("Settings");
 
-	ImGui::Checkbox("Change Camera", &useDebugCamera_);
+	//ImGui::Checkbox("Change Camera", &useDebugCamera_);
 	ImGui::DragFloat3("position", &sphere_->transform.translate.x, 0.1f);
 	ImGui::DragFloat3("position2", &sphere_->transform.scale.x, 0.1f);
 
