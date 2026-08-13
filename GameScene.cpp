@@ -25,7 +25,7 @@ void GameScene::Initialize() {
 	skydome_ = new Skydome();
 	skydome_->Initialize();
 
-	ground_ = new Ground();
+	ground_ = std::make_unique<Ground>();
 	ground_->Initialize();
 
 	particle_ = new Particle();

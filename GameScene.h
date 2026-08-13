@@ -70,7 +70,7 @@ private:
 private:
     Player* player_=nullptr;
     Skydome* skydome_ = nullptr;
-    Ground* ground_ = nullptr;
+    std::unique_ptr<Ground> ground_ = nullptr;
     FollowCamera* followCamera_ = nullptr;
     Particle* particle_ = nullptr;
 };

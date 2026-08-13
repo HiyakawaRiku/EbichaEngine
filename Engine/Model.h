@@ -40,34 +40,38 @@ struct ParticleInstanceData {
 class Model {
 public:
 	Transform transform{ {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
+	Transform uvTransform{ {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
 
 	// 色とライト設定
 	Vector4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
-	int32_t lightingType = 1; // LightType_Lambert
+	uint32_t lightingType = 2; // LightType_Lambert
 
 	// 初期化
 	void Initialize(const std::string& filename);
+	void Update(Camera* camera);
 
 	void Draw(Camera* camera, TextureHandle textureHandle);
 	void Draw(const Transform& transform, Camera* camera, TextureHandle textureHandle);
 	void DrawInstanced(std::list<ParticleData>& particles, Camera* camera, TextureHandle textureHandle);
 
 	// ★追加: ライト制御用ゲッター
+	DirectionalLight* GetDirectionalLightData() { return directionalLightData_; }
 	PointLight* GetPointLightData() { return pointLightData_; }
 	SpotLight* GetSpotLightData() { return spotLightData_; }
 
 private:
+
 	void CreateModelSphere();
 	void CreateMaterialResource();
 	void CreateWvpResource();
 	void CreateDirectionalLight();
-	// ★追加: リソース生成関数
 	void CreatePointLight();
 	void CreateSpotLight();
 	void CreateInstanceResource();
 
 private:
 	DirectXCommon* dxCommon_ = DirectXCommon::GetInstance();
+	Camera* camera_ = nullptr;
 
 	ModelData modelData_;
 
@@ -80,7 +84,6 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource_;
 	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource_;
 	Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource_;
-	// ★追加: ライトリソース
 	Microsoft::WRL::ComPtr<ID3D12Resource> pointLightResource_;
 	Microsoft::WRL::ComPtr<ID3D12Resource> spotLightResource_;
 
@@ -88,11 +91,10 @@ private:
 	Material* materialData_ = nullptr;
 	TransformationMatrix* wvpData_ = nullptr;
 	DirectionalLight* directionalLightData_ = nullptr;
-	// ★追加: ライトデータポインタ
 	PointLight* pointLightData_ = nullptr;
 	SpotLight* spotLightData_ = nullptr;
 
-	int instanceCount_ = 3;
+	int instanceCount_ = 1;
 
 private:
 	static const uint32_t kMaxInstanceCount = 1000;

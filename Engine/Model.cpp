@@ -35,7 +35,8 @@ void Model::CreateMaterialResource()
 	materialResource_ = DirectXUtils::CreateBufferResource(dxCommon_->GetDevice(), sizeof(Material));
 	materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&materialData_));
 	materialData_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-	materialData_->lightingType = 1; // LightType_Lambert
+	materialData_->lightingType = this->lightingType; // ★固定値 2 ではなくメンバ変数を参照
+	materialData_->shininess = 50.0f; // ★Sphereに合わせて設定
 	materialData_->uvTransform = MakeIdentity4x4();
 }
 
@@ -51,11 +52,8 @@ void Model::CreateDirectionalLight()
 	directionalLightResource_ = DirectXUtils::CreateBufferResource(dxCommon_->GetDevice(), sizeof(DirectionalLight));
 	directionalLightResource_->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData_));
 
-
 	directionalLightData_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-
 	directionalLightData_->direction = { 0.5f, -0.7f, 0.5f };
-
 	directionalLightData_->intensity = 1.0f;
 }
 
@@ -101,12 +99,38 @@ void Model::CreateSpotLight()
 
 	spotLightData_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
 	spotLightData_->position = { 0.0f, 3.0f, 0.0f };
-	spotLightData_->intensity = 2.0f;
 	spotLightData_->direction = { 0.0f, -1.0f, 0.0f };
+	spotLightData_->intensity = 2.0f;
 	spotLightData_->distance = 10.0f;
 	spotLightData_->decay = 2.0f;
 	spotLightData_->cosAngle = std::cos(DirectX::XMConvertToRadians(30.0f));
 	spotLightData_->cosFalloffStart = std::cos(DirectX::XMConvertToRadians(15.0f));
+}
+
+void Model::Update(Camera* camera)
+{
+	camera_ = camera;
+
+	// 行列更新とWVP計算
+	transform.UpdateMatrix();
+
+	if (wvpData_ && camera_) {
+		Matrix4x4 rootWorld = Multiply(modelData_.rootNode.localMatrix, transform.matWorld);
+
+		Matrix4x4 viewProjectionMatrix = Multiply(camera_->GetViewMatrix(), camera_->GetProjectionMatrix());
+		wvpData_->World = rootWorld;
+		wvpData_->WVP = Multiply(rootWorld, viewProjectionMatrix);
+	}
+
+	if (materialData_) {
+		materialData_->color = this->color;
+		materialData_->lightingType = this->lightingType;
+
+		Matrix4x4 uvMatScale = MakeScaleMatrix(uvTransform.scale);
+		Matrix4x4 uvMatRot = MakeRotateZMatrix(uvTransform.rotate.z);
+		Matrix4x4 uvMatTrans = MakeTranslateMatrix(uvTransform.translate);
+		materialData_->uvTransform = Multiply(uvMatScale, Multiply(uvMatRot, uvMatTrans));
+	}
 }
 
 void Model::Draw(Camera* camera, TextureHandle textureHandle)
@@ -120,7 +144,6 @@ void Model::Draw(const Transform& transform, Camera* camera, TextureHandle textu
 	currentTransform.UpdateMatrix();
 
 	if (wvpData_ && camera) {
-
 		Matrix4x4 worldMatrix = currentTransform.matWorld;
 
 		Matrix4x4 viewMatrix = camera->GetViewMatrix();
@@ -136,7 +159,7 @@ void Model::Draw(const Transform& transform, Camera* camera, TextureHandle textu
 
 	if (materialData_) {
 		materialData_->color = this->color;
-		materialData_->lightingType = 0;
+		materialData_->lightingType = this->lightingType; // ★重要: 0 から this->lightingType に修正
 	}
 
 	// 描画コマンドの発行
@@ -213,21 +236,21 @@ void Model::DrawInstanced(std::list<ParticleData>& particles, Camera* camera, Te
 
 	if (numInstance == 0) return;
 
-	auto commandList = dxCommon_->GetCommandList(); 
+	auto commandList = dxCommon_->GetCommandList();
 
 	// 頂点バッファ・トポロジ設定[cite: 5]
-	commandList->IASetVertexBuffers(0, 1, &vertexBufferView_); 
-	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); 
+	commandList->IASetVertexBuffers(0, 1, &vertexBufferView_);
+	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// パイプライン・定数バッファ等のバインド[cite: 5]
-	commandList->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress()); 
+	commandList->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress());
 
-	D3D12_GPU_DESCRIPTOR_HANDLE srvHandle = TextureManager::GetInstance()->GetSrvHandleGPU(textureHandle); 
-	commandList->SetGraphicsRootDescriptorTable(2, srvHandle); 
-	commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress()); 
+	D3D12_GPU_DESCRIPTOR_HANDLE srvHandle = TextureManager::GetInstance()->GetSrvHandleGPU(textureHandle);
+	commandList->SetGraphicsRootDescriptorTable(2, srvHandle);
+	commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
 
 	D3D12_GPU_DESCRIPTOR_HANDLE instancingSrvHandleGPU = dxCommon_->GetInstancingSrvHandleGPU(instanceSrvIndex_);
-	commandList->SetGraphicsRootDescriptorTable(4, instancingSrvHandleGPU); 
+	commandList->SetGraphicsRootDescriptorTable(4, instancingSrvHandleGPU);
 
 	if (camera) {
 		commandList->SetGraphicsRootConstantBufferView(5, camera->GetCameraResource()->GetGPUVirtualAddress());
@@ -240,7 +263,7 @@ void Model::DrawInstanced(std::list<ParticleData>& particles, Camera* camera, Te
 		commandList->SetGraphicsRootConstantBufferView(7, spotLightResource_->GetGPUVirtualAddress()); // b4
 	}
 
-	commandList->DrawInstanced(UINT(modelData_.vertices.size()), numInstance, 0, 0); 
+	commandList->DrawInstanced(UINT(modelData_.vertices.size()), numInstance, 0, 0);
 }
 
 MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename) {
