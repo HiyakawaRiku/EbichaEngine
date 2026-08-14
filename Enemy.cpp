@@ -1,79 +1,54 @@
 #include "Enemy.h"
 #include <cmath>
 
-Enemy::~Enemy()
-{
-	delete model_;
-	model_ = nullptr;
-}
-
 void Enemy::Initialize()
 {
-	transformBase_.Initialize();
-	transformBase_.translate = { 0.0f, 5.0f, 0.0f }; // 初期位置
+    // 敵用にパーツ無し（または手足を配置）で初期化[cite: 5]
+    // ※ Player のパーツ（Body.obj 等）を流用する場合は partConfigs にパーツを追加してください[cite: 5]
+    std::vector<BaseCharacter::PartConfig> partConfigs = {};
 
-	model_ = new Model();
-	model_->Initialize("enemy.obj");
-	model_->transform.parent = &transformBase_; // トランスフォームを親子関係に
+    // BaseCharacter の初期化を呼び出す[cite: 5]
+    BaseCharacter::Initialize("enemy.obj", partConfigs, "resources/player.png"); //[cite: 5]
 
-	textureHandle_ = TextureManager::GetInstance()->Load("resources/player.png", DirectXCommon::GetInstance()->GetCommandList());
+    transformBase_.translate = { 5.0f, 0.0f, 0.0f }; //[cite: 7]
 }
 
 void Enemy::Update(Camera* activeCamera)
 {
-	activeCamera_ = activeCamera;
-	model_->Update(activeCamera);
+    // 親クラスの共通更新処理を実行（カメラ更新、モデル更新、行列更新）[cite: 5]
+    BaseCharacter::Update(activeCamera);
 
-	// ----------------------------------------------------
-	// 移動判定とアニメーション
-	// ----------------------------------------------------
-	Vector3 moveVelocity = { 0.0f, 0.0f, 0.0f };
-	// ※必要に応じて移動処理を記述（例: moveVelocity.x = 0.05f; など）
+    // ----------------------------------------------------
+    // Enemy固有の移動・アニメーション処理[cite: 7]
+    // ----------------------------------------------------
+    Vector3 moveVelocity = { 0.0f, 0.0f, 0.0f }; //[cite: 7]
+    // ※AI追尾などのロジックを入れる場合はここで moveVelocity を計算
 
-	bool isMoving = (moveVelocity.x != 0.0f || moveVelocity.y != 0.0f || moveVelocity.z != 0.0f);
+    bool isMoving = (moveVelocity.x != 0.0f || moveVelocity.y != 0.0f || moveVelocity.z != 0.0f); //[cite: 7]
 
-	if (isMoving) {
-		// --- 1. 移動中：ぴょんぴょん跳ねる・体を傾ける動き ---
-		walkTimer_ += kWalkSpeed;
-		float sinVal = std::sin(walkTimer_);
+    if (isMoving) { //[cite: 7]
+        walkTimer_ += kWalkSpeed; //[cite: 7]
+        float sinVal = std::sin(walkTimer_); //[cite: 7]
 
-		// Y軸の跳ね運動
-		model_->transform.translate.y = std::abs(sinVal) * kWalkHopHeight;
+        modelBody_->transform.translate.y = std::abs(sinVal) * kWalkHopHeight; //[cite: 7]
+        modelBody_->transform.rotate.x = kWalkTilt; //[cite: 7]
 
-		// 移動方向に体を少し傾ける（臨場感）
-		model_->transform.rotate.x = kWalkTilt;
+        float targetAngle = std::atan2(moveVelocity.x, moveVelocity.z); //[cite: 7]
+        modelBody_->transform.rotate.y = targetAngle; //[cite: 7]
 
-		// 進行方向に向く
-		float targetAngle = std::atan2(moveVelocity.x, moveVelocity.z);
-		model_->transform.rotate.y = targetAngle;
+        transformBase_.translate += moveVelocity; //[cite: 7]
+    }
+    else { //[cite: 7]
+        walkTimer_ = 0.0f; //[cite: 7]
+        idleTimer_ += kIdleSpeed; //[cite: 7]
+        float sinVal = std::sin(idleTimer_); //[cite: 7]
 
-		transformBase_.translate += moveVelocity;
-	}
-	else {
-		// --- 2. 待機中：呼吸のように上下に伸縮する動き ---
-		walkTimer_ = 0.0f;
-		idleTimer_ += kIdleSpeed;
-		float sinVal = std::sin(idleTimer_);
+        modelBody_->transform.translate.y = sinVal * kIdleBreathing; //[cite: 7]
 
-		// 体の位置を微小に上下
-		model_->transform.translate.y = sinVal * kIdleBreathing;
+        modelBody_->transform.scale.x = 1.0f - (sinVal * kIdleSquash); //[cite: 7]
+        modelBody_->transform.scale.y = 1.0f + (sinVal * kIdleSquash); //[cite: 7]
+        modelBody_->transform.scale.z = 1.0f - (sinVal * kIdleSquash); //[cite: 7]
 
-		// 体を伸縮させる（息を吸うと縦伸び、吐くと横広がり）
-		model_->transform.scale.x = 1.0f - (sinVal * kIdleSquash);
-		model_->transform.scale.y = 1.0f + (sinVal * kIdleSquash);
-		model_->transform.scale.z = 1.0f - (sinVal * kIdleSquash);
-
-		model_->transform.rotate.x = 0.0f;
-	}
-
-	transformBase_.UpdateMatrix();
-}
-
-void Enemy::Draw()
-{
-	transformBase_.UpdateMatrix();
-	if (model_) {
-		model_->transform.UpdateMatrix();
-		model_->Draw(activeCamera_, textureHandle_);
-	}
+        modelBody_->transform.rotate.x = 0.0f; //[cite: 7]
+    }
 }

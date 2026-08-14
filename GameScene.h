@@ -1,11 +1,17 @@
 #pragma once
 #include <memory>
 #include <cstdint>
+#include <vector>
 
-// 前方宣言または必要なヘッダーのインクルード
+// エンジンヘッダー
 #include "EbichaEngine.h"
+
+// キャラクター基底および派生クラス
+#include "BaseCharacter.h"
 #include "Player.h"
 #include "Enemy.h"
+
+// その他のオブジェクト
 #include "Skydome.h"
 #include "Ground.h"
 #include "FollowCamera.h"
@@ -43,12 +49,8 @@ private:
 	Input* input_ = nullptr;
 	Audio* audio_ = nullptr;
 
-	// ゲームオブジェクト（生のポインタ管理）
+	// ゲームオブジェクト（スプライト等）
 	std::unique_ptr<Sprite> sprite_;
-	//std::unique_ptr<Sphere> sphere_;
-	//Model* modelTeapot_ = nullptr;
-	//Model* modelBunny_ = nullptr;
-	//Model* modelMultiMesh_ = nullptr;
 
 	// カメラ関連
 	std::unique_ptr<Camera> normalCamera_;
@@ -69,8 +71,15 @@ private:
 	const char* blendModeNames_ = "none\0normal\0add\0subtract\0multiply\0screen\0\0";
 
 private:
-	std::unique_ptr<Player> player_ = nullptr;
-	std::unique_ptr<Enemy> enemy_ = nullptr;
+	// =========================================================
+	// キャラクター一括管理（ポリモーフィズム）
+	// =========================================================
+	std::vector<std::unique_ptr<BaseCharacter>> characters_;
+
+	// FollowCamera へのターゲット参照用（所有権は characters_ が保持）
+	Player* player_ = nullptr;
+
+	// 背景・カメラ・エフェクトなど
 	std::unique_ptr<Skydome> skydome_ = nullptr;
 	std::unique_ptr<Ground> ground_ = nullptr;
 	std::unique_ptr<FollowCamera> followCamera_ = nullptr;
