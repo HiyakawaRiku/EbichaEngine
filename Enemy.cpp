@@ -10,7 +10,10 @@ void Enemy::Initialize()
     // BaseCharacter の初期化を呼び出す[cite: 5]
     BaseCharacter::Initialize("enemy.obj", partConfigs, "resources/player.png"); //[cite: 5]
 
-    transformBase_.translate = { 5.0f, 0.0f, 0.0f }; //[cite: 7]
+    transformBase_.translate = { 3.0f, 2.0f, 0.0f }; //[cite: 7]
+
+    // コライダーの半径を設定（例: 1.2f）
+    SetColliderRadius(1.2f);
 }
 
 void Enemy::Update(Camera* activeCamera)

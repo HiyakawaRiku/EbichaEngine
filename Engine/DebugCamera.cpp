@@ -6,6 +6,8 @@ Matrix4x4 operator*(const Matrix4x4& a, const Matrix4x4& b) {
 }
 
 void DebugCamera::Initialize() {
+
+	Camera::Initialize();
 	translation_ = { 0.0f, 0.0f, -50.0f };
 	matRot_ = MakeIdentity4x4();
 }
@@ -180,78 +182,84 @@ void DebugCamera::Update() {
 	// 射影行列の計算（既存のまま）
 	WinApp* app = WinApp::GetInstance();
 	projectionMatrix_ = MakePerspectiveFovMatrix(0.45f, float(app->kWindowWidth) / float(app->kWindowHeight), 0.1f, 100.0f);
+
+	if (cameraData_) {
+		cameraData_->worldPosition = translation_;
+	}
 }
+
 void DebugCamera::DrawFrustum(Camera* normalCamera) {
 	if (!normalCamera) return;
-	// 通常カメラの現在の座標を取得
-	Vector3 camPos = normalCamera->transform_.translate;
-	Vector3 camRot = normalCamera->transform_.rotate;
 
-	// --- 1. 最もシンプルな「カメラ位置に赤・緑・青の十字線を引く」 ---
-	float axisLength = 5.0f; // 線の長さ
+	// ビュー行列の逆行列を計算して、カメラのワールド行列（位置・回転）を取得する
+	Matrix4x4 viewMat = normalCamera->GetViewMatrix();
+	Matrix4x4 invView = Inverse(viewMat);
 
-	// カメラのローカル方向（前・上・右）のベクトルを計算
-	Matrix4x4 camRotMat = MakeRotateMatrix(camRot);
-	Vector3 forward = Transforms({ 0.0f, 0.0f, 1.0f }, camRotMat);
-	Vector3 up = Transforms({ 0.0f, 1.0f, 0.0f }, camRotMat);
-	Vector3 right = Transforms({ 1.0f, 0.0f, 0.0f }, camRotMat);
+	// ワールド位置を取得 (逆ビュー行列の4行目/平行移動部分)
+	Vector3 camPos = { invView.m[3][0], invView.m[3][1], invView.m[3][2] };
 
-	// X軸（右方向）：赤
-	DebugRenderer::AddLine(camPos, { camPos.x + right.x * axisLength, camPos.y + right.y * axisLength, camPos.z + right.z * axisLength }, { 1.0f, 0.0f, 0.0f, 1.0f });
-	// Y軸（上方向）：緑
-	DebugRenderer::AddLine(camPos, { camPos.x + up.x * axisLength,    camPos.y + up.y * axisLength,    camPos.z + up.z * axisLength }, { 0.0f, 1.0f, 0.0f, 1.0f });
-	// Z軸（前方向・視線）：青
-	DebugRenderer::AddLine(camPos, { camPos.x + forward.x * axisLength, camPos.y + forward.y * axisLength, camPos.z + forward.z * axisLength }, { 0.0f, 0.0f, 1.0f, 1.0f });
+	// カメラのローカル各軸ベクトル（ワールド空間上）を取得
+	Vector3 right = { invView.m[0][0], invView.m[0][1], invView.m[0][2] };
+	Vector3 up = { invView.m[1][0], invView.m[1][1], invView.m[1][2] };
+	Vector3 forward = { invView.m[2][0], invView.m[2][1], invView.m[2][2] };
 
+	// --- 1. カメラ位置に赤・緑・青の軸を表示 ---
+	float axisLength = 3.0f;
+	DebugRenderer::AddLine(camPos, { camPos.x + right.x * axisLength,   camPos.y + right.y * axisLength,   camPos.z + right.z * axisLength }, { 1.0f, 0.0f, 0.0f, 1.0f }); // X: 赤
+	DebugRenderer::AddLine(camPos, { camPos.x + up.x * axisLength,      camPos.y + up.y * axisLength,      camPos.z + up.z * axisLength }, { 0.0f, 1.0f, 0.0f, 1.0f }); // Y: 緑
+	DebugRenderer::AddLine(camPos, { camPos.x + forward.x * axisLength, camPos.y + forward.y * axisLength, camPos.z + forward.z * axisLength }, { 0.0f, 0.0f, 1.0f, 1.0f }); // Z: 青
 
-	// --- 2. ステップアップ：「カメラが見ている視界の箱（簡易四角錐）」を描画する ---
-	// カメラの目の前にある「画面の4隅」のローカル座標
-	float fovY = 0.45f; // 実際の画角 (ラジアン)
-	float aspect = 1280.0f / 720.0f; // 画面のアスペクト比
+	// --- 2. 視界枠（Frustum）の描画 ---
+	float fovY = 0.45f;
+	float aspect = 1280.0f / 720.0f;
+	float d = 20.0f; // 視体積の奥行き距離
 
-	// ガイド線を表示したいお好みの奥行き（例: 20の距離の視界枠を見る場合）
-	// ※ 100.0f にするとファークリップ（限界の奥）の枠になります
-	float d = 20.0f;
-
-	// 三角関数を使って、奥行き d の位置における「正しい半分の高さ」を逆算
 	float h = d * std::tan(fovY / 2.0f);
-	// アスペクト比を掛けて「正しい半分の横幅」を計算
 	float w = h * aspect;
 
-	Vector3 p0 = Transforms({ -w,  h, d }, camRotMat);
-	Vector3 p1 = Transforms({ w,  h, d }, camRotMat);
-	Vector3 p2 = Transforms({ w, -h, d }, camRotMat);
-	Vector3 p3 = Transforms({ -w, -h, d }, camRotMat);
+	// カメラローカル空間での4隅のベクトル
+	Vector3 p0 = { -w * right.x + h * up.x + d * forward.x, -w * right.y + h * up.y + d * forward.y, -w * right.z + h * up.z + d * forward.z };
+	Vector3 p1 = { w * right.x + h * up.x + d * forward.x,  w * right.y + h * up.y + d * forward.y,  w * right.z + h * up.z + d * forward.z };
+	Vector3 p2 = { w * right.x - h * up.x + d * forward.x,  w * right.y - h * up.y + d * forward.y,  w * right.z - h * up.z + d * forward.z };
+	Vector3 p3 = { -w * right.x - h * up.x + d * forward.x, -w * right.y - h * up.y + d * forward.y, -w * right.z - h * up.z + d * forward.z };
 
-	// 世界の座標（ワールド座標）に変換
+	// ワールド座標に変換
 	Vector3 w0 = { camPos.x + p0.x, camPos.y + p0.y, camPos.z + p0.z };
 	Vector3 w1 = { camPos.x + p1.x, camPos.y + p1.y, camPos.z + p1.z };
 	Vector3 w2 = { camPos.x + p2.x, camPos.y + p2.y, camPos.z + p2.z };
 	Vector3 w3 = { camPos.x + p3.x, camPos.y + p3.y, camPos.z + p3.z };
 
-	// カメラ位置から4隅へ黄色い線を伸ばす
+	// カメラ座標からのライン
 	Vector4 yellow = { 1.0f, 1.0f, 0.0f, 1.0f };
 	DebugRenderer::AddLine(camPos, w0, yellow);
 	DebugRenderer::AddLine(camPos, w1, yellow);
 	DebugRenderer::AddLine(camPos, w2, yellow);
 	DebugRenderer::AddLine(camPos, w3, yellow);
 
-	// 4隅を繋いで四角い枠を作る
+	// 枠の接続
 	DebugRenderer::AddLine(w0, w1, yellow);
 	DebugRenderer::AddLine(w1, w2, yellow);
 	DebugRenderer::AddLine(w2, w3, yellow);
 	DebugRenderer::AddLine(w3, w0, yellow);
-
 }
 
 TransformationMatrix DebugCamera::CalculateWVP(const Transform& objectTransform)
 {
-	// オブジェクトのワールド行列を計算
-	Matrix4x4 worldMatrix = MakeAffineMatrix(objectTransform.scale, objectTransform.rotate, objectTransform.translate);
+	// 1. Transform の行列を最新状態にする（親行列やUpdateMatrix結果を使用）
+	Transform currentTransform = objectTransform;
+	currentTransform.UpdateMatrix();
 
-	// すでに Update() 内で計算済みの viewMatrix_ と projectionMatrix_ を使って合成する！
-	Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix_, projectionMatrix_));
+	Matrix4x4 worldMatrix = currentTransform.matWorld;
 
-	TransformationMatrix result = { worldViewProjectionMatrix, worldMatrix };
+	// 2. 法線変換用の逆転置行列を計算
+	Matrix4x4 worldInverse = Inverse(worldMatrix);
+	Matrix4x4 worldInverseTranspose = Transpose(worldInverse);
+
+	// 3. WVP行列の合成 (World * View * Projection)
+	Matrix4x4 worldViewMatrix = Multiply(worldMatrix, viewMatrix_);
+	Matrix4x4 worldViewProjectionMatrix = Multiply(worldViewMatrix, projectionMatrix_);
+
+	// 4. 正しい要素（WVP, World, WorldInverseTranspose）をまとめて返す
+	TransformationMatrix result = { worldViewProjectionMatrix, worldMatrix, worldInverseTranspose };
 	return result;
 }

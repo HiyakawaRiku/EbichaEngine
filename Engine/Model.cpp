@@ -113,16 +113,16 @@ void Model::Update(Camera* camera)
 	currentTransform.UpdateMatrix();
 
 	if (wvpData_ && camera) {
-		Matrix4x4 worldMatrix = currentTransform.matWorld;
+		//Matrix4x4 worldMatrix = currentTransform.matWorld;
 
-		Matrix4x4 viewMatrix = camera->GetViewMatrix();
-		Matrix4x4 projectionMatrix = camera->GetProjectionMatrix();
-		Matrix4x4 viewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
+		//Matrix4x4 viewMatrix = camera->GetViewMatrix();
+		//Matrix4x4 projectionMatrix = camera->GetProjectionMatrix();
+		//Matrix4x4 viewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
 
-		Matrix4x4 rootWorld = Multiply(modelData_.rootNode.localMatrix, worldMatrix);
+		//Matrix4x4 rootWorld = Multiply(modelData_.rootNode.localMatrix, worldMatrix);
 
-		wvpData_->World = rootWorld;
-		wvpData_->WVP = Multiply(rootWorld, viewProjectionMatrix);
+		//wvpData_->World = rootWorld;
+		//wvpData_->WVP = Multiply(rootWorld, viewProjectionMatrix);
 		*wvpData_ = camera->CalculateWVP(currentTransform);
 	}
 
@@ -140,6 +140,9 @@ void Model::Draw(Camera* camera, TextureHandle textureHandle)
 
 void Model::Draw(const Transform& transform, Camera* camera, TextureHandle textureHandle)
 {
+	if (!camera || !camera->GetCameraResource()) {
+		return;
+	}
 	
 	// 描画コマンドの発行
 	auto commandList = dxCommon_->GetCommandList();
@@ -154,15 +157,15 @@ void Model::Draw(const Transform& transform, Camera* camera, TextureHandle textu
 	commandList->SetGraphicsRootDescriptorTable(2, srvHandle);
 	commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
 
+	if (camera && camera->GetCameraResource()) {
+		commandList->SetGraphicsRootConstantBufferView(5, camera->GetCameraResource()->GetGPUVirtualAddress());
+	}
+
 	if (pointLightResource_) {
 		commandList->SetGraphicsRootConstantBufferView(6, pointLightResource_->GetGPUVirtualAddress()); // b3
 	}
 	if (spotLightResource_) {
 		commandList->SetGraphicsRootConstantBufferView(7, spotLightResource_->GetGPUVirtualAddress()); // b4
-	}
-
-	if (camera) {
-		commandList->SetGraphicsRootConstantBufferView(5, camera->GetCameraResource()->GetGPUVirtualAddress());
 	}
 
 	// 描画呼出し
@@ -171,6 +174,10 @@ void Model::Draw(const Transform& transform, Camera* camera, TextureHandle textu
 
 void Model::DrawInstanced(std::list<ParticleData>& particles, Camera* camera, TextureHandle textureHandle)
 {
+	if (!camera || !camera->GetCameraResource()) {
+		return;
+	}
+
 	if (particles.empty()) return;
 
 	Matrix4x4 viewMatrix = MakeIdentity4x4();
@@ -231,7 +238,7 @@ void Model::DrawInstanced(std::list<ParticleData>& particles, Camera* camera, Te
 	D3D12_GPU_DESCRIPTOR_HANDLE instancingSrvHandleGPU = dxCommon_->GetInstancingSrvHandleGPU(instanceSrvIndex_);
 	commandList->SetGraphicsRootDescriptorTable(4, instancingSrvHandleGPU);
 
-	if (camera) {
+	if (camera && camera->GetCameraResource()) {
 		commandList->SetGraphicsRootConstantBufferView(5, camera->GetCameraResource()->GetGPUVirtualAddress());
 	}
 

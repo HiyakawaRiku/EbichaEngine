@@ -26,9 +26,8 @@ void BaseCharacter::Initialize(const std::string& bodyFilename, const std::vecto
 
 void BaseCharacter::Update(Camera* activeCamera)
 {
-    viewProjection_ = activeCamera; //[cite: 5]
+    viewProjection_ = activeCamera; //[cite: 6]
 
-    // 胴体と各パーツのカメラ参照更新を一括処理
     if (modelBody_) {
         modelBody_->Update(activeCamera);
     }
@@ -38,7 +37,10 @@ void BaseCharacter::Update(Camera* activeCamera)
         }
     }
 
-    transformBase_.UpdateMatrix(); //[cite: 5]
+    transformBase_.UpdateMatrix(); //[cite: 6]
+
+    // --- ★ コライダーの中心位置をキャラクターの現在位置と同期 ---[cite: 1, 7]
+    colliderSphere_.center = transformBase_.translate;
 }
 
 void BaseCharacter::Draw()

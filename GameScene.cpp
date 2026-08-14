@@ -47,6 +47,7 @@ void GameScene::Initialize() {
 
 	// カメラのセットアップ
 	normalCamera_ = std::make_unique<Camera>();
+	normalCamera_->Initialize();
 	debugCamera_ = std::make_unique<DebugCamera>();
 	debugCamera_->Initialize();
 	activeCamera_ = normalCamera_.get();
@@ -64,19 +65,15 @@ void GameScene::Update() {
 	// 入力更新
 	input_->Update();
 
-	if (useDebugCamera_) {
-		activeCamera_ = debugCamera_.get();
-	}
-	else {
-		activeCamera_ = &followCamera_->GetCamera();
-	}
-
-	// カメラ更新
-	followCamera_->Update();
-	normalCamera_->Update();
-	if (activeCamera_ != normalCamera_.get()) {
-		activeCamera_->Update();
-	}
+	//if (useDebugCamera_) {
+	//	activeCamera_ = debugCamera_.get();
+	//}
+	//else {
+	//	activeCamera_ = &followCamera_->GetCamera();
+	//}
+	//if (activeCamera_ != normalCamera_.get()) {
+	//	activeCamera_->Update();
+	//}
 
 	// =========================================================
 	// キャラクター一括更新（ポリモーフィズム）
@@ -84,6 +81,29 @@ void GameScene::Update() {
 	for (auto& character : characters_) {
 		if (character) {
 			character->Update(activeCamera_);
+		}
+	}
+
+	// カメラ更新
+	followCamera_->Update();
+	normalCamera_->Update();
+	debugCamera_->Update();
+
+	// =========================================================
+	// ★ 当たり判定チェック（総当り判定）[cite: 1, 8]
+	// =========================================================
+	for (size_t i = 0; i < characters_.size(); ++i) {
+		for (size_t j = i + 1; j < characters_.size(); ++j) {
+			if (!characters_[i] || !characters_[j]) continue;
+
+			const BSphere& sphereA = characters_[i]->GetColliderSphere(); 
+				const BSphere& sphereB = characters_[j]->GetColliderSphere();
+
+				// 球 vs 球 の衝突判定[cite: 1]
+				if (Physics3D::IsCollision(sphereA, sphereB)) {
+					// 衝突時のイベント（デバッグログ表示や演出など）
+					 OutputDebugStringA("Collision Detected!\n");
+				}
 		}
 	}
 
@@ -95,19 +115,22 @@ void GameScene::Update() {
 #ifdef _DEBUG
 	// デバッググリッド設定
 	DebugRenderer::AddGrid(100.0f, 10, { 0.5f, 0.5f, 0.5f, 1.0f });
-#endif 
 
-	// キー操作による処理
-	if (input_->PushKey(DIK_P)) {
-		activeCamera_->transform_.rotate.x -= 0.03f;
-	}
-	if (input_->PushButton(XINPUT_GAMEPAD_DPAD_RIGHT)) {
-		activeCamera_->transform_.rotate.x += 0.03f;
-	}
+	Camera* gameCamera = &followCamera_->GetCamera(); // 実際に使用されているゲーム用カメラ
 
 	if (useDebugCamera_) {
-		debugCamera_->DrawFrustum(normalCamera_.get());
+		activeCamera_ = debugCamera_.get();
 	}
+	else {
+		activeCamera_ = gameCamera;
+	}
+#endif 
+
+#ifdef _DEBUG
+	ImGui::Begin("Setting");
+	ImGui::Checkbox("debugcamera", &useDebugCamera_);
+	ImGui::End();
+#endif
 }
 
 void GameScene::Draw() {
@@ -134,6 +157,10 @@ void GameScene::Draw() {
 	dxCommon_->SetPipeline(PipelineType::kParticle, BlendMode::kAdd, DepthWrite::kDisable);
 
 	particle_->Draw();
+
+	if (useDebugCamera_) {
+		debugCamera_->DrawFrustum(normalCamera_.get());
+	}
 
 #ifdef _DEBUG
 	// デバッグレンダラーの描画適用

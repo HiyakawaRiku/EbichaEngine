@@ -17,6 +17,9 @@ void Player::Initialize()
     transformBase_.translate = { 0.0f, 1.5f, 0.0f }; //[cite: 9]
 
     InitializeFloatingGimmick(); //[cite: 9]
+
+    // コライダーの半径を設定（例: 1.0f）
+    SetColliderRadius(1.0f);
 }
 
 void Player::Update(Camera* activeCamera)
