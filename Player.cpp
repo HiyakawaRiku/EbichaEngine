@@ -39,14 +39,18 @@ void Player::Initialize()
 	InitializeFloatingGimmick();
 }
 
-void Player::Update(Camera* activeCamera_)
+void Player::Update(Camera* activeCamera)
 {
-	BehaviorRootUpdate(activeCamera_);
+	// カメラ参照の更新保持
+	viewProjection_ = activeCamera;
+	modelBody_->Update(activeCamera);
+	for (auto& part : modelParts_) {
+		part->Update(activeCamera);
+	}
+	BehaviorRootUpdate(activeCamera);
 
 	transformBase_.UpdateMatrix();
 
-	// カメラ参照の更新保持
-	viewProjection_ = activeCamera_;
 
 	// ImGui によるパラメータ調整ウィンドウ
 	ImGui::Begin("Player Jump Settings");

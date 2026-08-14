@@ -67,7 +67,7 @@ void Sprite::CreateMaterialResource()
 	materialResource_ = DirectXUtils::CreateBufferResource(dxCommon_->GetDevice(), sizeof(Material));
 	materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&materialData_));
 	materialData_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-	materialData_->lightingType = 0; // LightType_None
+	materialData_->lightingType = 0; // None
 	materialData_->uvTransform = MakeIdentity4x4();
 }
 

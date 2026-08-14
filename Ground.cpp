@@ -31,7 +31,7 @@ void Ground::Update(Camera* activeCamera)
 
 	// カメラ参照を保持
 	activeCamera_ = activeCamera;
-	//model_->Update(activeCamera);
+	model_->Update(activeCamera);
 
 	float rotationDeg = 90.0f; // 度数法で指定
 	float theta = MathUtils::ToRadians(rotationDeg); // ラジアン(θ)に変換

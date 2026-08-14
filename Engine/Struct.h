@@ -5,15 +5,15 @@
 #include <random>
 
 struct VertexData {
-	Vector4 position;
-	Vector2 texcoord;
-	Vector3 normal;
+	Vector4 position = { 0,0,0 };
+	Vector2 texcoord = { 0,0 };//UV座標(texture coordinate)
+	Vector3 normal = { 0,0,0 };
 };
 
 enum LightType {
-	LightType_None = 0,        // ライトなし
-	LightType_Lambert = 1,     // ランバート
-	LightType_HalfLambert = 2, // ハーフランバート
+	None = 0,        // ライトなし
+	Lambert = 1,     // ランバート
+	HalfLambert = 2, // ハーフランバート
 };
 
 struct Material {
@@ -21,7 +21,7 @@ struct Material {
 	int32_t lightingType;
 	float padding[3];
 	Matrix4x4 uvTransform;
-	float shininess; // ★追加
+	float shininess;
 	float padding2[3]; // アライメント調整
 };
 

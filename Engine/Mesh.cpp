@@ -44,7 +44,7 @@ void Mesh::CreateMaterialResource()
 	materialResource_ = DirectXUtils::CreateBufferResource(dxCommon_->GetDevice(), sizeof(Material));
 	materialResource_->Map(0, nullptr, reinterpret_cast<void**>(&materialData_));
 	materialData_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-	materialData_->lightingType = 1; // LightType_Lambert
+	materialData_->lightingType = 1; // Lambert
 	materialData_->uvTransform = MakeIdentity4x4();
 }
 

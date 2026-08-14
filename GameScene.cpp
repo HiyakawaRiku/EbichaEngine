@@ -16,22 +16,25 @@ void GameScene::Initialize() {
 	//sprite_->Initialize();
 	//sprite_->transform.translate = { 100.0f, 50.0f, 0.0f };
 
-	sphere_ = std::make_unique<Sphere>();
-	sphere_->Initialize();
+	//sphere_ = std::make_unique<Sphere>();
+	//sphere_->Initialize();
 
-	player_ = new Player();
+	player_ = std::make_unique<Player>();
 	player_->Initialize();
 
-	skydome_ = new Skydome();
+	enemy_ = std::make_unique<Enemy>();
+	enemy_->Initialize();
+
+	skydome_ = std::make_unique<Skydome>();
 	skydome_->Initialize();
 
 	ground_ = std::make_unique<Ground>();
 	ground_->Initialize();
 
-	particle_ = new Particle();
+	particle_ = std::make_unique<Particle>();
 	particle_->Initialize();
 
-	followCamera_ = new FollowCamera();
+	followCamera_ = std::make_unique<FollowCamera>();
 	followCamera_->Initialize();
 	followCamera_->SetTarget(&player_->GetTransform());
 	player_->SetViewProjection(&followCamera_->GetCamera());
@@ -50,7 +53,7 @@ void GameScene::Initialize() {
 	dxCommon_->SetBlendMode(blendMode_);
 
 	textureHandle_ = TextureManager::GetInstance()->Load("resources/monsterBall.png", dxCommon_->GetCommandList());
-	
+
 }
 
 void GameScene::Update() {
@@ -62,7 +65,7 @@ void GameScene::Update() {
 	}
 	else {
 		//activeCamera_ = normalCamera_.get();
-		activeCamera_=&followCamera_->GetCamera();
+		activeCamera_ = &followCamera_->GetCamera();
 	}
 
 	// カメラ更新
@@ -72,20 +75,23 @@ void GameScene::Update() {
 		activeCamera_->Update();
 	}
 	player_->Update(activeCamera_);
+	enemy_->Update(activeCamera_);
 	skydome_->Update(activeCamera_);
 	ground_->Update(activeCamera_);
 	particle_->Update(activeCamera_);
 
 	// オブジェクト更新
 	//sprite_->Update(activeCamera_);
-	sphere_->Update(activeCamera_);
+	//sphere_->Update(activeCamera_);
 	//modelTeapot_->Update(activeCamera_);
 	//modelBunny_->Update(activeCamera_);
 	//modelMultiMesh_->Update(activeCamera_);
 
+
+#ifdef _DEBUG
 	// デバッググリッド設定
 	DebugRenderer::AddGrid(100.0f, 10, { 0.5f, 0.5f, 0.5f, 1.0f });
-
+#endif 
 
 
 	// キー操作による処理
@@ -113,89 +119,90 @@ void GameScene::Draw() {
 	// 描画前処理
 	dxCommon_->PreDraw();
 
-#ifdef _DEBUG
-	ImGui::Begin("Settings");
+	//#ifdef _DEBUG
+	//	ImGui::Begin("Settings");
+	//
+	//	//ImGui::Checkbox("Change Camera", &useDebugCamera_);
+	//	ImGui::DragFloat3("position", &sphere_->transform.translate.x, 0.1f);
+	//	ImGui::DragFloat3("position2", &sphere_->transform.scale.x, 0.1f);
+	//
+	//	// ライティングタイプの選択 (0: None, 1: Lambert, 2: Half-Lambert)
+	//	const char* lightingTypes[] = { "Unlit (0)", "Lambert (1)", "Half-Lambert (2)" };
+	//	int currentLighting = static_cast<int>(sphere_->lightingType);
+	//	if (ImGui::Combo("Lighting Type", &currentLighting, lightingTypes, IM_ARRAYSIZE(lightingTypes))) {
+	//		sphere_->lightingType = static_cast<uint32_t>(currentLighting);
+	//	}
+	//
+	//	int currentIndex = static_cast<int>(blendMode_);
+	//	if (ImGui::Combo("Blend Mode", &currentIndex,blendModeNames_)) {
+	//		blendMode_ = static_cast<BlendMode>(currentIndex);
+	//		DirectXCommon::GetInstance()->SetBlendMode(blendMode_);
+	//	};
+	//
+	//	// =========================================================
+	//	// ポイントライト調整用 UI
+	//	// =========================================================
+	//	if (PointLight* pointLight = sphere_->GetPointLightData()) {
+	//		if (ImGui::TreeNode("Point Light")) {
+	//			ImGui::ColorEdit4("Color", &pointLight->color.x);
+	//			ImGui::DragFloat3("Position", &pointLight->position.x, 0.1f);
+	//			ImGui::DragFloat("Intensity", &pointLight->intensity, 0.05f, 0.0f, 100.0f);
+	//			ImGui::DragFloat("Radius", &pointLight->radius, 0.1f, 0.1f, 1000.0f);
+	//			ImGui::DragFloat("Decay", &pointLight->decay, 0.05f, 0.0f, 10.0f);
+	//			ImGui::TreePop();
+	//		}
+	//	}
+	//
+	//	// =========================================================
+	//	// スポットライト調整用 UI
+	//	// =========================================================
+	//	if (SpotLight* spotLight = sphere_->GetSpotLightData()) {
+	//		if (ImGui::TreeNode("Spot Light")) {
+	//			ImGui::ColorEdit4("Color", &spotLight->color.x);
+	//			ImGui::DragFloat3("Position", &spotLight->position.x, 0.1f);
+	//			ImGui::DragFloat3("Direction", &spotLight->direction.x, 0.01f, -1.0f, 1.0f);
+	//			ImGui::DragFloat("Intensity", &spotLight->intensity, 0.05f, 0.0f, 100.0f);
+	//			ImGui::DragFloat("Distance", &spotLight->distance, 0.1f, 0.1f, 1000.0f);
+	//			ImGui::DragFloat("Decay", &spotLight->decay, 0.05f, 0.0f, 10.0f);
+	//
+	//			// 角度 (cos値から角度(度)へ変換して調整)
+	//			static float angleDeg = 30.0f;
+	//			static float falloffStartDeg = 15.0f;
+	//
+	//			if (ImGui::DragFloat("Angle (deg)", &angleDeg, 0.5f, 0.0f, 90.0f)) {
+	//				spotLight->cosAngle = std::cos(angleDeg * 3.14159265f / 180.0f);
+	//			}
+	//			if (ImGui::DragFloat("Falloff Start (deg)", &falloffStartDeg, 0.5f, 0.0f, angleDeg)) {
+	//				spotLight->cosFalloffStart = std::cos(falloffStartDeg * 3.14159265f / 180.0f);
+	//			}
+	//
+	//			ImGui::TreePop();
+	//		}
+	//	}
+	//
+	//	ImGui::End();
+	//#endif
 
-	//ImGui::Checkbox("Change Camera", &useDebugCamera_);
-	ImGui::DragFloat3("position", &sphere_->transform.translate.x, 0.1f);
-	ImGui::DragFloat3("position2", &sphere_->transform.scale.x, 0.1f);
-
-	// ライティングタイプの選択 (0: None, 1: Lambert, 2: Half-Lambert)
-	const char* lightingTypes[] = { "Unlit (0)", "Lambert (1)", "Half-Lambert (2)" };
-	int currentLighting = static_cast<int>(sphere_->lightingType);
-	if (ImGui::Combo("Lighting Type", &currentLighting, lightingTypes, IM_ARRAYSIZE(lightingTypes))) {
-		sphere_->lightingType = static_cast<uint32_t>(currentLighting);
-	}
-
-	int currentIndex = static_cast<int>(blendMode_);
-	if (ImGui::Combo("Blend Mode", &currentIndex,blendModeNames_)) {
-		blendMode_ = static_cast<BlendMode>(currentIndex);
-		DirectXCommon::GetInstance()->SetBlendMode(blendMode_);
-	};
-
-	// =========================================================
-	// ポイントライト調整用 UI
-	// =========================================================
-	if (PointLight* pointLight = sphere_->GetPointLightData()) {
-		if (ImGui::TreeNode("Point Light")) {
-			ImGui::ColorEdit4("Color", &pointLight->color.x);
-			ImGui::DragFloat3("Position", &pointLight->position.x, 0.1f);
-			ImGui::DragFloat("Intensity", &pointLight->intensity, 0.05f, 0.0f, 100.0f);
-			ImGui::DragFloat("Radius", &pointLight->radius, 0.1f, 0.1f, 1000.0f);
-			ImGui::DragFloat("Decay", &pointLight->decay, 0.05f, 0.0f, 10.0f);
-			ImGui::TreePop();
-		}
-	}
-
-	// =========================================================
-	// スポットライト調整用 UI
-	// =========================================================
-	if (SpotLight* spotLight = sphere_->GetSpotLightData()) {
-		if (ImGui::TreeNode("Spot Light")) {
-			ImGui::ColorEdit4("Color", &spotLight->color.x);
-			ImGui::DragFloat3("Position", &spotLight->position.x, 0.1f);
-			ImGui::DragFloat3("Direction", &spotLight->direction.x, 0.01f, -1.0f, 1.0f);
-			ImGui::DragFloat("Intensity", &spotLight->intensity, 0.05f, 0.0f, 100.0f);
-			ImGui::DragFloat("Distance", &spotLight->distance, 0.1f, 0.1f, 1000.0f);
-			ImGui::DragFloat("Decay", &spotLight->decay, 0.05f, 0.0f, 10.0f);
-
-			// 角度 (cos値から角度(度)へ変換して調整)
-			static float angleDeg = 30.0f;
-			static float falloffStartDeg = 15.0f;
-
-			if (ImGui::DragFloat("Angle (deg)", &angleDeg, 0.5f, 0.0f, 90.0f)) {
-				spotLight->cosAngle = std::cos(angleDeg * 3.14159265f / 180.0f);
-			}
-			if (ImGui::DragFloat("Falloff Start (deg)", &falloffStartDeg, 0.5f, 0.0f, angleDeg)) {
-				spotLight->cosFalloffStart = std::cos(falloffStartDeg * 3.14159265f / 180.0f);
-			}
-
-			ImGui::TreePop();
-		}
-	}
-
-	ImGui::End();
-#endif
-
-	// 各オブジェクトの描画
-	//sprite_->Draw(1);
-	sphere_->Draw(textureHandle_);
-	//modelTeapot_->Draw(1);
-	//modelBunny_->Draw(1);
-	//modelMultiMesh_->Draw(1);
+		// 各オブジェクトの描画
+		//sprite_->Draw(1);
+		//sphere_->Draw(textureHandle_);
+		//modelTeapot_->Draw(1);
+		//modelBunny_->Draw(1);
+		//modelMultiMesh_->Draw(1);
 	dxCommon_->SetPipeline(PipelineType::kObject3D, blendMode_, DepthWrite::kEnable);
 
 	skydome_->Draw();
 	ground_->Draw();
 	player_->Draw();
+	enemy_->Draw();
 
 	dxCommon_->SetPipeline(PipelineType::kParticle, BlendMode::kAdd, DepthWrite::kDisable);
 
 	particle_->Draw();
-
+#ifdef _DEBUG
 	// デバッグレンダラーの描画適用
 	DebugRenderer::Flush(activeCamera_);
-
+#endif
 	// 描画後処理
 	dxCommon_->PostDraw();
 

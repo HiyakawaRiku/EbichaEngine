@@ -15,7 +15,7 @@ public:
 
 	// 色とライト設定のアクセサ（必要に応じて変更可能）
 	Vector4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
-	int32_t lightingType = 0; // LightType_None
+	int32_t lightingType = 0; // None
 
 private:
 	void CreateVertexResource();

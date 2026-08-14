@@ -44,7 +44,7 @@ public:
 
 	// 色とライト設定
 	Vector4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
-	uint32_t lightingType = 2; // LightType_Lambert
+	uint32_t lightingType = 2; // Lambert
 
 	// 初期化
 	void Initialize(const std::string& filename);

@@ -1,5 +1,5 @@
 #include "FollowCamera.h"
-#include "Player.h"
+#include "Enemy.h"
 
 void FollowCamera::Initialize()
 {

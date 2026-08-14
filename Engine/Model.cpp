@@ -109,37 +109,6 @@ void Model::CreateSpotLight()
 
 void Model::Update(Camera* camera)
 {
-	camera_ = camera;
-
-	// 行列更新とWVP計算
-	transform.UpdateMatrix();
-
-	if (wvpData_ && camera_) {
-		Matrix4x4 rootWorld = Multiply(modelData_.rootNode.localMatrix, transform.matWorld);
-
-		Matrix4x4 viewProjectionMatrix = Multiply(camera_->GetViewMatrix(), camera_->GetProjectionMatrix());
-		wvpData_->World = rootWorld;
-		wvpData_->WVP = Multiply(rootWorld, viewProjectionMatrix);
-	}
-
-	if (materialData_) {
-		materialData_->color = this->color;
-		materialData_->lightingType = this->lightingType;
-
-		Matrix4x4 uvMatScale = MakeScaleMatrix(uvTransform.scale);
-		Matrix4x4 uvMatRot = MakeRotateZMatrix(uvTransform.rotate.z);
-		Matrix4x4 uvMatTrans = MakeTranslateMatrix(uvTransform.translate);
-		materialData_->uvTransform = Multiply(uvMatScale, Multiply(uvMatRot, uvMatTrans));
-	}
-}
-
-void Model::Draw(Camera* camera, TextureHandle textureHandle)
-{
-	Draw(this->transform, camera, textureHandle);
-}
-
-void Model::Draw(const Transform& transform, Camera* camera, TextureHandle textureHandle)
-{
 	Transform currentTransform = transform;
 	currentTransform.UpdateMatrix();
 
@@ -162,6 +131,16 @@ void Model::Draw(const Transform& transform, Camera* camera, TextureHandle textu
 		materialData_->lightingType = this->lightingType; // ★重要: 0 から this->lightingType に修正
 	}
 
+}
+
+void Model::Draw(Camera* camera, TextureHandle textureHandle)
+{
+	Draw(this->transform, camera, textureHandle);
+}
+
+void Model::Draw(const Transform& transform, Camera* camera, TextureHandle textureHandle)
+{
+	
 	// 描画コマンドの発行
 	auto commandList = dxCommon_->GetCommandList();
 

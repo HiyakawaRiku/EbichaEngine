@@ -73,6 +73,7 @@ void Particle::Update(Camera* activeCamera)
 {
 	// カメラ参照を保持
 	activeCamera_ = activeCamera;
+	model_->Update(activeCamera);
 
 	// エミッターのタイマー更新と発生処理
 	emitter.frequencyTime += kDeltaTime;

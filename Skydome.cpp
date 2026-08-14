@@ -17,7 +17,7 @@ void Skydome::Update(Camera* activeCamera)
 {
 	// カメラ参照を保持
 	activeCamera_ = activeCamera;
-
+	model_->Update(activeCamera);
 	// 旧 BaseObject の Update(activeCamera_) 呼出しは不要になったため削除
 }
 
