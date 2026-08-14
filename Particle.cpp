@@ -53,7 +53,7 @@ void Particle::Initialize()
 	textureHandle_ = TextureManager::GetInstance()->Load("resources/circle.png", DirectXCommon::GetInstance()->GetCommandList());
 
 	emitter.transform = { {0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
-	emitter.count = 10;
+	emitter.count = 0;
 	emitter.frequency = 0.1f;
 	emitter.frequencyTime = 0.0f;
 	emitter.velocity = { 1.0f,1.0f,1.0f };

@@ -73,6 +73,16 @@ void Player::BehaviorRootUpdate(Camera* activeCamera_)
         BehaviorJumpUpdate(); 
     }
 
+    // ★ 攻撃トリガーの追加（マウス左クリック または Fキー）
+    if ((Input::GetInstance()->TriggerKey(DIK_F)) && !isAttacking_) {
+        BehaviorAttackInitialize();
+    }
+
+    // ★ 攻撃中の更新処理
+    if (isAttacking_) {
+        BehaviorAttackUpdate();
+    }
+
     Vector3 velocity_ = {}; 
     if (Input::GetInstance()->PushKey(DIK_D) || Input::GetInstance()->PushKey(DIK_A) || Input::GetInstance()->PushKey(DIK_W) || Input::GetInstance()->PushKey(DIK_S)) { 
 
@@ -198,6 +208,48 @@ void Player::BehaviorJumpUpdate()
                 modelParts_[3]->transform.rotate.x = EMath::Lerp(modelParts_[3]->transform.rotate.x, 0.5f, 0.2f); 
                 modelParts_[4]->transform.rotate.x = EMath::Lerp(modelParts_[4]->transform.rotate.x, 0.5f, 0.2f); 
             }
+        }
+    }
+}
+
+// ★ 攻撃初期化処理
+void Player::BehaviorAttackInitialize()
+{
+    isAttacking_ = true;
+    attackTimer_ = 0.0f;
+}
+
+// ★ 攻撃更新処理（右腕を前に突き出すモーション）
+void Player::BehaviorAttackUpdate()
+{
+    if (!isAttacking_) return;
+
+    attackTimer_ += 1.0f;
+
+    // 攻撃モーションの進行割合 (0.0 ～ 1.0)
+    float progress = attackTimer_ / kAttackDuration;
+
+    if (modelParts_.size() >= 3) { // 右腕が存在するかチェック
+        if (progress < 0.3f) {
+            // --- 1. 溜め動作 (0% ～ 30%): 腕を引く ---
+            modelParts_[2]->transform.rotate.x = EMath::Lerp(modelParts_[2]->transform.rotate.x, 0.5f, 0.3f);
+        }
+        else if (progress < 0.6f) {
+            // --- 2. 攻撃動作 (30% ～ 60%): 腕を前へ一気に突き出す ---
+            modelParts_[2]->transform.rotate.x = EMath::Lerp(modelParts_[2]->transform.rotate.x, -1.8f, 0.5f);
+        }
+        else {
+            // --- 3. 戻り動作 (60% ～ 100%): 腕を元の位置へ戻す ---
+            modelParts_[2]->transform.rotate.x = EMath::Lerp(modelParts_[2]->transform.rotate.x, 0.0f, 0.2f);
+        }
+    }
+
+    // 規定フレームに達したら攻撃終了
+    if (attackTimer_ >= kAttackDuration) {
+        isAttacking_ = false;
+        attackTimer_ = 0.0f;
+        if (modelParts_.size() >= 3) {
+            modelParts_[2]->transform.rotate.x = 0.0f; // 回転リセット
         }
     }
 }

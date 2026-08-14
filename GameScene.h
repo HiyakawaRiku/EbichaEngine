@@ -79,6 +79,7 @@ private:
 
 	// FollowCamera へのターゲット参照用（所有権は characters_ が保持）
 	Player* player_ = nullptr;
+	Enemy* enemy_ = nullptr;
 
 	// 背景・カメラ・エフェクトなど
 	std::unique_ptr<Skydome> skydome_ = nullptr;

@@ -23,9 +23,11 @@ void GameScene::Initialize() {
 	player_ = player.get(); // FollowCamera 設定用のポインタを保持
 	characters_.push_back(std::move(player));
 
-	// 2. 敵の生成・初期化
+	// 2. 敵生成
 	auto enemy = std::make_unique<Enemy>();
 	enemy->Initialize();
+	enemy->SetTargetPlayer(player_); // ★ 敵にプレイヤーのポインタを渡す
+	enemy_ = enemy.get();            // ★ 参照保持用（GameScene.hに Enemy* enemy_ = nullptr; を宣言）
 	characters_.push_back(std::move(enemy));
 
 	// =========================================================
@@ -65,6 +67,11 @@ void GameScene::Update() {
 	// 入力更新
 	input_->Update();
 
+	// カメラ更新
+	followCamera_->Update();
+	normalCamera_->Update();
+	debugCamera_->Update();
+
 	//if (useDebugCamera_) {
 	//	activeCamera_ = debugCamera_.get();
 	//}
@@ -84,11 +91,6 @@ void GameScene::Update() {
 		}
 	}
 
-	// カメラ更新
-	followCamera_->Update();
-	normalCamera_->Update();
-	debugCamera_->Update();
-
 	// =========================================================
 	// ★ 当たり判定チェック（総当り判定）[cite: 1, 8]
 	// =========================================================
@@ -107,10 +109,16 @@ void GameScene::Update() {
 		}
 	}
 
-	// 背景・エフェクトの更新
-	skydome_->Update(activeCamera_);
-	ground_->Update(activeCamera_);
-	particle_->Update(activeCamera_);
+	if (enemy_ && player_) {
+		const auto& bullets = enemy_->GetBullets();
+		for (const auto& bullet : bullets) {
+			if (Physics3D::IsCollision(bullet->GetColliderSphere(), player_->GetColliderSphere())) {
+				OutputDebugStringA("Player hit by Enemy Bullet!\n");
+				// ダメージ処理などを記述
+			}
+		}
+	}
+
 
 #ifdef _DEBUG
 	// デバッググリッド設定
@@ -124,7 +132,12 @@ void GameScene::Update() {
 	else {
 		activeCamera_ = gameCamera;
 	}
-#endif 
+#endif
+
+	// 背景・エフェクトの更新
+	skydome_->Update(activeCamera_);
+	ground_->Update(activeCamera_);
+	particle_->Update(activeCamera_);
 
 #ifdef _DEBUG
 	ImGui::Begin("Setting");
