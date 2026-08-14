@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <d3d12.h>
 #include <wrl.h>
+#include <vector>
 #include "DirectXTex.h"
 
 // テクスチャ識別用のハンドル型
@@ -28,6 +29,9 @@ public:
 private:
     TextureManager() = default;
     ~TextureManager() = default;
+
+    // ★追加: 1x1の真っ白テクスチャを内部生成する関数
+    void CreateWhiteTexture(ID3D12GraphicsCommandList* commandList);
 
     ID3D12Device* device_ = nullptr;
     ID3D12DescriptorHeap* srvHeap_ = nullptr;
