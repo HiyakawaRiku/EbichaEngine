@@ -32,6 +32,14 @@ public:
     // 敵が発射した弾リストの参照取得
     const std::vector<std::unique_ptr<EnemyBullet>>& GetBullets() const { return bullets_; }
 
+    // =========================================================
+    // ★ HP & ダメージ関連機能
+    // =========================================================
+    void TakeDamage(int damage);
+    int GetHp() const { return hp_; }
+    int GetMaxHp() const { return kMaxHp_; }
+    bool IsDead() const { return hp_ <= 0; }
+
 private:
     void UpdateNormal();
     void UpdateAttack();
@@ -46,6 +54,13 @@ private:
 
     // 弾の一括管理
     std::vector<std::unique_ptr<EnemyBullet>> bullets_;
+
+    // --- ★ HP・被弾用パラメータ ---
+    static inline const int kMaxHp_ = 20;               // 敵の最大HP
+    int hp_ = kMaxHp_;                                 // 敵の現在HP
+    bool isInvincible_ = false;                        // 無敵フラグ
+    float invincibleTimer_ = 0.0f;                     // 無敵タイマー
+    static inline const float kInvincibleTime = 10.0f; // ノックバック/被弾硬直用の短い無敵時間
 
     // 浮遊用パラメータ
     float floatTimer_ = 0.0f;

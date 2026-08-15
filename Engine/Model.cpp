@@ -3,7 +3,7 @@
 
 void Model::Initialize(const std::string& filename)
 {
-	modelData_ = LoadModelFile("resources", filename);
+	modelData_ = LoadModelFile("resources/" + filename, filename+".obj");
 
 	CreateModelSphere();
 
@@ -143,7 +143,7 @@ void Model::Draw(const Transform& transform, Camera* camera, TextureHandle textu
 	if (!camera || !camera->GetCameraResource()) {
 		return;
 	}
-	
+
 	// 描画コマンドの発行
 	auto commandList = dxCommon_->GetCommandList();
 

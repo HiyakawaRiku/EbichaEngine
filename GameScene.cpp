@@ -114,7 +114,7 @@ void GameScene::Update() {
 		for (const auto& bullet : bullets) {
 			if (Physics3D::IsCollision(bullet->GetColliderSphere(), player_->GetColliderSphere())) {
 				OutputDebugStringA("Player hit by Enemy Bullet!\n");
-				// ダメージ処理などを記述
+				player_->TakeDamage(1);
 			}
 		}
 	}

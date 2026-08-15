@@ -5,42 +5,81 @@ void Player::Initialize()
 {
     // パーツ構成を定義
     std::vector<BaseCharacter::PartConfig> partConfigs = {
-        { "Head.obj",  {  0.0f,  0.5f, 0.0f } },
-        { "armL1.obj", { -0.5f,  0.5f, 0.0f } },
-        { "armR1.obj", {  0.5f,  0.5f, 0.0f } },
-        { "legL1.obj", { -0.2f, -0.5f, 0.0f } },
-        { "legR1.obj", {  0.2f, -0.5f, 0.0f } },
+        { "Head",  {  0.0f,  0.5f, 0.0f } },
+        { "armL1", { -0.5f,  0.5f, 0.0f } },
+        { "armR1", {  0.5f,  0.5f, 0.0f } },
+        { "legL1", { -0.2f, -0.5f, 0.0f } },
+        { "legR1", {  0.2f, -0.5f, 0.0f } },
     };
 
-    // 親クラスの初期化関数に渡す[cite: 5]
-    BaseCharacter::Initialize("Body.obj", partConfigs, "resources/white1x1.png"); //[cite: 5]
-    transformBase_.translate = { 0.0f, 1.5f, 0.0f }; 
+    // 親クラスの初期化関数に渡す
+    BaseCharacter::Initialize("Body", partConfigs, "resources/white1x1.png");
+    transformBase_.translate = { 0.0f, 1.5f, 0.0f };
 
-    InitializeFloatingGimmick(); 
+    InitializeFloatingGimmick();
 
-    // コライダーの半径を設定（例: 1.0f）
+    // コライダーの半径を設定
     SetColliderRadius(1.0f);
+
+    // ★ HP & 無敵状態の初期化
+    hp_ = kMaxHp_;
+    isInvincible_ = false;
+    invincibleTimer_ = 0.0f;
 }
 
 void Player::Update(Camera* activeCamera)
 {
-    // 親クラスの更新（カメラセット、パーツ更新、行列更新）を実行[cite: 5]
+    // 親クラスの更新（カメラセット、パーツ更新、行列更新）を実行
     BaseCharacter::Update(activeCamera);
 
-    // プレイヤー固有の挙動更新[cite: 9]
+    // ★ 無敵時間のカウントダウン処理
+    if (isInvincible_) {
+        invincibleTimer_ -= 1.0f;
+        if (invincibleTimer_ <= 0.0f) {
+            isInvincible_ = false;
+            invincibleTimer_ = 0.0f;
+        }
+    }
+
+    // プレイヤー固有の挙動更新
     BehaviorRootUpdate(activeCamera);
 
-    // ImGui によるパラメータ調整ウィンドウ[cite: 9]
-    ImGui::Begin("Player Jump Settings"); 
-    ImGui::SliderFloat("Initial Velocity", &jumpInitialVelocity_, 0.1f, 1.5f); 
-    ImGui::SliderFloat("Gravity", &gravity_, 0.005f, 0.1f); 
-    ImGui::SliderFloat("Squash Amount", &jumpSquashAmount_, 0.0f, 0.6f); 
-    ImGui::SliderFloat("Ground Y", &jumpGroundY_, 0.0f, 5.0f); 
+    // ★ ImGui による HP ステータス表示・テストデバッグ用ウィンドウ
+#ifdef _DEBUG
+    ImGui::Begin("Player Status");
+    ImGui::Text("HP: %d / %d", hp_, kMaxHp_);
+    ImGui::ProgressBar((float)hp_ / (float)kMaxHp_, ImVec2(0.0f, 0.0f));
+    ImGui::Text("Invincible: %s (Timer: %.0f)", isInvincible_ ? "TRUE" : "FALSE", invincibleTimer_);
 
-    if (ImGui::Button("Test Jump") && !isJumping_) { 
-        BehaviorJumpInitialize(); 
+    if (ImGui::Button("Take 1 Damage")) {
+        TakeDamage(1);
     }
-    ImGui::End(); 
+    if (ImGui::Button("Heal Full")) {
+        hp_ = kMaxHp_;
+    }
+    ImGui::End();
+#endif
+}
+
+// ★ 被弾ダメージ処理
+void Player::TakeDamage(int damage)
+{
+    // 無敵中または既に死亡している場合は処理をスキップ
+    if (isInvincible_ || IsDead()) {
+        return;
+    }
+
+    // ダメージ減算
+    hp_ -= damage;
+    if (hp_ < 0) {
+        hp_ = 0;
+    }
+
+    // 無敵時間を付与（連続ヒット防止）
+    isInvincible_ = true;
+    invincibleTimer_ = kInvincibleTime;
+
+    // ※ここに被弾ノックバックやSE再生などを追加可能です
 }
 
 void Player::InitializeFloatingGimmick()
@@ -219,37 +258,49 @@ void Player::BehaviorAttackInitialize()
     attackTimer_ = 0.0f;
 }
 
-// ★ 攻撃更新処理（右腕を前に突き出すモーション）
+// 攻撃更新処理（大振りメガトンパンチ）
 void Player::BehaviorAttackUpdate()
 {
     if (!isAttacking_) return;
 
     attackTimer_ += 1.0f;
-
-    // 攻撃モーションの進行割合 (0.0 ～ 1.0)
     float progress = attackTimer_ / kAttackDuration;
 
-    if (modelParts_.size() >= 3) { // 右腕が存在するかチェック
-        if (progress < 0.3f) {
-            // --- 1. 溜め動作 (0% ～ 30%): 腕を引く ---
-            modelParts_[2]->transform.rotate.x = EMath::Lerp(modelParts_[2]->transform.rotate.x, 0.5f, 0.3f);
+    if (modelParts_.size() >= 3 && modelBody_) {
+        if (progress < 0.25f) {
+            // 【1. タメ動作 (0%～25%)】 
+            // 体を少し後ろに引いて右腕を大きく後ろへ構える
+            modelBody_->transform.rotate.y -= 0.05f; // 体を右に捻る
+            modelParts_[2]->transform.rotate.x = EMath::Lerp(modelParts_[2]->transform.rotate.x, 1.2f, 0.3f); // 右腕を後ろに引く
+            modelParts_[2]->transform.rotate.z = EMath::Lerp(modelParts_[2]->transform.rotate.z, 0.5f, 0.3f);
         }
-        else if (progress < 0.6f) {
-            // --- 2. 攻撃動作 (30% ～ 60%): 腕を前へ一気に突き出す ---
-            modelParts_[2]->transform.rotate.x = EMath::Lerp(modelParts_[2]->transform.rotate.x, -1.8f, 0.5f);
+        else if (progress < 0.55f) {
+            // 【2. 振り抜き＆踏み込み (25%～55%)】 
+            // プレイヤーを少し前に前進させつつ、右腕と体を前へ一気に振り抜く！
+
+            // 踏み込み（プレイヤー自体を前進させる）
+            Vector3 forward = { std::sin(modelBody_->transform.rotate.y), 0.0f, std::cos(modelBody_->transform.rotate.y) };
+            transformBase_.translate += forward * 0.15f;
+
+            // 体を逆に大きく捻り、腕を前方へぶん回す
+            modelBody_->transform.rotate.y += 0.12f;
+            modelParts_[2]->transform.rotate.x = EMath::Lerp(modelParts_[2]->transform.rotate.x, -2.2f, 0.5f); // 前方へ突き出し
+            modelParts_[2]->transform.rotate.z = EMath::Lerp(modelParts_[2]->transform.rotate.z, -0.3f, 0.5f);
         }
         else {
-            // --- 3. 戻り動作 (60% ～ 100%): 腕を元の位置へ戻す ---
-            modelParts_[2]->transform.rotate.x = EMath::Lerp(modelParts_[2]->transform.rotate.x, 0.0f, 0.2f);
+            // 【3. 残心・戻り動作 (55%～100%)】 
+            // 体と腕の回転をじわっと元の姿勢に戻す
+            modelParts_[2]->transform.rotate.x = EMath::Lerp(modelParts_[2]->transform.rotate.x, 0.0f, 0.15f);
+            modelParts_[2]->transform.rotate.z = EMath::Lerp(modelParts_[2]->transform.rotate.z, 0.0f, 0.15f);
         }
     }
 
-    // 規定フレームに達したら攻撃終了
+    // 規定フレームに達したら終了
     if (attackTimer_ >= kAttackDuration) {
         isAttacking_ = false;
         attackTimer_ = 0.0f;
         if (modelParts_.size() >= 3) {
-            modelParts_[2]->transform.rotate.x = 0.0f; // 回転リセット
+            modelParts_[2]->transform.rotate = { 0.0f, 0.0f, 0.0f }; // 回転リセット
         }
     }
 }

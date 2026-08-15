@@ -9,7 +9,7 @@ Skydome::~Skydome()
 void Skydome::Initialize()
 {
 	model_ = new Model();
-	model_->Initialize("skydome.obj");
+	model_->Initialize("skydome");
 	textureHandle_ = TextureManager::GetInstance()->Load("resources/sky_sphere.png", DirectXCommon::GetInstance()->GetCommandList());
 }
 

@@ -49,7 +49,7 @@ Particle::~Particle()
 void Particle::Initialize()
 {
 	model_ = new Model();
-	model_->Initialize("plane.obj");
+	model_->Initialize("plane");
 	textureHandle_ = TextureManager::GetInstance()->Load("resources/circle.png", DirectXCommon::GetInstance()->GetCommandList());
 
 	emitter.transform = { {0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };

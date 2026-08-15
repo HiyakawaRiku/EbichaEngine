@@ -22,7 +22,7 @@ Ground::~Ground()
 void Ground::Initialize()
 {
 	model_ = new Model();
-	model_->Initialize("plane.obj");
+	model_->Initialize("plane");
 	textureHandle_ = TextureManager::GetInstance()->Load("resources/ground_leaf.png", DirectXCommon::GetInstance()->GetCommandList());
 }
 

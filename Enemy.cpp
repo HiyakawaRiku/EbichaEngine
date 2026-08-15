@@ -4,7 +4,7 @@
 void Enemy::Initialize()
 {
     std::vector<BaseCharacter::PartConfig> partConfigs = {};
-    BaseCharacter::Initialize("enemy.obj", partConfigs, "resources/player.png");
+    BaseCharacter::Initialize("enemy", partConfigs, "resources/white1x1.png");
 
     // 初期位置（浮かせた高さに設定）
     transformBase_.translate = { 3.0f, kBaseHeight, 0.0f };
@@ -16,10 +16,29 @@ void Enemy::Initialize()
     attackStateTimer_ = 0.0f;
     floatTimer_ = 0.0f;
     bullets_.clear();
+
+    // ★ HPの初期化
+    hp_ = kMaxHp_;
+    isInvincible_ = false;
+    invincibleTimer_ = 0.0f;
 }
 
 void Enemy::Update(Camera* activeCamera)
 {
+    // 死亡している場合は動作を更新しない
+    if (IsDead()) {
+        return;
+    }
+
+    // ★ 被弾無敵タイマーの減衰
+    if (isInvincible_) {
+        invincibleTimer_ -= 1.0f;
+        if (invincibleTimer_ <= 0.0f) {
+            isInvincible_ = false;
+            invincibleTimer_ = 0.0f;
+        }
+    }
+
     // 常に浮遊アニメーションを実行
     UpdateFloating();
 
@@ -46,16 +65,63 @@ void Enemy::Update(Camera* activeCamera)
     }
 
     BaseCharacter::Update(activeCamera);
+
+    // =========================================================
+    // ★ 画面上への Enemy HPバー描画 (ImGui UI)
+    // =========================================================
+#ifdef _DEBUG
+    // 画面中央上に「BOSS HP」として表示するスタイルのUI
+    ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x * 0.5f - 150.0f, 20.0f), ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(300.0f, 65.0f));
+    ImGui::Begin("Enemy Status", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
+
+    ImGui::Text("ENEMY HP: %d / %d", hp_, kMaxHp_);
+
+    // 赤色のゲージで描画
+    ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.8f, 0.1f, 0.1f, 1.0f));
+    ImGui::ProgressBar((float)hp_ / (float)kMaxHp_, ImVec2(-1.0f, 20.0f), "");
+    ImGui::PopStyleColor();
+
+    ImGui::End();
+#endif
 }
 
 void Enemy::Draw()
 {
-    BaseCharacter::Draw();
+    // 生きている時のみ本体を描画
+    if (!IsDead()) {
+        BaseCharacter::Draw();
+    }
 
-    // 発射した弾の描画
+    // 発射した弾の描画（敵が死んでも弾はそのまま描画・更新可能）
     for (const auto& bullet : bullets_) {
         bullet->Draw();
     }
+}
+
+// Enemy.cpp の TakeDamage に追加
+void Enemy::TakeDamage(int damage)
+{
+    if (isInvincible_ || IsDead()) return;
+
+    hp_ -= damage;
+    if (hp_ < 0) hp_ = 0;
+
+    // ★ 攻撃されたら後ろに少しノックバック（押し出される）
+    if (targetPlayer_) {
+        Vector3 playerPos = targetPlayer_->GetTransform().translate;
+        Vector3 pushDir = transformBase_.translate - playerPos; // プレイヤーから離れる方向
+        pushDir.y = 0.0f; // Y軸は固定
+
+        // 正規化してノックバック移動
+        float len = std::sqrt(pushDir.x * pushDir.x + pushDir.z * pushDir.z);
+        if (len > 0.0f) {
+            transformBase_.translate += (pushDir / len) * 0.8f; // 吹っ飛び量
+        }
+    }
+
+    isInvincible_ = true;
+    invincibleTimer_ = kInvincibleTime;
 }
 
 void Enemy::UpdateFloating()
