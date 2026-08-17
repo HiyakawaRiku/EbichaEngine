@@ -18,7 +18,6 @@ void Enemy::Initialize()
     attackIntervalTimer_ = 0.0f;
     attackStateTimer_ = 0.0f;
     floatTimer_ = 0.0f;
-    bullets_.clear();
 
     hp_ = kMaxHp_;
     isInvincible_ = false;
@@ -40,16 +39,6 @@ void Enemy::Update(Camera* activeCamera)
     }
 
     UpdateFloating();
-
-    for (auto it = bullets_.begin(); it != bullets_.end(); ) {
-        (*it)->Update(activeCamera);
-        if ((*it)->IsDead()) {
-            it = bullets_.erase(it);
-        }
-        else {
-            ++it;
-        }
-    }
 
     switch (state_) {
     case State::Normal:
@@ -90,10 +79,6 @@ void Enemy::Draw()
 {
     if (!IsDead()) {
         BaseCharacter::Draw();
-    }
-
-    for (const auto& bullet : bullets_) {
-        bullet->Draw();
     }
 }
 
@@ -153,8 +138,8 @@ void Enemy::UpdateNormal()
         attackIntervalTimer_ = 0.0f;
         attackStateTimer_ = 0.0f;
 
-        // 6種類の攻撃からランダム選択（大技の割合を高めに）
-        int type = rand() % 6;
+        // 3種類の攻撃パターンからランダム選択
+        int type = rand() % 3;
         currentAttackType_ = static_cast<AttackType>(type);
     }
 }
@@ -187,10 +172,6 @@ void Enemy::UpdateAttack()
             modelBody_->transform.rotate.x = -0.4f;
             modelBody_->transform.scale = { 0.9f, 0.8f, 1.1f };
         }
-        else if (currentAttackType_ == AttackType::SpinShoot) {
-            modelBody_->transform.rotate.y += 0.3f;
-            modelBody_->transform.scale = { 1.2f, 0.8f, 1.2f };
-        }
         else {
             modelBody_->transform.scale = { 1.4f, 1.4f, 1.4f };
         }
@@ -210,13 +191,6 @@ void Enemy::UpdateAttack()
                     chargeDirection_ = { 0.0f, 0.0f, 1.0f };
                 }
             }
-
-            if (currentAttackType_ == AttackType::Shoot) {
-                FireBullet();
-            }
-            else if (currentAttackType_ == AttackType::RingShoot) {
-                FireRingBullet(16);
-            }
         }
     }
     break;
@@ -235,10 +209,8 @@ void Enemy::UpdateAttack()
             transformBase_.translate.z += (slamTargetPos_.z - transformBase_.translate.z) * 0.3f;
             transformBase_.translate.y = (kBaseHeight + 6.0f) * (1.0f - progress) + 0.5f * progress;
 
-            // 着地した瞬間（攻撃の終わり）に全方向に超強力な拡散衝撃波（18方向弾幕）を発射
             if (attackStateTimer_ >= currentDuration - 1.0f) {
                 transformBase_.translate.y = 0.5f; // 地面叩きつけ
-                FireRingBullet(18); // 着地衝撃波
             }
         }
         else if (currentAttackType_ == AttackType::Charge) {
@@ -251,16 +223,6 @@ void Enemy::UpdateAttack()
             float bounceHeight = std::abs(std::sin(attackStateTimer_ * 0.2f)) * 3.0f;
             transformBase_.translate.y = kBaseHeight + bounceHeight;
             modelBody_->transform.rotate.x += 0.3f;
-        }
-        else if (currentAttackType_ == AttackType::SpinShoot) {
-            currentDuration = kAttackDuration * 2.5f;
-            modelBody_->transform.rotate.y += 0.4f;
-
-            if (static_cast<int>(attackStateTimer_) % 3 == 0) {
-                float angle = modelBody_->transform.rotate.y;
-                Vector3 dir = { std::sin(angle), 0.0f, std::cos(angle) };
-                FireSingleBullet(dir, kBulletSpeed * 0.8f);
-            }
         }
 
         if (attackStateTimer_ >= currentDuration) {
@@ -296,37 +258,5 @@ void Enemy::UpdateAttack()
         }
     }
     break;
-    }
-}
-
-void Enemy::FireBullet()
-{
-    Vector3 bulletVel = chargeDirection_ * kBulletSpeed;
-    auto bullet = std::make_unique<EnemyBullet>();
-    bullet->Initialize(transformBase_.translate, bulletVel);
-    bullets_.push_back(std::move(bullet));
-}
-
-void Enemy::FireSingleBullet(const Vector3& dir, float speed)
-{
-    Vector3 bulletVel = dir * speed;
-    auto bullet = std::make_unique<EnemyBullet>();
-    bullet->Initialize(transformBase_.translate, bulletVel);
-    bullets_.push_back(std::move(bullet));
-}
-
-void Enemy::FireRingBullet(int count)
-{
-    const float kTwoPi = 6.28318530718f;
-    for (int i = 0; i < count; ++i) {
-        float angle = (kTwoPi / count) * static_cast<float>(i);
-
-        Vector3 dir = {
-            std::sin(angle),
-            0.0f,
-            std::cos(angle)
-        };
-
-        FireSingleBullet(dir, kBulletSpeed * 0.7f);
     }
 }

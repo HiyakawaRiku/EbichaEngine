@@ -23,12 +23,12 @@ void FollowCamera::Update()
 		else if (Input::GetInstance()->PushKey(DIK_LEFT)) {
 			acceleration.y -= kRotateSpeed;
 		}
-		else if (Input::GetInstance()->PushKey(DIK_UP)) {
-			acceleration.x -= kRotateSpeed;
-		}
-		else if (Input::GetInstance()->PushKey(DIK_DOWN)) {
-			acceleration.x += kRotateSpeed;
-		}
+		//else if (Input::GetInstance()->PushKey(DIK_UP)) {
+		//	acceleration.x -= kRotateSpeed;
+		//}
+		//else if (Input::GetInstance()->PushKey(DIK_DOWN)) {
+		//	acceleration.x += kRotateSpeed;
+		//}
 		cameraPos += acceleration;
 	}
 	viewProjection_.transform_.rotate.x += (float)cameraPos.x * kRotateSpeed;

@@ -37,6 +37,11 @@ struct ParticleInstanceData {
 	Vector4 color;
 };
 
+struct InstancedTransformData {
+	Transform transform;
+	Vector4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
+};
+
 class Model {
 public:
 	Transform transform{ {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
@@ -53,6 +58,7 @@ public:
 	void Draw(Camera* camera, TextureHandle textureHandle);
 	void Draw(const Transform& transform, Camera* camera, TextureHandle textureHandle);
 	void DrawInstanced(std::list<ParticleData>& particles, Camera* camera, TextureHandle textureHandle);
+	void DrawInstanced(const std::vector<InstancedTransformData>& instanceList, Camera* camera, TextureHandle textureHandle);
 
 	// ★追加: ライト制御用ゲッター
 	DirectionalLight* GetDirectionalLightData() { return directionalLightData_; }

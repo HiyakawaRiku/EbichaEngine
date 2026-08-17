@@ -50,6 +50,9 @@ public:
     bool IsAttacking() const { return isDashAttacking_; }
     bool IsDashAttacking() const { return isDashAttacking_; }
 
+    bool IsJumping() const { return isJumping_; }
+    float GetJumpVelocityY() const { return jumpVelocityY_; }
+
 private:
     float floatingParameter_ = 0.0f;
     float frame_ = 60.0f;
@@ -104,7 +107,7 @@ private:
     float moveDashTimer_ = 0.0f;          // 移動長押し時間タイマー
     const float kBaseMoveSpeed = 0.15f;   // 初速（通常移動速度）
     const float kMaxMoveSpeed = 0.35f;    // 長押し時の最高速度
-    const float kDashAccelTime = 120.0f;  // 最高速度に達するまでのフレーム数（約2秒）
+    const float kDashAccelTime = 600.0f;  // 最高速度に達するまでのフレーム数（約2秒）
 
     bool isDashAttacking_ = false;        // 最高速度時の突進攻撃状態フラグ
     Vector3 dashAttackExtents_{ 0.8f, 0.8f, 0.8f }; // 突進攻撃の判定サイズ

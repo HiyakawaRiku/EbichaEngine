@@ -27,7 +27,7 @@ void GameScene::Initialize() {
 	auto enemy = std::make_unique<Enemy>();
 	enemy->Initialize();
 	enemy->SetTargetPlayer(player_); // ★ 敵にプレイヤーのポインタを渡す
-	enemy_ = enemy.get();            // ★ 参照保持用（GameScene.hに Enemy* enemy_ = nullptr; を宣言）
+	enemy_ = enemy.get();            // ★ 参照保持用
 	characters_.push_back(std::move(enemy));
 
 	// =========================================================
@@ -72,16 +72,6 @@ void GameScene::Update() {
 	normalCamera_->Update();
 	debugCamera_->Update();
 
-	//if (useDebugCamera_) {
-	//	activeCamera_ = debugCamera_.get();
-	//}
-	//else {
-	//	activeCamera_ = &followCamera_->GetCamera();
-	//}
-	//if (activeCamera_ != normalCamera_.get()) {
-	//	activeCamera_->Update();
-	//}
-
 	// =========================================================
 	// キャラクター一括更新（ポリモーフィズム）
 	// =========================================================
@@ -92,32 +82,43 @@ void GameScene::Update() {
 	}
 
 	// =========================================================
-	// ★ 当たり判定チェック（総当り判定）[cite: 1, 8]
+	// ★ 当たり判定およびダメージ処理（Player vs Enemy）
 	// =========================================================
-	for (size_t i = 0; i < characters_.size(); ++i) {
-		for (size_t j = i + 1; j < characters_.size(); ++j) {
-			if (!characters_[i] || !characters_[j]) continue;
+	if (player_ && enemy_ && !player_->IsDead() && !enemy_->IsDead()) {
 
-			const BSphere& sphereA = characters_[i]->GetColliderSphere();
-			const BSphere& sphereB = characters_[j]->GetColliderSphere();
+		const BSphere& playerSphere = player_->GetColliderSphere();
+		const BSphere& enemySphere = enemy_->GetColliderSphere();
 
-			// 球 vs 球 の衝突判定[cite: 1]
-			if (Physics3D::IsCollision(sphereA, sphereB)) {
-				// 衝突時のイベント（デバッグログ表示や演出など）
-				OutputDebugStringA("Collision Detected!\n");
+		// 1. 基本的な球同士の衝突チェック（接触しているか）
+		if (Physics3D::IsCollision(playerSphere, enemySphere)) {
+
+			// A. プレイヤーがダッシュ突進攻撃中 -> 敵にダメージ
+			if (player_->IsDashAttacking()) {
+				enemy_->TakeDamage(3);
+			}
+			// B. プレイヤーがジャンプ中かつ下降中（急降下攻撃）
+			else if (player_->IsJumping() && player_->GetJumpVelocityY() < 0.0f) {
+				// 敵がグロッキー（大技後のひるみ）状態なら特大ダメージが適用される
+				enemy_->TakeDamage(5);
+			}
+			// C. 敵が攻撃中（突進・大技など） -> プレイヤーにダメージ
+			else if (enemy_->IsAttacking()) {
+				player_->TakeDamage(2);
+			}
+			// D. お互い通常状態での接触（体当たり） -> プレイヤーがダメージ
+			else if (!player_->IsInvincible()) {
+				player_->TakeDamage(1);
 			}
 		}
 	}
-
 
 #ifdef _DEBUG
 	DebugRenderer::AddGrid(100.0f, 10, { 0.5f, 0.5f, 0.5f, 1.0f });
 #endif
 
 	// =========================================================
-	// ★ 当たり判定の可視化描画
+	// ★ 当たり判定の可視化・デバッグ操作
 	// =========================================================
-
 #ifdef _DEBUG
 	// ImGui 設定ウィンドウ
 	ImGui::Begin("Setting");
@@ -132,25 +133,23 @@ void GameScene::Update() {
 		ImGui::Separator();
 		ImGui::Text("Hammer Collider (AABB)");
 
-		// ★ サイズ調整
+		// サイズ調整
 		Vector3& hammerExtents = player_->GetHammerBoxExtents();
 		ImGui::DragFloat3("Hammer Half Extents", &hammerExtents.x, 0.05f, 0.1f, 10.0f, "%.2f");
 
-		// ★ 位置（オフセット）調整を追加
+		// 位置（オフセット）調整
 		Vector3& hammerOffset = player_->GetHammerColliderOffset();
 		ImGui::DragFloat3("Hammer Offset", &hammerOffset.x, 0.05f, -5.0f, 5.0f, "%.2f");
 	}
 	ImGui::End();
 #endif
 
-	Camera* gameCamera = &followCamera_->GetCamera(); // 実際に使用されているゲーム用カメラ[cite: 5]
+	Camera* gameCamera = &followCamera_->GetCamera(); // 実際に使用されているゲーム用カメラ
 
 	if (useDebugCamera_) {
-
 		activeCamera_ = debugCamera_.get();
 	}
 	else {
-
 		activeCamera_ = gameCamera;
 	}
 
@@ -158,12 +157,6 @@ void GameScene::Update() {
 	skydome_->Update(activeCamera_);
 	ground_->Update(activeCamera_);
 	particle_->Update(activeCamera_);
-
-#ifdef _DEBUG
-	ImGui::Begin("Setting");
-	ImGui::Checkbox("debugcamera", &useDebugCamera_);
-	ImGui::End();
-#endif
 }
 
 void GameScene::Draw() {

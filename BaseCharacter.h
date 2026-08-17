@@ -26,6 +26,9 @@ public:
     const BSphere& GetColliderSphere() const { return colliderSphere_; }
     void SetColliderRadius(float radius) { colliderSphere_.radius = radius; }
 
+    TextureHandle GetTextureHandle() const { return textureHandle_; }
+    Model* GetModelBody() { return modelBody_.get(); }
+
 protected:
     Transform transformBase_;
     std::unique_ptr<Model> modelBody_;

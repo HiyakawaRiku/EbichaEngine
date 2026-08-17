@@ -252,6 +252,67 @@ void Model::DrawInstanced(std::list<ParticleData>& particles, Camera* camera, Te
 	commandList->DrawInstanced(UINT(modelData_.vertices.size()), numInstance, 0, 0);
 }
 
+void Model::DrawInstanced(const std::vector<InstancedTransformData>& instanceList, Camera* camera, TextureHandle textureHandle)
+{
+	if (!camera || !camera->GetCameraResource() || instanceList.empty()) {
+		return;
+	}
+
+	Matrix4x4 viewMatrix = camera->GetViewMatrix();
+	Matrix4x4 projectionMatrix = camera->GetProjectionMatrix();
+	Matrix4x4 viewProjectionMatrix = Multiply(viewMatrix, projectionMatrix);
+
+	uint32_t numInstance = 0;
+
+	for (const auto& inst : instanceList) {
+		if (numInstance >= kMaxInstanceCount) break;
+
+		// トランスフォーム行列計算
+		Transform t = inst.transform;
+		t.UpdateMatrix();
+		Matrix4x4 worldMatrix = t.matWorld;
+
+		instanceData_[numInstance].World = worldMatrix;
+		instanceData_[numInstance].WVP = Multiply(worldMatrix, viewProjectionMatrix);
+		instanceData_[numInstance].color = inst.color;
+
+		++numInstance;
+	}
+
+	if (numInstance == 0) return;
+
+	auto commandList = dxCommon_->GetCommandList();
+
+	// 頂点バッファ・トポロジ設定
+	commandList->IASetVertexBuffers(0, 1, &vertexBufferView_);
+	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	// 各種バッファの設定
+	commandList->SetGraphicsRootConstantBufferView(0, materialResource_->GetGPUVirtualAddress());
+
+	D3D12_GPU_DESCRIPTOR_HANDLE srvHandle = TextureManager::GetInstance()->GetSrvHandleGPU(textureHandle);
+	commandList->SetGraphicsRootDescriptorTable(2, srvHandle);
+	commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource_->GetGPUVirtualAddress());
+
+	// インスタンス用SRVを設定 (rootParameter[4])
+	D3D12_GPU_DESCRIPTOR_HANDLE instancingSrvHandleGPU = dxCommon_->GetInstancingSrvHandleGPU(instanceSrvIndex_);
+	commandList->SetGraphicsRootDescriptorTable(4, instancingSrvHandleGPU);
+
+	if (camera && camera->GetCameraResource()) {
+		commandList->SetGraphicsRootConstantBufferView(5, camera->GetCameraResource()->GetGPUVirtualAddress());
+	}
+
+	if (pointLightResource_) {
+		commandList->SetGraphicsRootConstantBufferView(6, pointLightResource_->GetGPUVirtualAddress());
+	}
+	if (spotLightResource_) {
+		commandList->SetGraphicsRootConstantBufferView(7, spotLightResource_->GetGPUVirtualAddress());
+	}
+
+	// 1回の描画呼出しで全弾を描画
+	commandList->DrawInstanced(vertexCount_, numInstance, 0, 0);
+}
+
 MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename) {
 	MaterialData materialData;
 	std::string line;
