@@ -1,14 +1,17 @@
 #include "Enemy.h"
 #include <cmath>
+#include <cstdlib>
+
+#ifdef _DEBUG
+#include "imgui.h"
+#endif
 
 void Enemy::Initialize()
 {
     std::vector<BaseCharacter::PartConfig> partConfigs = {};
-    BaseCharacter::Initialize("enemy", partConfigs, "resources/white1x1.png");
+    BaseCharacter::Initialize("cube", partConfigs, "resources/white1x1.png");
 
-    // 初期位置（浮かせた高さに設定）
     transformBase_.translate = { 3.0f, kBaseHeight, 0.0f };
-
     SetColliderRadius(1.2f);
 
     state_ = State::Normal;
@@ -17,7 +20,6 @@ void Enemy::Initialize()
     floatTimer_ = 0.0f;
     bullets_.clear();
 
-    // ★ HPの初期化
     hp_ = kMaxHp_;
     isInvincible_ = false;
     invincibleTimer_ = 0.0f;
@@ -25,12 +27,10 @@ void Enemy::Initialize()
 
 void Enemy::Update(Camera* activeCamera)
 {
-    // 死亡している場合は動作を更新しない
     if (IsDead()) {
         return;
     }
 
-    // ★ 被弾無敵タイマーの減衰
     if (isInvincible_) {
         invincibleTimer_ -= 1.0f;
         if (invincibleTimer_ <= 0.0f) {
@@ -39,10 +39,8 @@ void Enemy::Update(Camera* activeCamera)
         }
     }
 
-    // 常に浮遊アニメーションを実行
     UpdateFloating();
 
-    // 弾の更新＆死んだ弾の削除
     for (auto it = bullets_.begin(); it != bullets_.end(); ) {
         (*it)->Update(activeCamera);
         if ((*it)->IsDead()) {
@@ -66,19 +64,21 @@ void Enemy::Update(Camera* activeCamera)
 
     BaseCharacter::Update(activeCamera);
 
-    // =========================================================
-    // ★ 画面上への Enemy HPバー描画 (ImGui UI)
-    // =========================================================
 #ifdef _DEBUG
-    // 画面中央上に「BOSS HP」として表示するスタイルのUI
     ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x * 0.5f - 150.0f, 20.0f), ImGuiCond_Always);
-    ImGui::SetNextWindowSize(ImVec2(300.0f, 65.0f));
+    ImGui::SetNextWindowSize(ImVec2(300.0f, 85.0f));
     ImGui::Begin("Enemy Status", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar);
 
     ImGui::Text("ENEMY HP: %d / %d", hp_, kMaxHp_);
 
-    // 赤色のゲージで描画
-    ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.8f, 0.1f, 0.1f, 1.0f));
+    if (IsGroggy()) {
+        ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.0f, 1.0f), "!! CHANCE !! GROGGY (JUMP ATTACK!)");
+    }
+    else {
+        ImGui::Text("State: Active");
+    }
+
+    ImGui::PushStyleColor(ImGuiCol_PlotHistogram, IsGroggy() ? ImVec4(0.9f, 0.7f, 0.1f, 1.0f) : ImVec4(0.8f, 0.1f, 0.1f, 1.0f));
     ImGui::ProgressBar((float)hp_ / (float)kMaxHp_, ImVec2(-1.0f, 20.0f), "");
     ImGui::PopStyleColor();
 
@@ -88,35 +88,35 @@ void Enemy::Update(Camera* activeCamera)
 
 void Enemy::Draw()
 {
-    // 生きている時のみ本体を描画
     if (!IsDead()) {
         BaseCharacter::Draw();
     }
 
-    // 発射した弾の描画（敵が死んでも弾はそのまま描画・更新可能）
     for (const auto& bullet : bullets_) {
         bullet->Draw();
     }
 }
 
-// Enemy.cpp の TakeDamage に追加
 void Enemy::TakeDamage(int damage)
 {
     if (isInvincible_ || IsDead()) return;
 
+    // ★ ひるみ（ダウン）中にジャンプ攻撃を受けた場合は特大ダメージ（2.5倍）
+    if (IsGroggy()) {
+        damage = static_cast<int>(damage * 2.5f);
+    }
+
     hp_ -= damage;
     if (hp_ < 0) hp_ = 0;
 
-    // ★ 攻撃されたら後ろに少しノックバック（押し出される）
     if (targetPlayer_) {
         Vector3 playerPos = targetPlayer_->GetTransform().translate;
-        Vector3 pushDir = transformBase_.translate - playerPos; // プレイヤーから離れる方向
-        pushDir.y = 0.0f; // Y軸は固定
+        Vector3 pushDir = transformBase_.translate - playerPos;
+        pushDir.y = 0.0f;
 
-        // 正規化してノックバック移動
         float len = std::sqrt(pushDir.x * pushDir.x + pushDir.z * pushDir.z);
         if (len > 0.0f) {
-            transformBase_.translate += (pushDir / len) * 0.8f; // 吹っ飛び量
+            transformBase_.translate += (pushDir / len) * 0.8f;
         }
     }
 
@@ -126,11 +126,10 @@ void Enemy::TakeDamage(int damage)
 
 void Enemy::UpdateFloating()
 {
-    // Y座標に正弦波（sin）を適用して常に空中を浮遊させる
     floatTimer_ += kFloatSpeed;
     float sinVal = std::sin(floatTimer_);
 
-    // Normal時以外（攻撃中など）も基準の高さを浮遊
+    // Normal時または大技以外の時に基準の高さで浮遊
     if (state_ == State::Normal) {
         transformBase_.translate.y = kBaseHeight + sinVal * kFloatAmplitude;
     }
@@ -138,27 +137,25 @@ void Enemy::UpdateFloating()
 
 void Enemy::UpdateNormal()
 {
-    // プレイヤーの方向を向く
     if (targetPlayer_) {
         Vector3 playerPos = targetPlayer_->GetTransform().translate;
         Vector3 diff = playerPos - transformBase_.translate;
         float targetAngle = std::atan2(diff.x, diff.z);
 
-        // 緩やかにプレイヤーの方へ回転
         modelBody_->transform.rotate.y = EMath::LerpShortAngle(
             modelBody_->transform.rotate.y, targetAngle, 0.1f
         );
     }
 
-    // 攻撃までのカウントダウン
     attackIntervalTimer_ += 1.0f;
     if (attackIntervalTimer_ >= kAttackInterval) {
         state_ = State::AttackPrep;
         attackIntervalTimer_ = 0.0f;
         attackStateTimer_ = 0.0f;
 
-        // 攻撃パターンをランダムで選択（突進 or 弾発射）
-        currentAttackType_ = (rand() % 2 == 0) ? AttackType::Charge : AttackType::Shoot;
+        // 6種類の攻撃からランダム選択（大技の割合を高めに）
+        int type = rand() % 6;
+        currentAttackType_ = static_cast<AttackType>(type);
     }
 }
 
@@ -168,76 +165,168 @@ void Enemy::UpdateAttack()
 
     switch (state_) {
     case State::AttackPrep:
-        // --- 【予備動作】 ---
-        if (currentAttackType_ == AttackType::Charge) {
-            // 突進溜め: 後ろに引く
+    {
+        float prepDuration = kPrepDuration;
+
+        if (currentAttackType_ == AttackType::GigaSlam) {
+            // 【大技溜め】上空へ上昇しつつ体を大増殖・巨大化
+            prepDuration = 60.0f; // 溜め時間（長め）
+            float progress = attackStateTimer_ / prepDuration;
+
+            transformBase_.translate.y = kBaseHeight + progress * 6.0f; // 上空へ舞い上がる
+            modelBody_->transform.scale = { 1.0f + progress * 1.0f, 1.0f + progress * 1.0f, 1.0f + progress * 1.0f }; // 2倍の大きさに
+            modelBody_->transform.rotate.y += 0.2f;
+
+            // ターゲット（プレイヤー位置）の保持
+            if (targetPlayer_) {
+                slamTargetPos_ = targetPlayer_->GetTransform().translate;
+                slamTargetPos_.y = 0.5f; // 地面着地点
+            }
+        }
+        else if (currentAttackType_ == AttackType::Charge || currentAttackType_ == AttackType::BouncingCharge) {
             modelBody_->transform.rotate.x = -0.4f;
             modelBody_->transform.scale = { 0.9f, 0.8f, 1.1f };
         }
+        else if (currentAttackType_ == AttackType::SpinShoot) {
+            modelBody_->transform.rotate.y += 0.3f;
+            modelBody_->transform.scale = { 1.2f, 0.8f, 1.2f };
+        }
         else {
-            // 弾発射溜め: 体を膨らませて少し浮き上がる
-            modelBody_->transform.scale = { 1.3f, 1.3f, 1.3f };
-            transformBase_.translate.y += 0.02f;
+            modelBody_->transform.scale = { 1.4f, 1.4f, 1.4f };
         }
 
-        // 溜め終了直前に突進方向（プレイヤーの位置）をロックオン
-        if (attackStateTimer_ >= kPrepDuration) {
+        if (attackStateTimer_ >= prepDuration) {
             state_ = State::Attacking;
             attackStateTimer_ = 0.0f;
 
             if (targetPlayer_) {
                 Vector3 diff = targetPlayer_->GetTransform().translate - transformBase_.translate;
-                float len = std::sqrt(diff.x * diff.x + diff.y * diff.y + diff.z * diff.z);
+                diff.y = 0.0f;
+                float len = std::sqrt(diff.x * diff.x + diff.z * diff.z);
                 if (len > 0.0f) {
-                    chargeDirection_ = { diff.x / len, diff.y / len, diff.z / len };
+                    chargeDirection_ = { diff.x / len, 0.0f, diff.z / len };
+                }
+                else {
+                    chargeDirection_ = { 0.0f, 0.0f, 1.0f };
                 }
             }
 
-            // 弾発射攻撃の場合は、攻撃開始瞬間に弾を生成
             if (currentAttackType_ == AttackType::Shoot) {
                 FireBullet();
             }
+            else if (currentAttackType_ == AttackType::RingShoot) {
+                FireRingBullet(16);
+            }
         }
-        break;
+    }
+    break;
 
     case State::Attacking:
-        // --- 【攻撃実行】 ---
-        if (currentAttackType_ == AttackType::Charge) {
-            // 突進: 計算した方向ベクトルに向かって高速移動
-            modelBody_->transform.rotate.x = 0.5f;
+    {
+        float currentDuration = kAttackDuration;
+
+        if (currentAttackType_ == AttackType::GigaSlam) {
+            // 【大技実行】プレイヤー位置へ向かって超高速急降下叩きつけ
+            currentDuration = 15.0f;
+            float progress = attackStateTimer_ / currentDuration;
+
+            // 補間移動で着地させる
+            transformBase_.translate.x += (slamTargetPos_.x - transformBase_.translate.x) * 0.3f;
+            transformBase_.translate.z += (slamTargetPos_.z - transformBase_.translate.z) * 0.3f;
+            transformBase_.translate.y = (kBaseHeight + 6.0f) * (1.0f - progress) + 0.5f * progress;
+
+            // 着地した瞬間（攻撃の終わり）に全方向に超強力な拡散衝撃波（18方向弾幕）を発射
+            if (attackStateTimer_ >= currentDuration - 1.0f) {
+                transformBase_.translate.y = 0.5f; // 地面叩きつけ
+                FireRingBullet(18); // 着地衝撃波
+            }
+        }
+        else if (currentAttackType_ == AttackType::Charge) {
             transformBase_.translate += chargeDirection_ * kAttackDashSpeed;
         }
-        else {
-            // 弾発射: 反動で少し後ろに下がる演出
-            modelBody_->transform.rotate.x = -0.2f;
-            modelBody_->transform.scale = { 0.9f, 0.9f, 0.9f };
+        else if (currentAttackType_ == AttackType::BouncingCharge) {
+            currentDuration = kAttackDuration * 2.0f;
+            transformBase_.translate += chargeDirection_ * (kAttackDashSpeed * 0.8f);
+
+            float bounceHeight = std::abs(std::sin(attackStateTimer_ * 0.2f)) * 3.0f;
+            transformBase_.translate.y = kBaseHeight + bounceHeight;
+            modelBody_->transform.rotate.x += 0.3f;
+        }
+        else if (currentAttackType_ == AttackType::SpinShoot) {
+            currentDuration = kAttackDuration * 2.5f;
+            modelBody_->transform.rotate.y += 0.4f;
+
+            if (static_cast<int>(attackStateTimer_) % 3 == 0) {
+                float angle = modelBody_->transform.rotate.y;
+                Vector3 dir = { std::sin(angle), 0.0f, std::cos(angle) };
+                FireSingleBullet(dir, kBulletSpeed * 0.8f);
+            }
         }
 
-        if (attackStateTimer_ >= kAttackDuration) {
+        if (attackStateTimer_ >= currentDuration) {
             state_ = State::AttackCool;
             attackStateTimer_ = 0.0f;
         }
-        break;
+    }
+    break;
 
     case State::AttackCool:
-        // --- 【隙・クールダウン】 ---
-        modelBody_->transform.rotate.x = 0.0f;
-        modelBody_->transform.scale = { 1.0f, 1.0f, 1.0f };
+    {
+        float coolDuration = kCoolDuration;
 
-        if (attackStateTimer_ >= kCoolDuration) {
+        // 【ひるみ状態処理】大技「GigaSlam」の後は長いスキ（ひるみ／ダウン）を作る
+        if (currentAttackType_ == AttackType::GigaSlam) {
+            coolDuration = 180.0f; // 3秒間無防備なひるみ状態になる（攻撃の大チャンス）
+
+            // 体をぺしゃんこに潰して地面に伏せる（ひるみ演出）
+            modelBody_->transform.scale = { 1.6f, 0.3f, 1.6f };
+            modelBody_->transform.rotate.x = 0.5f; // 傾いてぐったりする
+            transformBase_.translate.y = 0.3f;     // 低い姿勢
+        }
+        else {
+            modelBody_->transform.rotate.x = 0.0f;
+            modelBody_->transform.scale = { 1.0f, 1.0f, 1.0f };
+        }
+
+        if (attackStateTimer_ >= coolDuration) {
             state_ = State::Normal;
             attackStateTimer_ = 0.0f;
+            modelBody_->transform.rotate.x = 0.0f;
+            modelBody_->transform.scale = { 1.0f, 1.0f, 1.0f };
         }
-        break;
+    }
+    break;
     }
 }
 
 void Enemy::FireBullet()
 {
-    // プレイヤーに向かう速度ベクトルを計算
     Vector3 bulletVel = chargeDirection_ * kBulletSpeed;
-
     auto bullet = std::make_unique<EnemyBullet>();
     bullet->Initialize(transformBase_.translate, bulletVel);
     bullets_.push_back(std::move(bullet));
+}
+
+void Enemy::FireSingleBullet(const Vector3& dir, float speed)
+{
+    Vector3 bulletVel = dir * speed;
+    auto bullet = std::make_unique<EnemyBullet>();
+    bullet->Initialize(transformBase_.translate, bulletVel);
+    bullets_.push_back(std::move(bullet));
+}
+
+void Enemy::FireRingBullet(int count)
+{
+    const float kTwoPi = 6.28318530718f;
+    for (int i = 0; i < count; ++i) {
+        float angle = (kTwoPi / count) * static_cast<float>(i);
+
+        Vector3 dir = {
+            std::sin(angle),
+            0.0f,
+            std::cos(angle)
+        };
+
+        FireSingleBullet(dir, kBulletSpeed * 0.7f);
+    }
 }

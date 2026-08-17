@@ -37,6 +37,7 @@ public:
     static void AddWireAABB(const Vector3& min, const Vector3& max, const Vector4& color, bool depthEnable = true, float duration = 0.0f);
     // OBB (有向バウンディングボックス)
     static void AddWireOBB(const Vector3& center, const Vector3& halfExtents, const Matrix4x4& rotate, const Vector4& color, bool depthEnable = true, float duration = 0.0f);
+    static void AddWireOBB(const Matrix4x4& transform, const Vector3& halfExtents, const Vector4& color, bool depthEnable = true, float duration = 0.0f);
 
     // 描画実行
     static void Flush(Camera* camera);

@@ -81,6 +81,7 @@ struct Matrix4x4 {
 	}
 };
 
+
 Matrix4x4 Add(const Matrix4x4& m1, const Matrix4x4& m2);
 Matrix4x4 Subtract(const Matrix4x4& m1, const Matrix4x4& m2);
 Matrix4x4 Multiply(const Matrix4x4& m1, const Matrix4x4& m2);
@@ -125,4 +126,15 @@ namespace EMath {
 	//最短角度補間
 	float LerpShortAngle(float a, float b, float t);
 
+}
+
+// 3. operator* のインライン定義（★ Multiply の宣言より後に記述）
+inline Matrix4x4 operator*(const Matrix4x4& m1, const Matrix4x4& m2) {
+	return Multiply(m1, m2);
+}
+
+// ★ 必要であれば代入演算子 (m1 *= m2) も定義できます
+inline Matrix4x4& operator*=(Matrix4x4& m1, const Matrix4x4& m2) {
+	m1 = Multiply(m1, m2);
+	return m1;
 }

@@ -1,10 +1,6 @@
 #include "DebugCamera.h"
 #include "DebugRenderer.h"
 
-Matrix4x4 operator*(const Matrix4x4& a, const Matrix4x4& b) {
-	return Multiply(a, b);
-}
-
 void DebugCamera::Initialize() {
 
 	Camera::Initialize();

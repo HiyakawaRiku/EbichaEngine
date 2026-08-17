@@ -1,38 +1,47 @@
 #include "Player.h"
 #include <cmath>
+#include <algorithm>
 
 void Player::Initialize()
 {
-    // パーツ構成を定義
-    std::vector<BaseCharacter::PartConfig> partConfigs = {
-        { "Head",  {  0.0f,  0.5f, 0.0f } },
-        { "armL1", { -0.5f,  0.5f, 0.0f } },
-        { "armR1", {  0.5f,  0.5f, 0.0f } },
-        { "legL1", { -0.2f, -0.5f, 0.0f } },
-        { "legR1", {  0.2f, -0.5f, 0.0f } },
-    };
+    // パーツ構成を空にする（Cube単体にする）
+    std::vector<BaseCharacter::PartConfig> partConfigs = {};
 
     // 親クラスの初期化関数に渡す
-    BaseCharacter::Initialize("Body", partConfigs, "resources/white1x1.png");
-    transformBase_.translate = { 0.0f, 1.5f, 0.0f };
+    BaseCharacter::Initialize("sphere", partConfigs, "resources/white1x1.png");
+    transformBase_.translate = { 0.0f, 1.0f, 0.0f };
+
+    hammerPartIndex_ = -1; // ハンマーは使用しない
 
     InitializeFloatingGimmick();
 
     // コライダーの半径を設定
     SetColliderRadius(1.0f);
 
-    // ★ HP & 無敵状態の初期化
+    // HP & 無敵状態の初期化
     hp_ = kMaxHp_;
     isInvincible_ = false;
     invincibleTimer_ = 0.0f;
+
+    // 各変数の初期化
+    moveVelocity_ = { 0.0f, 0.0f, 0.0f };
+    sphereRollAngleX_ = 0.0f;
+    moveDashTimer_ = 0.0f;
+    idleMotionTimer_ = 0.0f;
+    isLandingBounce_ = false;
+    landingBounceTimer_ = 0.0f;
+    isDashAttacking_ = false;
 }
 
 void Player::Update(Camera* activeCamera)
 {
-    // 親クラスの更新（カメラセット、パーツ更新、行列更新）を実行
+    // 親クラスの更新を実行
     BaseCharacter::Update(activeCamera);
 
-    // ★ 無敵時間のカウントダウン処理
+    // 浮遊ギミックの更新処理を呼ぶ
+    UpdateFloatingGimmick();
+
+    // 無敵時間のカウントダウン処理
     if (isInvincible_) {
         invincibleTimer_ -= 1.0f;
         if (invincibleTimer_ <= 0.0f) {
@@ -44,7 +53,7 @@ void Player::Update(Camera* activeCamera)
     // プレイヤー固有の挙動更新
     BehaviorRootUpdate(activeCamera);
 
-    // ★ ImGui による HP ステータス表示・テストデバッグ用ウィンドウ
+    // ImGui による HP ステータス表示・テストデバッグ用ウィンドウ
 #ifdef _DEBUG
     ImGui::Begin("Player Status");
     ImGui::Text("HP: %d / %d", hp_, kMaxHp_);
@@ -59,9 +68,23 @@ void Player::Update(Camera* activeCamera)
     }
     ImGui::End();
 #endif
+
+#ifdef _DEBUG
+    ImGui::Begin("Position Monitor");
+
+    // プレイヤーの位置・移動パラメータ・突進状態
+    Vector3 playerPos = transformBase_.translate;
+    float currentSpeed = std::sqrt(moveVelocity_.x * moveVelocity_.x + moveVelocity_.z * moveVelocity_.z);
+    ImGui::Text("Player Pos   : X:%.2f, Y:%.2f, Z:%.2f", playerPos.x, playerPos.y, playerPos.z);
+    ImGui::Text("Current Speed: %.3f", currentSpeed);
+    ImGui::Text("Dash Timer   : %.1f / %.1f", moveDashTimer_, kDashAccelTime);
+    ImGui::Text("Dash Attack  : %s", isDashAttacking_ ? "ACTIVE (MAX SPEED)" : "Inactive");
+
+    ImGui::End();
+#endif
 }
 
-// ★ 被弾ダメージ処理
+// 被弾ダメージ処理
 void Player::TakeDamage(int damage)
 {
     // 無敵中または既に死亡している場合は処理をスキップ
@@ -78,229 +101,291 @@ void Player::TakeDamage(int damage)
     // 無敵時間を付与（連続ヒット防止）
     isInvincible_ = true;
     invincibleTimer_ = kInvincibleTime;
+}
 
-    // ※ここに被弾ノックバックやSE再生などを追加可能です
+AABB Player::GetColliderAABB() const
+{
+    Vector3 center = transformBase_.translate; // プレイヤーの現在位置
+
+    AABB aabb;
+    aabb.min = center - boxExtents_;
+    aabb.max = center + boxExtents_;
+    return aabb;
 }
 
 void Player::InitializeFloatingGimmick()
 {
-    floatingParameter_ = 0.0f; 
+    floatingParameter_ = 0.0f;
 }
 
 void Player::UpdateFloatingGimmick()
 {
-    const uint16_t cycle = (uint16_t)frame_; 
-    const float step = 2.0f * 3.14f / cycle; 
+    const uint16_t cycle = (uint16_t)frame_;
+    const float step = 2.0f * 3.1415926f / cycle;
 
-    floatingParameter_ += step; 
-    floatingParameter_ = std::fmod(floatingParameter_, 2.0f * 3.14f); 
+    floatingParameter_ += step;
+    floatingParameter_ = std::fmod(floatingParameter_, 2.0f * 3.1415926f);
 
-    modelBody_->transform.translate.y = std::sin(floatingParameter_) * floatingAmplitude; 
+    modelBody_->transform.translate.y = std::sin(floatingParameter_) * floatingAmplitude;
 
-    ImGui::Begin("Player"); 
-    ImGui::SliderFloat("amplitude", &floatingAmplitude, 0.1f, 1.0f); 
-    ImGui::End(); 
+#ifdef _DEBUG
+    ImGui::Begin("Player");
+    ImGui::SliderFloat("amplitude", &floatingAmplitude, 0.1f, 1.0f);
+    ImGui::End();
+#endif
 }
 
 void Player::BehaviorRootUpdate(Camera* activeCamera_)
 {
-    if (Input::GetInstance()->TriggerKey(DIK_SPACE) && !isJumping_) { 
-        BehaviorJumpInitialize(); 
+    // -------------------------------------------------------------
+    // 1. ジャンプ入力 & 処理
+    // -------------------------------------------------------------
+    if (Input::GetInstance()->TriggerKey(DIK_SPACE) && !isJumping_) {
+        BehaviorJumpInitialize();
     }
 
-    if (isJumping_) { 
-        BehaviorJumpUpdate(); 
+    if (isJumping_ && jumpVelocityY_ > 0.0f) {
+        if (Input::GetInstance()->ReleaseKey(DIK_SPACE)) {
+            jumpVelocityY_ *= jumpCutMultiplier_;
+        }
     }
 
-    // ★ 攻撃トリガーの追加（マウス左クリック または Fキー）
-    if ((Input::GetInstance()->TriggerKey(DIK_F)) && !isAttacking_) {
-        BehaviorAttackInitialize();
+    if (isJumping_) {
+        BehaviorJumpUpdate();
     }
 
-    // ★ 攻撃中の更新処理
-    if (isAttacking_) {
-        BehaviorAttackUpdate();
-    }
+    // -------------------------------------------------------------
+    // 2. 移動（振り向き慣性 & 立ち止まり慣性）
+    // -------------------------------------------------------------
+    Vector3 inputDir = {};
+    if (Input::GetInstance()->PushKey(DIK_D)) { inputDir.x += 1.0f; }
+    if (Input::GetInstance()->PushKey(DIK_A)) { inputDir.x -= 1.0f; }
+    if (Input::GetInstance()->PushKey(DIK_W)) { inputDir.z += 1.0f; }
+    if (Input::GetInstance()->PushKey(DIK_S)) { inputDir.z -= 1.0f; }
 
-    Vector3 velocity_ = {}; 
-    if (Input::GetInstance()->PushKey(DIK_D) || Input::GetInstance()->PushKey(DIK_A) || Input::GetInstance()->PushKey(DIK_W) || Input::GetInstance()->PushKey(DIK_S)) { 
+    float stickX = Input::GetInstance()->GetLeftStickX();
+    float stickZ = Input::GetInstance()->GetLeftStickY();
+    inputDir.x += stickX;
+    inputDir.z += stickZ;
 
-        Vector3 acceleration{}; 
-        if (Input::GetInstance()->PushKey(DIK_D)) { acceleration.x += kAcceleration; } 
-        else if (Input::GetInstance()->PushKey(DIK_A)) { acceleration.x -= kAcceleration; } 
-        else if (Input::GetInstance()->PushKey(DIK_W)) { acceleration.z += kAcceleration; } 
-        else if (Input::GetInstance()->PushKey(DIK_S)) { acceleration.z -= kAcceleration; } 
-        velocity_ += acceleration; 
-    }
+    bool isInputting = (inputDir.x != 0.0f || inputDir.z != 0.0f);
 
-    float moveX = Input::GetInstance()->GetLeftStickX(); 
-    float moveZ = Input::GetInstance()->GetLeftStickY(); 
-    Vector3 localMove = { moveX + velocity_.x, 0.0f, moveZ + velocity_.z }; 
-
-    bool isMoving = (localMove.x != 0.0f || localMove.z != 0.0f); 
-
-    if (isMoving) { 
-        walkTimer_ += kWalkSpeed; 
-        float swing = std::sin(walkTimer_) * kWalkAngle; 
-
-        if (!isAttacking_ && modelParts_.size() >= 5) {
-            modelParts_[1]->transform.rotate.x = swing;  // 左腕[cite: 9]
-            modelParts_[2]->transform.rotate.x = -swing; // 右腕[cite: 9]
-            modelParts_[3]->transform.rotate.x = -swing; // 左脚[cite: 9]
-            modelParts_[4]->transform.rotate.x = swing;  // 右脚[cite: 9]
+    if (isInputting) {
+        // 入力ベクトルの正規化
+        float length = std::sqrt(inputDir.x * inputDir.x + inputDir.z * inputDir.z);
+        if (length > 0.001f) {
+            inputDir.x /= length;
+            inputDir.z /= length;
         }
 
-        Vector3 worldMove = localMove; 
-        if (activeCamera_) { 
-            float cameraRotateY = activeCamera_->transform_.rotate.y; 
-            Matrix4x4 matRotateY = MakeRotateYMatrix(cameraRotateY); 
-            worldMove = TransformNormal(localMove, matRotateY); 
+        // カメラ視点に応じたベクトル変換
+        if (activeCamera_) {
+            float cameraRotateY = activeCamera_->transform_.rotate.y;
+            Matrix4x4 matRotateY = MakeRotateYMatrix(cameraRotateY);
+            inputDir = TransformNormal(inputDir, matRotateY);
         }
 
-        if (!isAttacking_) { 
-            float targetAngle = std::atan2(worldMove.x, worldMove.z); 
-            modelBody_->transform.rotate.y = EMath::LerpShortAngle( 
-                modelBody_->transform.rotate.y, 
-                targetAngle, 
-                kRotateSpeed 
-            );
+        // ダッシュタイマー加算（緩やかな加速計算用）
+        moveDashTimer_ += 1.0f;
+        float dashRatio = (std::min)(moveDashTimer_ / kDashAccelTime, 1.0f);
+        float smoothedRatio = dashRatio * dashRatio;
+        float targetSpeed = EMath::Lerp(kBaseMoveSpeed, kMaxMoveSpeed, smoothedRatio);
+
+        // ★ 1. 新しい入力方向と「現在の進行方向」の内積（向きの関係）を計算
+        float currentSpeed = std::sqrt(moveVelocity_.x * moveVelocity_.x + moveVelocity_.z * moveVelocity_.z);
+        if (currentSpeed > 0.001f) {
+            Vector3 currentDir = { moveVelocity_.x / currentSpeed, 0.0f, moveVelocity_.z / currentSpeed };
+            float dot = currentDir.x * inputDir.x + currentDir.z * inputDir.z;
+
+            // ★ 2. 真逆または急角度への切り返し（内積が負）の場合、スピードとダッシュタイマーを即座にリセット
+            if (dot < 0.0f) {
+                moveVelocity_ = { 0.0f, 0.0f, 0.0f };
+                moveDashTimer_ = 0.0f; // 切り返し時にダッシュタイマーもリセットしたい場合
+            }
         }
 
-        transformBase_.translate += worldMove; 
+        // ★ 3. 速度ベクトルを新しい入力方向に直接設定（滑る補正を削除）
+        moveVelocity_.x = inputDir.x * targetSpeed;
+        moveVelocity_.z = inputDir.z * targetSpeed;
+
+        // 最高速度に達している場合は突進攻撃判定フラグを立てる
+        isDashAttacking_ = (dashRatio >= 1.0f);
     }
-    else { 
-        walkTimer_ = 0.0f; 
-        idleTimer_ += kIdleSpeed; 
-        float idleSin = std::sin(idleTimer_); 
+    else {
+        // ★【立ち止まりの慣性】キーを離した時は摩擦で滑りながら停止
+        moveVelocity_.x *= kStopFriction;
+        moveVelocity_.z *= kStopFriction;
 
-        modelBody_->transform.translate.y = idleSin * kIdleBreathing; 
+        // タイマー減衰・突進解除
+        moveDashTimer_ = (std::max)(0.0f, moveDashTimer_ - 2.0f);
+        isDashAttacking_ = false;
+    }
 
-        for (size_t i = 1; i < modelParts_.size(); ++i) { 
-            if ((i == 1 || i == 2) && isAttacking_) continue; 
-            modelParts_[i]->transform.rotate.x = EMath::Lerp(modelParts_[i]->transform.rotate.x, 0.0f, 0.2f); 
+    // 極小値のクランプ（振れ防止）
+    if (std::abs(moveVelocity_.x) < 0.0001f) moveVelocity_.x = 0.0f;
+    if (std::abs(moveVelocity_.z) < 0.0001f) moveVelocity_.z = 0.0f;
+
+    float currentSpeed = std::sqrt(moveVelocity_.x * moveVelocity_.x + moveVelocity_.z * moveVelocity_.z);
+    bool isMoving = (currentSpeed > 0.001f);
+
+    if (isMoving) {
+        // 1. 進行方向（Y軸旋回）への回転
+        float targetAngle = std::atan2(moveVelocity_.x, moveVelocity_.z);
+        modelBody_->transform.rotate.y = EMath::LerpShortAngle(
+            modelBody_->transform.rotate.y,
+            targetAngle,
+            kRotateSpeed
+        );
+
+        // 2. 転がり回転 (ジャンプ中でない場合)
+        if (!isJumping_) {
+            float deltaAngle = currentSpeed / sphereRadius_;
+            sphereRollAngleX_ += deltaAngle;
+            modelBody_->transform.rotate.x = sphereRollAngleX_;
+
+            // 突進攻撃中は球体を前後に変形してスピード感を出す
+            if (isDashAttacking_) {
+                modelBody_->transform.scale = { 0.9f, 0.9f, 1.25f };
+            }
+            else if (!isLandingBounce_) {
+                modelBody_->transform.scale = { 1.0f, 1.0f, 1.0f };
+            }
         }
 
-        if (!isAttacking_ && modelParts_.size() >= 3) { 
-            modelParts_[1]->transform.rotate.z = idleSin * kIdleArmAngle;  // 左腕[cite: 9]
-            modelParts_[2]->transform.rotate.z = -idleSin * kIdleArmAngle; // 右腕[cite: 9]
+        // 位置の更新
+        transformBase_.translate += moveVelocity_;
+
+        // =========================================================
+        // ★ 原点（X:0, Z:0）から半径50以内に制限する処理
+        // =========================================================
+        const float kMaxRadius = 100.0f; // 制限半径
+
+        // 原点からのXZ平面上の距離を計算
+        float distance = std::sqrt(transformBase_.translate.x * transformBase_.translate.x +
+            transformBase_.translate.z * transformBase_.translate.z);
+
+        // 距離が50を超えていたら境界上に押し戻す
+        if (distance > kMaxRadius) {
+            // 原点からの正規化方向ベクトルを掛けて、距離をちょうど50に収める
+            transformBase_.translate.x = (transformBase_.translate.x / distance) * kMaxRadius;
+            transformBase_.translate.z = (transformBase_.translate.z / distance) * kMaxRadius;
+
+            // 境界に引っかかった際、外向きの速度（進行方向の力）をクリアして突っかかりを滑らかにする
+            moveVelocity_ = { 0.0f, 0.0f, 0.0f };
+        }
+    }
+    else {
+        // -------------------------------------------------------------
+        // 3. 球体の待機モーション (呼吸・ゆらゆら動き)
+        // -------------------------------------------------------------
+        if (!isJumping_) {
+            idleMotionTimer_ += kIdleMotionSpeed;
+            float idleSin = std::sin(idleMotionTimer_);
+            float idleCos = std::cos(idleMotionTimer_ * 0.5f);
+
+            // 呼吸に伴う伸縮（Squash & Stretch）
+            if (!isLandingBounce_) {
+                float scaleY = 1.0f + idleSin * 0.05f;
+                float scaleXZ = 1.0f - idleSin * 0.025f;
+                modelBody_->transform.scale = { scaleXZ, scaleY, scaleXZ };
+            }
+
+            // 微小な上下左右揺れ
+            modelBody_->transform.translate.y = idleSin * 0.08f;
+            modelBody_->transform.translate.x = idleCos * 0.03f;
+        }
+    }
+
+    // -------------------------------------------------------------
+    // 4. 着地バウンド（Squash復元）のアニメーション更新
+    // -------------------------------------------------------------
+    if (isLandingBounce_ && modelBody_) {
+        landingBounceTimer_ += 0.15f;
+        float bounceSin = std::sin(landingBounceTimer_ * 3.1415926f);
+
+        float scaleY = 1.0f - bounceSin * 0.25f;
+        float scaleXZ = 1.0f + bounceSin * 0.15f;
+        modelBody_->transform.scale = { scaleXZ, scaleY, scaleXZ };
+
+        if (landingBounceTimer_ >= 1.0f) {
+            isLandingBounce_ = false;
+            landingBounceTimer_ = 0.0f;
+            modelBody_->transform.scale = { 1.0f, 1.0f, 1.0f };
         }
     }
 }
 
 void Player::BehaviorJumpInitialize()
 {
-    isJumping_ = true; 
-    jumpTimer_ = 0.0f; 
-    jumpVelocityY_ = jumpInitialVelocity_; 
+    isJumping_ = true;
+    jumpVelocityY_ = jumpInitialVelocity_;
+    isLandingBounce_ = false;
 
-    modelBody_->transform.scale = { 
-        1.0f + jumpSquashAmount_, 
-        1.0f - jumpSquashAmount_, 
-        1.0f + jumpSquashAmount_ 
-    };
+    if (modelBody_) {
+        jumpStartRotX_ = modelBody_->transform.rotate.x;
+        jumpTargetRotX_ = jumpStartRotX_ + (3.1415926f * 2.0f); // 空中での1回転
+    }
 }
 
 void Player::BehaviorJumpUpdate()
 {
-    if (!isJumping_) return; 
+    if (!isJumping_) return;
 
-    jumpTimer_ += 1.0f; 
-
-    transformBase_.translate.y += jumpVelocityY_; 
-    jumpVelocityY_ -= gravity_; 
-
-    if (transformBase_.translate.y <= jumpGroundY_) { 
-        transformBase_.translate.y = jumpGroundY_; 
-        jumpVelocityY_ = 0.0f; 
-
-        modelBody_->transform.scale.x = EMath::Lerp(modelBody_->transform.scale.x, 1.0f + jumpSquashAmount_, 0.3f); 
-        modelBody_->transform.scale.y = EMath::Lerp(modelBody_->transform.scale.y, 1.0f - jumpSquashAmount_, 0.3f); 
-        modelBody_->transform.scale.z = EMath::Lerp(modelBody_->transform.scale.z, 1.0f + jumpSquashAmount_, 0.3f); 
-
-        for (size_t i = 1; i < modelParts_.size(); ++i) { 
-            modelParts_[i]->transform.rotate.x = EMath::Lerp(modelParts_[i]->transform.rotate.x, 0.0f, 0.3f); 
-            modelParts_[i]->transform.rotate.z = EMath::Lerp(modelParts_[i]->transform.rotate.z, 0.0f, 0.3f); 
-        }
-
-        if (jumpTimer_ > 12.0f) { 
-            modelBody_->transform.scale = { 1.0f, 1.0f, 1.0f }; 
-            isJumping_ = false; 
-        }
+    // Y軸位置更新・重力演算
+    transformBase_.translate.y += jumpVelocityY_;
+    if (jumpVelocityY_ < 0.0f) {
+        jumpVelocityY_ -= gravity_ * fallGravityMultiplier_;
     }
-    else { 
-        modelBody_->transform.scale.x = EMath::Lerp(modelBody_->transform.scale.x, 1.0f - (jumpSquashAmount_ * 0.5f), 0.1f); 
-        modelBody_->transform.scale.y = EMath::Lerp(modelBody_->transform.scale.y, 1.0f + (jumpSquashAmount_ * 0.5f), 0.1f); 
-        modelBody_->transform.scale.z = EMath::Lerp(modelBody_->transform.scale.z, 1.0f - (jumpSquashAmount_ * 0.5f), 0.1f); 
-
-        if (jumpVelocityY_ > 0.0f) { 
-            if (modelParts_.size() >= 5) {
-                modelParts_[1]->transform.rotate.z = EMath::Lerp(modelParts_[1]->transform.rotate.z, 0.6f, 0.2f);  
-                modelParts_[2]->transform.rotate.z = EMath::Lerp(modelParts_[2]->transform.rotate.z, -0.6f, 0.2f); 
-                modelParts_[3]->transform.rotate.x = EMath::Lerp(modelParts_[3]->transform.rotate.x, -0.4f, 0.2f); 
-                modelParts_[4]->transform.rotate.x = EMath::Lerp(modelParts_[4]->transform.rotate.x, -0.4f, 0.2f); 
-            }
-        }
-        else { 
-            if (modelParts_.size() >= 5) {
-                modelParts_[1]->transform.rotate.x = EMath::Lerp(modelParts_[1]->transform.rotate.x, 0.3f, 0.2f); 
-                modelParts_[2]->transform.rotate.x = EMath::Lerp(modelParts_[2]->transform.rotate.x, 0.3f, 0.2f); 
-                modelParts_[3]->transform.rotate.x = EMath::Lerp(modelParts_[3]->transform.rotate.x, 0.5f, 0.2f); 
-                modelParts_[4]->transform.rotate.x = EMath::Lerp(modelParts_[4]->transform.rotate.x, 0.5f, 0.2f); 
-            }
-        }
+    else {
+        jumpVelocityY_ -= gravity_;
     }
-}
 
-// ★ 攻撃初期化処理
-void Player::BehaviorAttackInitialize()
-{
-    isAttacking_ = true;
-    attackTimer_ = 0.0f;
-}
+    // 空中での前転と変形演出
+    if (modelBody_) {
+        modelBody_->transform.rotate.x = EMath::Lerp(
+            modelBody_->transform.rotate.x,
+            jumpTargetRotX_,
+            0.15f
+        );
 
-// 攻撃更新処理（大振りメガトンパンチ）
-void Player::BehaviorAttackUpdate()
-{
-    if (!isAttacking_) return;
-
-    attackTimer_ += 1.0f;
-    float progress = attackTimer_ / kAttackDuration;
-
-    if (modelParts_.size() >= 3 && modelBody_) {
-        if (progress < 0.25f) {
-            // 【1. タメ動作 (0%～25%)】 
-            // 体を少し後ろに引いて右腕を大きく後ろへ構える
-            modelBody_->transform.rotate.y -= 0.05f; // 体を右に捻る
-            modelParts_[2]->transform.rotate.x = EMath::Lerp(modelParts_[2]->transform.rotate.x, 1.2f, 0.3f); // 右腕を後ろに引く
-            modelParts_[2]->transform.rotate.z = EMath::Lerp(modelParts_[2]->transform.rotate.z, 0.5f, 0.3f);
-        }
-        else if (progress < 0.55f) {
-            // 【2. 振り抜き＆踏み込み (25%～55%)】 
-            // プレイヤーを少し前に前進させつつ、右腕と体を前へ一気に振り抜く！
-
-            // 踏み込み（プレイヤー自体を前進させる）
-            Vector3 forward = { std::sin(modelBody_->transform.rotate.y), 0.0f, std::cos(modelBody_->transform.rotate.y) };
-            transformBase_.translate += forward * 0.15f;
-
-            // 体を逆に大きく捻り、腕を前方へぶん回す
-            modelBody_->transform.rotate.y += 0.12f;
-            modelParts_[2]->transform.rotate.x = EMath::Lerp(modelParts_[2]->transform.rotate.x, -2.2f, 0.5f); // 前方へ突き出し
-            modelParts_[2]->transform.rotate.z = EMath::Lerp(modelParts_[2]->transform.rotate.z, -0.3f, 0.5f);
+        if (jumpVelocityY_ > 0.0f) {
+            modelBody_->transform.scale = { 0.85f, 1.20f, 0.85f };
         }
         else {
-            // 【3. 残心・戻り動作 (55%～100%)】 
-            // 体と腕の回転をじわっと元の姿勢に戻す
-            modelParts_[2]->transform.rotate.x = EMath::Lerp(modelParts_[2]->transform.rotate.x, 0.0f, 0.15f);
-            modelParts_[2]->transform.rotate.z = EMath::Lerp(modelParts_[2]->transform.rotate.z, 0.0f, 0.15f);
+            modelBody_->transform.scale = { 1.15f, 0.85f, 1.15f };
         }
     }
 
-    // 規定フレームに達したら終了
-    if (attackTimer_ >= kAttackDuration) {
-        isAttacking_ = false;
-        attackTimer_ = 0.0f;
-        if (modelParts_.size() >= 3) {
-            modelParts_[2]->transform.rotate = { 0.0f, 0.0f, 0.0f }; // 回転リセット
+    // 着地判定
+    if (transformBase_.translate.y <= jumpGroundY_) {
+        transformBase_.translate.y = jumpGroundY_;
+        jumpVelocityY_ = 0.0f;
+        isJumping_ = false;
+
+        // 着地バウンドアニメーションの開始
+        isLandingBounce_ = true;
+        landingBounceTimer_ = 0.0f;
+
+        if (modelBody_) {
+            sphereRollAngleX_ = std::fmod(modelBody_->transform.rotate.x, 3.1415926f * 2.0f);
         }
     }
+}
+
+// 突進攻撃の判定（OBB）を取得する関数
+OBB Player::GetDashAttackOBB() const
+{
+    OBB obb;
+    obb.extents = dashAttackExtents_;
+
+    if (!isDashAttacking_) {
+        obb.center = { 0.0f, -999.0f, 0.0f }; // 無効時
+        return obb;
+    }
+
+    Matrix4x4 matWorld = MakeAffineMatrix({ 1.0f, 1.0f, 1.0f }, modelBody_->transform.rotate, transformBase_.translate);
+    obb.transform = matWorld;
+    obb.center = transformBase_.translate;
+
+    return obb;
 }

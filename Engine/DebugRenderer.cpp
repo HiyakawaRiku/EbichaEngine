@@ -185,10 +185,42 @@ void DebugRenderer::AddWireOBB(const Vector3& center, const Vector3& halfExtents
         {  halfExtents.x,  halfExtents.y,  halfExtents.z }, { -halfExtents.x,  halfExtents.y,  halfExtents.z }
     };
 
+    // ★ rotate 行列の平行移動成分(m[3][0]~[3][2])を無視して純粋な回転だけを適用する
+    Matrix4x4 pureRotate = rotate;
+    pureRotate.m[3][0] = 0.0f;
+    pureRotate.m[3][1] = 0.0f;
+    pureRotate.m[3][2] = 0.0f;
+
     Vector3 worldPoints[8];
     for (int i = 0; i < 8; ++i) {
-        // 回転行列でローカル頂点を回転して中心座標を加算
-        worldPoints[i] = Transforms(localPoints[i], rotate) + center;
+        // 回転のみを適用してから、明確に center を1回だけ加算
+        worldPoints[i] = Transforms(localPoints[i], pureRotate) + center;
+    }
+
+    // 底面
+    AddLine(worldPoints[0], worldPoints[1], color, depthEnable, duration); AddLine(worldPoints[1], worldPoints[2], color, depthEnable, duration);
+    AddLine(worldPoints[2], worldPoints[3], color, depthEnable, duration); AddLine(worldPoints[3], worldPoints[0], color, depthEnable, duration);
+    // 天面
+    AddLine(worldPoints[4], worldPoints[5], color, depthEnable, duration); AddLine(worldPoints[5], worldPoints[6], color, depthEnable, duration);
+    AddLine(worldPoints[6], worldPoints[7], color, depthEnable, duration); AddLine(worldPoints[7], worldPoints[4], color, depthEnable, duration);
+    // 柱
+    AddLine(worldPoints[0], worldPoints[4], color, depthEnable, duration); AddLine(worldPoints[1], worldPoints[5], color, depthEnable, duration);
+    AddLine(worldPoints[2], worldPoints[6], color, depthEnable, duration); AddLine(worldPoints[3], worldPoints[7], color, depthEnable, duration);
+}
+
+// 2. ★追加: OBBのワールド変換行列 (obb.transform) を直接渡す場合
+void DebugRenderer::AddWireOBB(const Matrix4x4& transform, const Vector3& halfExtents, const Vector4& color, bool depthEnable, float duration) {
+    Vector3 localPoints[8] = {
+        { -halfExtents.x, -halfExtents.y, -halfExtents.z }, {  halfExtents.x, -halfExtents.y, -halfExtents.z },
+        {  halfExtents.x,  halfExtents.y, -halfExtents.z }, { -halfExtents.x,  halfExtents.y, -halfExtents.z },
+        { -halfExtents.x, -halfExtents.y,  halfExtents.z }, {  halfExtents.x, -halfExtents.y,  halfExtents.z },
+        {  halfExtents.x,  halfExtents.y,  halfExtents.z }, { -halfExtents.x,  halfExtents.y,  halfExtents.z }
+    };
+
+    Vector3 worldPoints[8];
+    for (int i = 0; i < 8; ++i) {
+        // ワールド行列をそのまま使ってローカル座標をワールド座標へ変換
+        worldPoints[i] = Transforms(localPoints[i], transform);
     }
 
     // 底面

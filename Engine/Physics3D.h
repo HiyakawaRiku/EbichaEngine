@@ -303,5 +303,29 @@ namespace Physics3D {
 		return true;
 	}
 
+	// OBB vs BSphere (球 vs 有向ボックス)
+	static bool IsCollision(const OBB& obb, const BSphere& sphere) {
+		// 球の中心を OBB のローカル空間に変換
+		Vector3 d = sphere.center - obb.center;
+		Vector3 closestPoint = obb.center;
+
+		for (int i = 0; i < 3; ++i) {
+			Vector3 axis = obb.getAxis(i);
+			float dist = Vector3::dot(d, axis);
+			float limit = (i == 0) ? obb.extents.x : (i == 1) ? obb.extents.y : obb.extents.z;
+
+			// OBBの範囲内にクランプ
+			dist = std::clamp(dist, -limit, limit);
+			closestPoint += axis * dist;
+		}
+
+		// 最寄点と球中心の距離の二乗で判定
+		return (sphere.center - closestPoint).lengthSq() <= (sphere.radius * sphere.radius);
+	}
+
+	static bool IsCollision(const BSphere& sphere, const OBB& obb) {
+		return IsCollision(obb, sphere);
+	}
+
 
 } // namespace Physics3D

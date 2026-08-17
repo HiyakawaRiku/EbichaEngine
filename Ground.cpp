@@ -37,8 +37,8 @@ void Ground::Update(Camera* activeCamera)
 	float theta = MathUtils::ToRadians(rotationDeg); // ラジアン(θ)に変換
 
 	model_->transform.rotate.x = theta;
-	model_->transform.scale.x = 100.0f;
-	model_->transform.scale.y = 100.0f;
+	model_->transform.scale.x = 1000.0f;
+	model_->transform.scale.y = 1000.0f;
 	
 	ImGui::Begin("Settings");
 	// =========================================================

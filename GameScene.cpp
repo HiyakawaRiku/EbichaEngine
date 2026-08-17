@@ -98,41 +98,61 @@ void GameScene::Update() {
 		for (size_t j = i + 1; j < characters_.size(); ++j) {
 			if (!characters_[i] || !characters_[j]) continue;
 
-			const BSphere& sphereA = characters_[i]->GetColliderSphere(); 
-				const BSphere& sphereB = characters_[j]->GetColliderSphere();
+			const BSphere& sphereA = characters_[i]->GetColliderSphere();
+			const BSphere& sphereB = characters_[j]->GetColliderSphere();
 
-				// 球 vs 球 の衝突判定[cite: 1]
-				if (Physics3D::IsCollision(sphereA, sphereB)) {
-					// 衝突時のイベント（デバッグログ表示や演出など）
-					 OutputDebugStringA("Collision Detected!\n");
-				}
-		}
-	}
-
-	if (enemy_ && player_) {
-		const auto& bullets = enemy_->GetBullets();
-		for (const auto& bullet : bullets) {
-			if (Physics3D::IsCollision(bullet->GetColliderSphere(), player_->GetColliderSphere())) {
-				OutputDebugStringA("Player hit by Enemy Bullet!\n");
-				player_->TakeDamage(1);
+			// 球 vs 球 の衝突判定[cite: 1]
+			if (Physics3D::IsCollision(sphereA, sphereB)) {
+				// 衝突時のイベント（デバッグログ表示や演出など）
+				OutputDebugStringA("Collision Detected!\n");
 			}
 		}
 	}
 
 
 #ifdef _DEBUG
-	// デバッググリッド設定
 	DebugRenderer::AddGrid(100.0f, 10, { 0.5f, 0.5f, 0.5f, 1.0f });
+#endif
 
-	Camera* gameCamera = &followCamera_->GetCamera(); // 実際に使用されているゲーム用カメラ
+	// =========================================================
+	// ★ 当たり判定の可視化描画
+	// =========================================================
+
+#ifdef _DEBUG
+	// ImGui 設定ウィンドウ
+	ImGui::Begin("Setting");
+	ImGui::Checkbox("debugcamera", &useDebugCamera_);
+
+	if (player_) {
+		ImGui::Separator();
+		ImGui::Text("Player Collider (AABB)");
+		Vector3& extents = player_->GetBoxExtents();
+		ImGui::DragFloat3("Box Half Extents", &extents.x, 0.05f, 0.1f, 10.0f, "%.2f");
+
+		ImGui::Separator();
+		ImGui::Text("Hammer Collider (AABB)");
+
+		// ★ サイズ調整
+		Vector3& hammerExtents = player_->GetHammerBoxExtents();
+		ImGui::DragFloat3("Hammer Half Extents", &hammerExtents.x, 0.05f, 0.1f, 10.0f, "%.2f");
+
+		// ★ 位置（オフセット）調整を追加
+		Vector3& hammerOffset = player_->GetHammerColliderOffset();
+		ImGui::DragFloat3("Hammer Offset", &hammerOffset.x, 0.05f, -5.0f, 5.0f, "%.2f");
+	}
+	ImGui::End();
+#endif
+
+	Camera* gameCamera = &followCamera_->GetCamera(); // 実際に使用されているゲーム用カメラ[cite: 5]
 
 	if (useDebugCamera_) {
+
 		activeCamera_ = debugCamera_.get();
 	}
 	else {
+
 		activeCamera_ = gameCamera;
 	}
-#endif
 
 	// 背景・エフェクトの更新
 	skydome_->Update(activeCamera_);
