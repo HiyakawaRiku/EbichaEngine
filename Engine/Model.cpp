@@ -86,7 +86,7 @@ void Model::CreatePointLight()
 	pointLightResource_->Map(0, nullptr, reinterpret_cast<void**>(&pointLightData_));
 
 	pointLightData_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-	pointLightData_->position = { 0.0f, 2.0f, 0.0f };
+	pointLightData_->position = { 0.0f, 0.0f, 0.0f };
 	pointLightData_->intensity = 1.0f;
 	pointLightData_->radius = 10.0f;
 	pointLightData_->decay = 2.0f;
@@ -98,7 +98,7 @@ void Model::CreateSpotLight()
 	spotLightResource_->Map(0, nullptr, reinterpret_cast<void**>(&spotLightData_));
 
 	spotLightData_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-	spotLightData_->position = { 0.0f, 3.0f, 0.0f };
+	spotLightData_->position = { 0.0f, 0.0f, 0.0f };
 	spotLightData_->direction = { 0.0f, -1.0f, 0.0f };
 	spotLightData_->intensity = 2.0f;
 	spotLightData_->distance = 10.0f;

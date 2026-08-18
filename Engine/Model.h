@@ -65,6 +65,15 @@ public:
 	PointLight* GetPointLightData() { return pointLightData_; }
 	SpotLight* GetSpotLightData() { return spotLightData_; }
 
+	void SetSpotLightColor(const Vector4& color) { if (spotLightData_) spotLightData_->color = color; }
+	void SetSpotLightPosition(const Vector3& position) { if (spotLightData_) spotLightData_->position = position; }
+	void SetSpotLightDirection(const Vector3& direction) { if (spotLightData_) spotLightData_->direction = direction; }
+	void SetSpotLightIntensity(float intensity) { if (spotLightData_) spotLightData_->intensity = intensity; }
+	void SetSpotLightDistance(float distance) { if (spotLightData_) spotLightData_->distance = distance; }
+	void SetSpotLightDecay(float decay) { if (spotLightData_) spotLightData_->decay = decay; }
+	void SetSpotLightCosAngle(float cosAngle) { if (spotLightData_) spotLightData_->cosAngle = cosAngle; }
+	void SetSpotLightCosFalloffStart(float cosFalloffStart) { if (spotLightData_) spotLightData_->cosFalloffStart = cosFalloffStart; }
+
 private:
 
 	void CreateModelSphere();

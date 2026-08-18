@@ -16,6 +16,7 @@
 #include "Ground.h"
 #include "FollowCamera.h"
 #include "Particle.h"
+#include "HatSphere.h"
 
 class GameScene {
 public:
@@ -41,6 +42,17 @@ public:
 	/// 終了処理・解放
 	/// </summary>
 	void Finalize();
+
+private:
+	// ランダム生成用（Particle.cpp と同じ方式）
+	std::random_device seedGenerator_;
+	std::mt19937 randomEngine_{ seedGenerator_() };
+
+	// 補助関数: 指定範囲のランダムな float を取得
+	float RandomFloat(float min, float max) {
+		std::uniform_real_distribution<float> dist(min, max);
+		return dist(randomEngine_);
+	}
 
 private:
 
@@ -81,9 +93,12 @@ private:
 	Player* player_ = nullptr;
 	Enemy* enemy_ = nullptr;
 
+	std::vector<HatSphere*> hatSpheres_;
+
 	// 背景・カメラ・エフェクトなど
 	std::unique_ptr<Skydome> skydome_ = nullptr;
 	std::unique_ptr<Ground> ground_ = nullptr;
 	std::unique_ptr<FollowCamera> followCamera_ = nullptr;
 	std::unique_ptr<Particle> particle_ = nullptr;
+	HatSphere* hatSphere_ = nullptr;
 };

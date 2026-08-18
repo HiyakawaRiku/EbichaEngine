@@ -24,6 +24,11 @@ void Ground::Initialize()
 	model_ = new Model();
 	model_->Initialize("plane");
 	textureHandle_ = TextureManager::GetInstance()->Load("resources/ground_leaf.png", DirectXCommon::GetInstance()->GetCommandList());
+
+
+	model_->SetSpotLightDecay(0.0f);
+	model_->SetSpotLightDistance(100.0f);
+	model_->SetSpotLightCosAngle(std::cos(DirectX::XMConvertToRadians(0.0f)));
 }
 
 void Ground::Update(Camera* activeCamera)

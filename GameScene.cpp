@@ -30,6 +30,23 @@ void GameScene::Initialize() {
 	enemy_ = enemy.get();            // ★ 参照保持用
 	characters_.push_back(std::move(enemy));
 
+	// ★ 2. HatSphere をランダムな位置に複数生成 (例: 5個)
+	int spawnCount = 5;
+	for (int i = 0; i < spawnCount; ++i) {
+		auto hatSphere = std::make_unique<HatSphere>();
+
+		// X: -10~10, Y: 1, Z: -10~10 のランダム位置
+		Vector3 randomPos = {
+			RandomFloat(-10.0f, 10.0f),
+			1.0f,
+			RandomFloat(-10.0f, 10.0f)
+		};
+		hatSphere->Initialize(randomPos);
+
+		hatSpheres_.push_back(hatSphere.get());      // 更新・判定用参照の保存
+		characters_.push_back(std::move(hatSphere)); // 所有権を characters_ へ (自動描画用)
+	}
+
 	// =========================================================
 	// 背景・カメラ等の初期化
 	// =========================================================
@@ -72,14 +89,151 @@ void GameScene::Update() {
 	normalCamera_->Update();
 	debugCamera_->Update();
 
+	// 1. キャラクターの更新
+    for (auto& character : characters_) {
+        if (character) character->Update(activeCamera_);
+    }
+
+    // 2. Cube敵からの HatSphere 生成要求の受け取り
+    if (enemy_) {
+        Vector3 spawnPos, spawnVel;
+        while (enemy_->PopHatSphereSpawnRequest(spawnPos, spawnVel)) {
+            auto hatSphere = std::make_unique<HatSphere>();
+            hatSphere->Initialize(spawnPos);
+            hatSphere->Throw(spawnVel); // 重力運動を開始
+
+            hatSpheres_.push_back(hatSphere.get());
+            characters_.push_back(std::move(hatSphere));
+        }
+    }
+
+    // 3. 当たり判定処理（Physics3D を使用）
+    for (HatSphere* hat : hatSpheres_) {
+        if (!hat || hat->GetState() != HatSphere::State::Thrown) continue;
+
+        BSphere hatSphere = hat->GetBSphere();
+
+        // --- A. HatSphere (BSphere) vs プレイヤー (AABB) ---
+        if (player_) {
+            AABB playerAABB = player_->GetColliderAABB();
+            if (Physics3D::IsCollision(playerAABB, hatSphere)) {
+                player_->TakeDamage(1);
+                hat->OnHit(); // 跳ね返って縮小消滅へ
+            }
+        }
+
+        // --- B. HatSphere (BSphere) vs Cube敵 (AABB) ---
+        if (enemy_) {
+            AABB enemyAABB = enemy_->GetAABB();
+            if (Physics3D::IsCollision(enemyAABB, hatSphere)) {
+                enemy_->TakeDamage(2);
+                hat->OnHit();
+            }
+        }
+    }
+
 	// =========================================================
-	// キャラクター一括更新（ポリモーフィズム）
+	// ★ 敵からの HatSphere 生成リクエスト処理
 	// =========================================================
-	for (auto& character : characters_) {
-		if (character) {
-			character->Update(activeCamera_);
+	if (enemy_) {
+		Vector3 spawnPos, spawnVel;
+		while (enemy_->PopHatSphereSpawnRequest(spawnPos, spawnVel)) {
+			auto hatSphere = std::make_unique<HatSphere>();
+			hatSphere->Initialize(spawnPos);
+
+			// 出現直後から投げられた状態（State::Thrown）にして飛んでいかせる
+			// ※ 敵が射出した方向・速度を適用するため直接投擲状態を設定するメソッドか、強引に Throw 呼出しを行います
+			hatSphere->Throw({ spawnVel.x, 0.0f, spawnVel.z });
+
+			// （補足: HatSphere に速度を直接設定できる SetVelocity 等を用意するとより正確になります）
+
+			hatSpheres_.push_back(hatSphere.get());
+			characters_.push_back(std::move(hatSphere));
 		}
 	}
+
+	// =========================================================
+	// ★ HatSphere の当たり判定・乗っかる処理
+	// =========================================================
+	if (player_) {
+		// すでに頭に乗っている球があるかチェック
+		bool isAlreadyEquipped = std::any_of(hatSpheres_.begin(), hatSpheres_.end(),
+			[](const HatSphere* h) {
+				return h && h->GetState() == HatSphere::State::Equipped;
+			});
+
+		// 乗っていない場合のみ、地面にある球と接触判定
+		if (!isAlreadyEquipped) {
+			for (auto* hatSphere : hatSpheres_) {
+				if (hatSphere && hatSphere->GetState() == HatSphere::State::OnGround) {
+					const BSphere& playerSphere = player_->GetColliderSphere();
+					const BSphere& hatSphereCollider = hatSphere->GetColliderSphere();
+
+					if (Physics3D::IsCollision(playerSphere, hatSphereCollider)) {
+						hatSphere->EquipToPlayer(player_);
+						break; // 1個乗ったら終了
+					}
+				}
+			}
+		}
+
+		// =========================================================
+		// ★ Eキーで投げる処理
+		// =========================================================
+		if (input_->TriggerKey(DIK_E)) {
+			for (auto* hatSphere : hatSpheres_) {
+				if (hatSphere && hatSphere->GetState() == HatSphere::State::Equipped) {
+					Vector3 throwDir = { 0.0f, 0.0f, 0.0f };
+
+					// プレイヤーが移動中の場合は移動方向へ投げる
+					if (player_->IsMoving()) {
+						Vector3 moveVel = player_->GetMoveVelocity();
+						float length = std::sqrt(moveVel.x * moveVel.x + moveVel.z * moveVel.z);
+						if (length > 0.0001f) {
+							throwDir = { moveVel.x / length, 0.0f, moveVel.z / length };
+						}
+					}
+					else {
+						// 立ち止まっている場合はプレイヤーの正面向きへ投げる
+						float rotY = player_->GetTransform().rotate.y;
+						throwDir = { std::sin(rotY), 0.0f, std::cos(rotY) };
+					}
+
+					hatSphere->Throw(throwDir);
+					break; // 1個投げたら終了
+				}
+			}
+		}
+	}
+
+	// =========================================================
+	// ★ 消滅処理 (IsDead が true になった HatSphere を削除)
+	// =========================================================
+	// 1. hatSpheres_ から削除された要素を取得
+	std::vector<HatSphere*> deadSpheres;
+	for (auto* h : hatSpheres_) {
+		if (h && h->IsDead()) {
+			deadSpheres.push_back(h);
+		}
+	}
+
+	// 2. characters_ (unique_ptr) 内から該当オブジェクトを消去（画面から消える）
+	characters_.erase(
+		std::remove_if(characters_.begin(), characters_.end(),
+			[&deadSpheres](const std::unique_ptr<BaseCharacter>& c) {
+				return std::find(deadSpheres.begin(), deadSpheres.end(), c.get()) != deadSpheres.end();
+			}),
+		characters_.end()
+	);
+
+	// 3. hatSpheres_ (生ポインタ) からも消去
+	hatSpheres_.erase(
+		std::remove_if(hatSpheres_.begin(), hatSpheres_.end(),
+			[](const HatSphere* h) {
+				return h == nullptr || h->IsDead();
+			}),
+		hatSpheres_.end()
+	);
 
 	// =========================================================
 	// ★ 当たり判定およびダメージ処理（Player vs Enemy）

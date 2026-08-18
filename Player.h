@@ -46,6 +46,14 @@ public:
     // 突進攻撃判定（OBB）を取得
     OBB GetDashAttackOBB() const;
 
+    // 移動速度ベクトルの取得
+    const Vector3& GetMoveVelocity() const { return moveVelocity_; }
+
+    // 移動中かどうか（または移動入力があるか）の判定
+    bool IsMoving() const {
+        return (moveVelocity_.x * moveVelocity_.x + moveVelocity_.z * moveVelocity_.z) > 0.0001f;
+    }
+
     // 攻撃中判定（最高速度時の突進攻撃中か）
     bool IsAttacking() const { return isDashAttacking_; }
     bool IsDashAttacking() const { return isDashAttacking_; }
@@ -115,4 +123,6 @@ private:
     // --- 待機モーション用パラメータ ---
     float idleMotionTimer_ = 0.0f;
     const float kIdleMotionSpeed = 0.05f;
+
+
 };
