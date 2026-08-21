@@ -23,28 +23,34 @@ void HatSphere::Initialize(const Vector3& initialPos)
     }
 }
 
-// ★ 1. プレイヤー装備処理の実装
 void HatSphere::EquipToPlayer(Player* player)
 {
     state_ = State::Equipped;
     ownerPlayer_ = player;
+    thrownByPlayer_ = false;    // ★ リセット
+    thrownGroundTimer_ = 0.0f;
+
+    if (modelBody_) {
+        modelBody_->transform.scale = { 1.0f, 1.0f, 1.0f };
+    }
 }
 
-// ★ 2. 投擲・射出処理の実装
-void HatSphere::Throw(const Vector3& velocity)
+void HatSphere::Throw(const Vector3& velocity, bool isPlayer)
 {
     velocity_ = velocity;
     state_ = State::Thrown;
     ownerPlayer_ = nullptr;
+    thrownByPlayer_ = isPlayer; // ★ プレイヤーが投げた場合のみ true
+    thrownGroundTimer_ = 0.0f;
 }
 
-// ★ 3. 衝突時処理の実装
+// ★ 衝突時の挙動（ヒットしたらバウンドして落ちる）
 void HatSphere::OnHit()
 {
     velocity_.x = -velocity_.x * 0.3f;
     velocity_.z = -velocity_.z * 0.3f;
     velocity_.y = 0.15f;
-    state_ = State::Disappearing;
+    state_ = State::Thrown; // ★ 消滅せず落下運動へ移行させる
 }
 
 void HatSphere::Update(Camera* activeCamera)
@@ -63,9 +69,10 @@ void HatSphere::Update(Camera* activeCamera)
         velocity_.y -= gravity_;
         transformBase_.translate += velocity_;
 
-        // 地面着地判定
-        if (transformBase_.translate.y <= groundY_) {
-            transformBase_.translate.y = groundY_;
+        // ★ めり込み防止（中心 Y = groundY_ + radius_）
+        float targetY = groundY_ + radius_; // 0.5f + 0.5f = 1.0f
+        if (transformBase_.translate.y <= targetY) {
+            transformBase_.translate.y = targetY; // 接地点でぴったり止める
 
             if (std::abs(velocity_.y) > 0.08f) {
                 velocity_.y = -velocity_.y * bounceFriction_;
@@ -73,19 +80,26 @@ void HatSphere::Update(Camera* activeCamera)
                 velocity_.z *= bounceFriction_;
             }
             else {
-                // 着地停止後は消滅イージングへ
+                state_ = State::OnGround;
+                velocity_ = { 0.0f, 0.0f, 0.0f };
+            }
+        }
+    }
+    else if (state_ == State::OnGround) {
+        // 地面に停止中
+        velocity_ = { 0.0f, 0.0f, 0.0f };
+
+        // ★ 「プレイヤーが投げた球」のみ一定時間経過で消滅処理へ
+        if (thrownByPlayer_) {
+            thrownGroundTimer_ += 1.0f / 60.0f;
+            if (thrownGroundTimer_ >= kMaxThrownGroundTime_) {
                 state_ = State::Disappearing;
-                velocity_.y = 0.0f;
+                disappearTimer_ = 0.0f;
             }
         }
     }
     else if (state_ == State::Disappearing) {
-        // スーッと滑りながら慣性減衰
-        transformBase_.translate += velocity_;
-        velocity_.x *= 0.85f;
-        velocity_.z *= 0.85f;
-
-        // イージング縮小処理 (Ease-Out)
+        // 縮小しながら消滅
         disappearTimer_ += 1.0f / 60.0f;
         float t = std::min(disappearTimer_ / kDisappearTime_, 1.0f);
         float scale = (1.0f - t) * (1.0f - t);
@@ -95,7 +109,7 @@ void HatSphere::Update(Camera* activeCamera)
         }
 
         if (t >= 1.0f) {
-            isDead_ = true;
+            isDead_ = true; // GameSceneのクリーンアップで自動削除
         }
     }
 

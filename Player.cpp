@@ -11,8 +11,6 @@ void Player::Initialize()
     BaseCharacter::Initialize("sphere", partConfigs, "resources/white1x1.png");
     transformBase_.translate = { 0.0f, 1.0f, 0.0f };
 
-    hammerPartIndex_ = -1; // ハンマーは使用しない
-
     InitializeFloatingGimmick();
 
     // コライダーの半径を設定
@@ -127,12 +125,6 @@ void Player::UpdateFloatingGimmick()
     floatingParameter_ = std::fmod(floatingParameter_, 2.0f * 3.1415926f);
 
     modelBody_->transform.translate.y = std::sin(floatingParameter_) * floatingAmplitude;
-
-#ifdef _DEBUG
-    ImGui::Begin("Player");
-    ImGui::SliderFloat("amplitude", &floatingAmplitude, 0.1f, 1.0f);
-    ImGui::End();
-#endif
 }
 
 void Player::BehaviorRootUpdate(Camera* activeCamera_)

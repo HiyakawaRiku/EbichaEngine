@@ -264,3 +264,35 @@ void Enemy::Draw()
 
     BaseCharacter::Draw();
 }
+
+void Enemy::SpawnHatSpheresRandomly(int count) {
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+
+    std::uniform_real_distribution<float> distAngle(0.0f, 6.28318f);
+    std::uniform_real_distribution<float> distSpeedXZ(0.2f, 0.4f); // 速度を少し速めに
+    std::uniform_real_distribution<float> distSpeedY(0.2f, 0.35f);
+
+    Vector3 enemyPos = transformBase_.translate;
+
+    for (int i = 0; i < count; ++i) {
+        float angle = distAngle(gen);
+        float speedXZ = distSpeedXZ(gen);
+        float speedY = distSpeedY(gen);
+
+        Vector3 velocity = {
+            std::cos(angle) * speedXZ,
+            speedY,
+            std::sin(angle) * speedXZ
+        };
+
+        // ★ 敵の半径(1.2f)より外側から生成して当たり判定のめり込みを防ぐ
+        Vector3 spawnPos = {
+            enemyPos.x + std::cos(angle) * 2.0f,
+            enemyPos.y + 0.5f,
+            enemyPos.z + std::sin(angle) * 2.0f
+        };
+
+        spawnRequests_.push_back({ spawnPos, velocity });
+    }
+}

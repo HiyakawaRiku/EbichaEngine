@@ -39,10 +39,6 @@ public:
     // ハンマーの当たり判定（OBB）を取得
     OBB GetHammerColliderOBB() const;
 
-    // ハンマーのOBBサイズ・オフセット調整用アクセッサ
-    Vector3& GetHammerBoxExtents() { return hammerBoxExtents_; }
-    Vector3& GetHammerColliderOffset() { return hammerColliderOffset_; }
-
     // 突進攻撃判定（OBB）を取得
     OBB GetDashAttackOBB() const;
 
@@ -74,19 +70,7 @@ private:
     float invincibleTimer_ = 0.0f;                     // 無敵タイマー
     static inline const float kInvincibleTime = 60.0f; // 無敵時間（1秒 = 60フレーム）
 
-    int hammerPartIndex_ = -1;
-
-    // ImGuiでリアルタイム調整するためのオフセット用変数
-    Vector3 hammerOffsetPos_ = { 0.0f, -0.2f, 0.4f };  // 手からの位置ズレ (X, Y, Z)
-    Vector3 hammerOffsetRot_ = { 0.0f,  3.14f, 0.0f };  // 向きの角度 (X, Y, Z)
-
     Vector3 boxExtents_{ 0.5f, 1.3f, 0.5f };
-
-    // ハンマー判定用のAABBサイズ（中心からのハーフサイズ）
-    Vector3 hammerBoxExtents_{ 0.8f, 0.8f, 0.8f };
-
-    // ハンマーモデル中心からの判定位置オフセット（X, Y, Z）
-    Vector3 hammerColliderOffset_{ 0.0f, 0.0f, 0.0f };
 
     // --- ジャンプ調整用パラメータ ---
     float jumpInitialVelocity_ = 0.45f;   // 初速（少し高めに設定）
@@ -113,7 +97,7 @@ private:
     float sphereRadius_ = 1.0f;           // 球体の半径
 
     float moveDashTimer_ = 0.0f;          // 移動長押し時間タイマー
-    const float kBaseMoveSpeed = 0.15f;   // 初速（通常移動速度）
+    const float kBaseMoveSpeed = 0.20f;   // 初速（通常移動速度）
     const float kMaxMoveSpeed = 0.35f;    // 長押し時の最高速度
     const float kDashAccelTime = 600.0f;  // 最高速度に達するまでのフレーム数（約2秒）
 

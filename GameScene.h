@@ -70,6 +70,9 @@ private:
 	Camera* activeCamera_ = nullptr;
 	bool useDebugCamera_ = false;
 
+	bool isCollisionEnabled_ = true;
+	bool showColliders_ = true;
+
 	// Transformデータ
 	Transform transformSprite_{ {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
 	Transform uvTransformSprite_{ {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
