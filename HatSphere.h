@@ -32,6 +32,13 @@ public:
     // 衝突時のバウンド・反発処理
     void OnHit();
 
+public:
+    // ★ 危険状態（敵が投げて飛行中）の判定
+    bool IsDangerous() const { return isDangerous_; }
+    void SetDangerous(bool dangerous) { isDangerous_ = dangerous; }
+
+    void OnHitPlayer(const Vector3& bounceVelocity);
+
 private:
     State state_ = State::OnGround;
     Player* ownerPlayer_ = nullptr;
@@ -45,16 +52,23 @@ private:
     float radius_ = 0.5f;
     bool isDead_ = false;
 
-    // 消滅イージング用タイマー
+    // 消滅処理用タイマー
     float disappearTimer_ = 0.0f;
     const float kDisappearTime_ = 0.3f;
-private:
-    // 地面放置時の自動消滅タイマーを追加
-    float onGroundTimer_ = 0.0f;
-    const float kMaxOnGroundTime_ = 3.0f; // 3秒で消滅開始
 
-    // ★ プレイヤーが投げて着地した後に消去されるまでのタイマー
+    // プレイヤーが投げて着地した後に消去されるまでのタイマー
     float thrownGroundTimer_ = 0.0f;
-    const float kMaxThrownGroundTime_ = 3.0f; // 投げて着地後 3秒で消去開始
-    bool thrownByPlayer_ = false;             // ★ プレイヤーが投げたフラグ
+    const float kMaxThrownGroundTime_ = 3.0f;
+    bool thrownByPlayer_ = false;
+
+    bool isDangerous_ = false;
+    float dangerousTimer_ = 0.0f;
+    const float kMaxDangerousTime_ = 2.0f;
+
+private:
+    bool isThrownByPlayer_ = false;
+
+public:
+
+    bool IsThrownByPlayer() const { return isThrownByPlayer_; }
 };

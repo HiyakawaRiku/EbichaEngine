@@ -27,20 +27,36 @@ void Enemy::Initialize()
 
 void Enemy::Update(Camera* activeCamera)
 {
-    if (IsDead()) {
-        return;
-    }
+    if (IsDead()) return;
 
+    // 無敵タイマー演算 ＆ 被弾時の赤点滅フィードバック
     if (isInvincible_) {
         invincibleTimer_ -= 1.0f;
+
+        // 被弾時に一瞬赤く明滅させる
+        if (modelBody_) {
+            modelBody_->color = { 1.0f, 0.2f, 0.2f, 1.0f };
+        }
+
         if (invincibleTimer_ <= 0.0f) {
             isInvincible_ = false;
             invincibleTimer_ = 0.0f;
+            if (modelBody_) {
+                modelBody_->color = { 1.0f, 1.0f, 1.0f, 1.0f }; // 通常色に復帰
+            }
         }
+    }
+
+    // ノックバック減衰処理
+    if (std::abs(knockbackVelocity_.x) > 0.001f || std::abs(knockbackVelocity_.z) > 0.001f) {
+        transformBase_.translate += knockbackVelocity_;
+        knockbackVelocity_.x *= 0.85f; // 摩擦で減衰
+        knockbackVelocity_.z *= 0.85f;
     }
 
     UpdateFloating();
 
+    // (以下、既存の switch (state_) 処理...)
     switch (state_) {
     case State::Normal:
         UpdateNormal();
@@ -96,21 +112,26 @@ void Enemy::UpdateAttack()
     switch (state_) {
     case State::AttackPrep:
     {
-        float prepDuration = (currentAttackType_ == AttackType::GigaSlam) ? 50.0f : kPrepDuration;
+        float prepDuration = (currentAttackType_ == AttackType::GigaSlam) ? 60.0f : kPrepDuration;
 
         if (currentAttackType_ == AttackType::GigaSlam) {
             float progress = attackStateTimer_ / prepDuration;
-            transformBase_.translate.y = kBaseHeight + progress * 6.0f;
-            modelBody_->transform.scale = { 1.0f + progress * 1.0f, 1.0f + progress * 1.0f, 1.0f + progress * 1.0f };
-            modelBody_->transform.rotate.y += 0.2f;
 
+            // ★ 1. 上空へ上昇 (Y: kBaseHeight から kBaseHeight + 10.0f へ)
+            transformBase_.translate.y = kBaseHeight + progress * 10.0f;
+
+            // ★ 2. 徐々に巨大化 (1.0f から 2.5f 倍に膨らむ)
+            float scale = 1.0f + progress * 1.5f;
+            modelBody_->transform.scale = { scale, scale, scale };
+
+            // ★ プレイヤーの真上付近へ少しずつ寄っていく
             if (targetPlayer_) {
-                slamTargetPos_ = targetPlayer_->GetTransform().translate;
-                slamTargetPos_.y = 0.05f;
+                Vector3 playerPos = targetPlayer_->GetTransform().translate;
+                transformBase_.translate.x += (playerPos.x - transformBase_.translate.x) * 0.05f;
+                transformBase_.translate.z += (playerPos.z - transformBase_.translate.z) * 0.05f;
             }
         }
         else if (currentAttackType_ == AttackType::SpawnHatSphere) {
-            // Cube吐き出し前兆（上下にぐにゅっと伸縮）
             float prepProgress = attackStateTimer_ / prepDuration;
             float pulse = std::sin(prepProgress * 3.14159f * 4.0f) * 0.2f;
             modelBody_->transform.scale = { 1.0f - pulse, 1.0f + pulse, 1.0f - pulse };
@@ -147,9 +168,15 @@ void Enemy::UpdateAttack()
         float lockDuration = kLockDuration;
 
         if (currentAttackType_ == AttackType::GigaSlam) {
-            float shake = std::sin(attackStateTimer_ * 1.5f) * 0.1f;
+            // ★ 上空で狙いを定める（空中で少し揺れる演出）
+            float shake = std::sin(attackStateTimer_ * 0.8f) * 0.15f;
             transformBase_.translate.x += shake;
-            modelBody_->transform.rotate.y += 0.4f;
+
+            // 落ちる直前にターゲットの位置（地面）を固定
+            if (targetPlayer_) {
+                slamTargetPos_ = targetPlayer_->GetTransform().translate;
+                slamTargetPos_.y = 0.5f; // 地面の着地高さ
+            }
         }
 
         if (attackStateTimer_ >= lockDuration) {
@@ -164,21 +191,23 @@ void Enemy::UpdateAttack()
         float currentDuration = kAttackDuration;
 
         if (currentAttackType_ == AttackType::GigaSlam) {
-            currentDuration = 15.0f;
+            currentDuration = 12.0f; // ★ 急降下させるため短フレームで処理
             float progress = attackStateTimer_ / currentDuration;
 
-            transformBase_.translate.x += (slamTargetPos_.x - transformBase_.translate.x) * 0.3f;
-            transformBase_.translate.z += (slamTargetPos_.z - transformBase_.translate.z) * 0.3f;
-            transformBase_.translate.y = (kBaseHeight + 6.0f) * (1.0f - progress) + 0.5f * progress;
+            // ★ 上空から叩きつけ地点へ一気に急降下（イージングで加速感を出す）
+            float dropFactor = progress * progress; // 加速落下
+            float startY = kBaseHeight + 10.0f;
+
+            //transformBase_.translate.x = EMath::Lerp(transformBase_.translate.x, slamTargetPos_.x, 0.2f);
+            //transformBase_.translate.z = EMath::Lerp(transformBase_.translate.z, slamTargetPos_.z, 0.2f);
+            transformBase_.translate.y = EMath::Lerp(startY, slamTargetPos_.y, dropFactor);
 
             if (attackStateTimer_ >= currentDuration - 1.0f) {
-                transformBase_.translate.y = 0.5f;
+                transformBase_.translate.y = slamTargetPos_.y;
             }
         }
         else if (currentAttackType_ == AttackType::SpawnHatSphere) {
             currentDuration = 32.0f;
-
-            // 8フレームごとに計3個射出
             int frame = static_cast<int>(attackStateTimer_);
             if (frame % 8 == 1 && frame <= 25) {
                 Vector3 spawnPos = transformBase_.translate;
@@ -186,7 +215,6 @@ void Enemy::UpdateAttack()
 
                 float randSpread = ((rand() % 100) / 100.0f - 0.5f) * 0.6f;
                 float baseAngle = std::atan2(chargeDirection_.x, chargeDirection_.z) + randSpread;
-
                 float forwardSpeed = 0.35f + ((rand() % 100) / 100.0f) * 0.15f;
                 float upPower = 0.25f;
 
@@ -198,7 +226,6 @@ void Enemy::UpdateAttack()
 
                 spawnRequests_.push_back({ spawnPos, vel });
             }
-
             modelBody_->transform.scale = { 1.2f, 0.8f, 1.2f };
         }
         else if (currentAttackType_ == AttackType::Charge) {
@@ -226,10 +253,20 @@ void Enemy::UpdateAttack()
         float coolDuration = kCoolDuration;
 
         if (currentAttackType_ == AttackType::GigaSlam) {
-            coolDuration = 180.0f;
-            modelBody_->transform.scale = { 1.6f, 0.3f, 1.6f };
-            modelBody_->transform.rotate.x = 0.5f;
-            transformBase_.translate.y = 0.3f;
+            coolDuration = 120.0f;
+
+            // ★ 着地直後は横に押し潰れた形状（Squash & Stretch）にして隙を作る
+            float progress = attackStateTimer_ / coolDuration;
+            if (progress < 0.3f) {
+                modelBody_->transform.scale = { 3.0f, 0.5f, 3.0f }; // ペチャンコ
+            }
+            else {
+                // 徐々に元のスケール (1.0f) と高さに戻る
+                float t = (progress - 0.3f) / 0.7f;
+                float currentScale = EMath::Lerp(2.5f, 1.0f, t);
+                modelBody_->transform.scale = { currentScale, currentScale, currentScale };
+                transformBase_.translate.y = EMath::Lerp(0.5f, kBaseHeight, t);
+            }
         }
         else {
             modelBody_->transform.rotate.x = 0.0f;
@@ -247,7 +284,7 @@ void Enemy::UpdateAttack()
     }
 }
 
-void Enemy::TakeDamage(int damage)
+void Enemy::TakeDamage(int damage, const Vector3& knockback)
 {
     if (isInvincible_) return;
 
@@ -255,7 +292,10 @@ void Enemy::TakeDamage(int damage)
     if (hp_ < 0) hp_ = 0;
 
     isInvincible_ = true;
-    invincibleTimer_ = kInvincibleTime;
+    invincibleTimer_ = kInvincibleTime; // 無敵時間 (例: 15.0f)
+
+    // ノックバック速度を設定
+    knockbackVelocity_ = knockback;
 }
 
 void Enemy::Draw()

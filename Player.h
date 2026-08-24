@@ -57,6 +57,8 @@ public:
     bool IsJumping() const { return isJumping_; }
     float GetJumpVelocityY() const { return jumpVelocityY_; }
 
+    void ApplyKnockback(const Vector3& knockbackVelocity);
+
 private:
     float floatingParameter_ = 0.0f;
     float frame_ = 60.0f;

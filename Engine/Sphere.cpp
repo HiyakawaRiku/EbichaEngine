@@ -174,9 +174,6 @@ void Sphere::Update(Camera* camera)
 
 void Sphere::Draw(TextureHandle textureHandle)
 {
-	ImGui::Begin("pos");
-	ImGui::DragFloat3("pos", &directionalLightData_->direction.x, 0.1f);
-	ImGui::End();
 
 	auto commandList = dxCommon_->GetCommandList();
 

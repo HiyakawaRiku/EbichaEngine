@@ -2,6 +2,7 @@
 #include <memory>
 #include <cstdint>
 #include <vector>
+#include <random>
 
 // エンジンヘッダー
 #include "EbichaEngine.h"
@@ -43,10 +44,21 @@ public:
 	/// </summary>
 	void Finalize();
 
+	// getter
+	bool IsFinished() const { return finished_; }
+	bool IsDead() const { return dead_; }
+
 private:
-	// ランダム生成用（Particle.cpp と同じ方式）
-	std::random_device seedGenerator_;
-	std::mt19937 randomEngine_{ seedGenerator_() };
+	// 内部処理切り出し関数
+	void UpdateEnemySpawnRequests();
+	void UpdateCollisions();
+	void UpdatePlayerThrowInput();
+	void RemoveDeadObjects();
+	void CheckDangerousSphereCollisions();
+
+#ifdef _DEBUG
+	void DrawDebugGui();
+#endif
 
 	// 補助関数: 指定範囲のランダムな float を取得
 	float RandomFloat(float min, float max) {
@@ -55,14 +67,13 @@ private:
 	}
 
 private:
+	bool dead_ = false;
+	bool finished_ = false; // 終了フラグ
 
-	// エンジンの各ポインタ（シングルトン参照）
-	DirectXCommon* dxCommon_ = nullptr;
-	Input* input_ = nullptr;
-	Audio* audio_ = nullptr;
 
-	// ゲームオブジェクト（スプライト等）
-	std::unique_ptr<Sprite> sprite_;
+	// ランダム生成用
+	std::random_device seedGenerator_;
+	std::mt19937 randomEngine_{ seedGenerator_() };
 
 	// カメラ関連
 	std::unique_ptr<Camera> normalCamera_;
@@ -70,29 +81,23 @@ private:
 	Camera* activeCamera_ = nullptr;
 	bool useDebugCamera_ = false;
 
+	// デバッグ・判定フラグ
 	bool isCollisionEnabled_ = true;
 	bool showColliders_ = true;
 
-	// Transformデータ
-	Transform transformSprite_{ {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
-	Transform uvTransformSprite_{ {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
-
-	// オーディオハンドル
+	// オーディオハンドル & テクスチャ
 	uint32_t seHandle_ = 0;
 	uint32_t bgmHandle_ = 0;
 	TextureHandle textureHandle_;
 
 	BlendMode blendMode_ = BlendMode::kNormal;
-	const char* blendModeNames_ = "none\0normal\0add\0subtract\0multiply\0screen\0\0";
-
-private:
 
 	// =========================================================
-	// キャラクター一括管理（ポリモーフィズム）
+	// キャラクター一括管理
 	// =========================================================
 	std::vector<std::unique_ptr<BaseCharacter>> characters_;
 
-	// FollowCamera へのターゲット参照用（所有権は characters_ が保持）
+	// 参照ポインタ（所有権は characters_ が保持）
 	Player* player_ = nullptr;
 	Enemy* enemy_ = nullptr;
 
@@ -103,5 +108,4 @@ private:
 	std::unique_ptr<Ground> ground_ = nullptr;
 	std::unique_ptr<FollowCamera> followCamera_ = nullptr;
 	std::unique_ptr<Particle> particle_ = nullptr;
-	HatSphere* hatSphere_ = nullptr;
 };

@@ -105,12 +105,13 @@ void Particle::Update(Camera* activeCamera)
 		++particleIterator;
 
 	}
-
+#ifdef _DEBUG
 	ImGui::Begin("Particle");
 	ImGui::DragFloat3("EmitterTranslate", &emitter.transform.translate.x, 0.01f, -100.0f, 100.0f);
 	ImGui::DragFloat3("EmitterTranslat", &accelerationField.acceleration.x, 0.01f, -100.0f, 100.0f);
 	ImGui::Checkbox("update", &isUpdate);
 	ImGui::End();
+#endif
 }
 
 void Particle::Draw()

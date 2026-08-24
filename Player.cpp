@@ -178,29 +178,36 @@ void Player::BehaviorRootUpdate(Camera* activeCamera_)
         }
 
         // ダッシュタイマー加算（緩やかな加速計算用）
-        moveDashTimer_ += 1.0f;
+        if(moveDashTimer_<=700.0f)moveDashTimer_ += 1.0f;
         float dashRatio = (std::min)(moveDashTimer_ / kDashAccelTime, 1.0f);
         float smoothedRatio = dashRatio * dashRatio;
         float targetSpeed = EMath::Lerp(kBaseMoveSpeed, kMaxMoveSpeed, smoothedRatio);
 
-        // ★ 1. 新しい入力方向と「現在の進行方向」の内積（向きの関係）を計算
         float currentSpeed = std::sqrt(moveVelocity_.x * moveVelocity_.x + moveVelocity_.z * moveVelocity_.z);
         if (currentSpeed > 0.001f) {
             Vector3 currentDir = { moveVelocity_.x / currentSpeed, 0.0f, moveVelocity_.z / currentSpeed };
+
+            // 現在の進行方向と新しい入力方向の内積 (1.0 = 直進, 0.0 = 90度カーブ, -1.0 = 真逆)
             float dot = currentDir.x * inputDir.x + currentDir.z * inputDir.z;
 
-            // ★ 2. 真逆または急角度への切り返し（内積が負）の場合、スピードとダッシュタイマーを即座にリセット
-            if (dot < 0.0f) {
-                moveVelocity_ = { 0.0f, 0.0f, 0.0f };
-                moveDashTimer_ = 0.0f; // 切り返し時にダッシュタイマーもリセットしたい場合
+            // 内積が小さい（急な方向転換）ほど大きな減衰をかける
+            // 例: 90度（dot = 0）なら速度を 50% に低下、180度反転（dot = -1）なら即座に停止に近い減速
+            if (dot < 0.8f) { // 角度がついている場合
+                float turnDecelFactor = std::max(0.0f, (dot + 1.0f) * 0.5f); // 0.0 ～ 0.9 程度の減衰倍率
+
+                moveVelocity_.x *= turnDecelFactor;
+                moveVelocity_.z *= turnDecelFactor;
+
+                // 急カーブで溜めたダッシュも少しリセット
+                moveDashTimer_ *= turnDecelFactor;
             }
         }
 
-        // ★ 3. 速度ベクトルを新しい入力方向に直接設定（滑る補正を削除）
-        moveVelocity_.x = inputDir.x * targetSpeed;
-        moveVelocity_.z = inputDir.z * targetSpeed;
+        // 新しい入力方向へ徐々に補正（線形補間により滑らかな旋回感を出す）
+        const float kTurnLerpRate = 0.25f; // 値を大きくするとクイックに、小さくすると大回りになる
+        moveVelocity_.x = EMath::Lerp(moveVelocity_.x, inputDir.x * targetSpeed, kTurnLerpRate);
+        moveVelocity_.z = EMath::Lerp(moveVelocity_.z, inputDir.z * targetSpeed, kTurnLerpRate);
 
-        // 最高速度に達している場合は突進攻撃判定フラグを立てる
         isDashAttacking_ = (dashRatio >= 1.0f);
     }
     else {
@@ -208,8 +215,10 @@ void Player::BehaviorRootUpdate(Camera* activeCamera_)
         moveVelocity_.x *= kStopFriction;
         moveVelocity_.z *= kStopFriction;
 
-        // タイマー減衰・突進解除
-        moveDashTimer_ = (std::max)(0.0f, moveDashTimer_ - 2.0f);
+        moveDashTimer_ -= 4.0f;
+        if (moveDashTimer_ < 0.0f) {
+            moveDashTimer_ = 0.0f;
+        }
         isDashAttacking_ = false;
     }
 
@@ -380,4 +389,15 @@ OBB Player::GetDashAttackOBB() const
     obb.center = transformBase_.translate;
 
     return obb;
+}
+
+void Player::ApplyKnockback(const Vector3& knockbackVelocity)
+{
+    // 水平方向の吹き飛び（X, Z）
+    moveVelocity_.x = knockbackVelocity.x;
+    moveVelocity_.z = knockbackVelocity.z;
+
+    // ダッシュタイマーのリセット
+    moveDashTimer_ = 0.0f;
+    isDashAttacking_ = false;
 }

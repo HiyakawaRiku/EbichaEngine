@@ -45,6 +45,7 @@ void Ground::Update(Camera* activeCamera)
 	model_->transform.scale.x = 1000.0f;
 	model_->transform.scale.y = 1000.0f;
 	
+#ifdef _DEBUG
 	ImGui::Begin("Settings");
 	// =========================================================
 	// ポイントライト調整用 UI
@@ -87,6 +88,7 @@ void Ground::Update(Camera* activeCamera)
 		}
 	}
 	ImGui::End();
+#endif
 
 }
 

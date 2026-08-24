@@ -5,7 +5,7 @@ void Model::Initialize(const std::string& filename)
 {
 	modelData_ = LoadModelFile("resources/" + filename, filename+".obj");
 
-	CreateModelSphere();
+	CreateVertexBuffer();
 
 	CreateMaterialResource();
 	CreateWvpResource();
@@ -16,7 +16,7 @@ void Model::Initialize(const std::string& filename)
 	CreateInstanceResource();
 }
 
-void Model::CreateModelSphere()
+void Model::CreateVertexBuffer()
 {
 	vertexCount_ = static_cast<uint32_t>(modelData_.vertices.size());
 	vertexResource_ = DirectXUtils::CreateBufferResource(dxCommon_->GetDevice(), sizeof(VertexData) * vertexCount_);

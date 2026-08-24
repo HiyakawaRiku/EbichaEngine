@@ -31,7 +31,7 @@ void DebugCamera::Update() {
 
 	float deltaX = static_cast<float>(currentMousePos.x - prevMousePos_.x);
 	float deltaY = static_cast<float>(currentMousePos.y - prevMousePos_.y);
-
+#ifdef _DEBUG
 	if (!ImGui::GetIO().WantCaptureMouse) {
 		// ───★ 1. 左クリックドラッグ：注視点を中心に回転 ───
 		if ((GetKeyState(VK_LBUTTON) & 0x8000) != 0) {
@@ -73,6 +73,7 @@ void DebugCamera::Update() {
 
 		if (targetDistance_ < 2.0f) targetDistance_ = 2.0f;
 	}
+#endif
 
 	// 【予備・または併用】もしホイールメッセージが上手く取れない環境の場合、
 	// 「キーボードのIとO」でも全く同じように動く予備コードを残しておくと安心です

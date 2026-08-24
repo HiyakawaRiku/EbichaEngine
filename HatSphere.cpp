@@ -35,13 +35,17 @@ void HatSphere::EquipToPlayer(Player* player)
     }
 }
 
+// HatSphere.cpp
 void HatSphere::Throw(const Vector3& velocity, bool isPlayer)
 {
     velocity_ = velocity;
     state_ = State::Thrown;
     ownerPlayer_ = nullptr;
-    thrownByPlayer_ = isPlayer; // ★ プレイヤーが投げた場合のみ true
+    thrownByPlayer_ = isPlayer;
+    isThrownByPlayer_ = isPlayer; // ★ ここを追加！（フラグを更新）
     thrownGroundTimer_ = 0.0f;
+
+    isDangerous_ = !isPlayer;
 }
 
 // ★ 衝突時の挙動（ヒットしたらバウンドして落ちる）
@@ -53,26 +57,27 @@ void HatSphere::OnHit()
     state_ = State::Thrown; // ★ 消滅せず落下運動へ移行させる
 }
 
+void HatSphere::OnHitPlayer(const Vector3& bounceVelocity)
+{
+    velocity_ = bounceVelocity;
+    state_ = State::Thrown; // 飛翔状態に戻して反発移動させる
+}
+
 void HatSphere::Update(Camera* activeCamera)
 {
     if (state_ == State::Equipped && ownerPlayer_) {
-        // 装備中: プレイヤーの頭上に追従
         Vector3 playerPos = ownerPlayer_->GetTransform().translate;
-        transformBase_.translate = {
-            playerPos.x,
-            playerPos.y + headOffset_,
-            playerPos.z
-        };
+        transformBase_.translate = { playerPos.x, playerPos.y + headOffset_, playerPos.z };
+        isDangerous_ = false;
+        dangerousTimer_ = 0.0f;
     }
     else if (state_ == State::Thrown) {
-        // 重力適用と移動
         velocity_.y -= gravity_;
         transformBase_.translate += velocity_;
 
-        // ★ めり込み防止（中心 Y = groundY_ + radius_）
-        float targetY = groundY_ + radius_; // 0.5f + 0.5f = 1.0f
+        float targetY = groundY_ + radius_;
         if (transformBase_.translate.y <= targetY) {
-            transformBase_.translate.y = targetY; // 接地点でぴったり止める
+            transformBase_.translate.y = targetY;
 
             if (std::abs(velocity_.y) > 0.08f) {
                 velocity_.y = -velocity_.y * bounceFriction_;
@@ -86,10 +91,17 @@ void HatSphere::Update(Camera* activeCamera)
         }
     }
     else if (state_ == State::OnGround) {
-        // 地面に停止中
         velocity_ = { 0.0f, 0.0f, 0.0f };
 
-        // ★ 「プレイヤーが投げた球」のみ一定時間経過で消滅処理へ
+        // ★ 着地後も危険状態タイマーをカウント
+        if (isDangerous_) {
+            dangerousTimer_ += 1.0f / 60.0f;
+            if (dangerousTimer_ >= kMaxDangerousTime_) {
+                isDangerous_ = false;
+                dangerousTimer_ = 0.0f;
+            }
+        }
+
         if (thrownByPlayer_) {
             thrownGroundTimer_ += 1.0f / 60.0f;
             if (thrownGroundTimer_ >= kMaxThrownGroundTime_) {
@@ -99,7 +111,6 @@ void HatSphere::Update(Camera* activeCamera)
         }
     }
     else if (state_ == State::Disappearing) {
-        // 縮小しながら消滅
         disappearTimer_ += 1.0f / 60.0f;
         float t = std::min(disappearTimer_ / kDisappearTime_, 1.0f);
         float scale = (1.0f - t) * (1.0f - t);
@@ -109,7 +120,17 @@ void HatSphere::Update(Camera* activeCamera)
         }
 
         if (t >= 1.0f) {
-            isDead_ = true; // GameSceneのクリーンアップで自動削除
+            isDead_ = true;
+        }
+    }
+
+    // ★ 危険状態に応じた色の適用
+    if (modelBody_) {
+        if (isDangerous_) {
+            modelBody_->color = { 1.0f, 0.2f, 0.2f, 1.0f }; // 赤色
+        }
+        else {
+            modelBody_->color = { 1.0f, 1.0f, 1.0f, 1.0f }; // 通常色
         }
     }
 

@@ -76,7 +76,7 @@ public:
 
 private:
 
-	void CreateModelSphere();
+	void CreateVertexBuffer();
 	void CreateMaterialResource();
 	void CreateWvpResource();
 	void CreateDirectionalLight();

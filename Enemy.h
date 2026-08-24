@@ -15,7 +15,8 @@ public:
 		Charge,           // 1. 通常突進
 		BouncingCharge,   // 2. バウンド突進
 		GigaSlam,         // 3. 大技：跳躍落下叩きつけ
-		SpawnHatSphere    // 4. HatSphere 吐き出し攻撃
+		SpawnHatSphere,    // 4. HatSphere 吐き出し攻撃
+		DashAttack
 	};
 
 	// 敵の状態定義
@@ -73,7 +74,7 @@ public:
 	}
 
 	// HP & ダメージ関連機能
-	void TakeDamage(int damage);
+	void TakeDamage(int damage, const Vector3& knockback = { 0.0f, 0.0f, 0.0f });
 	int GetHp() const { return hp_; }
 	int GetMaxHp() const { return kMaxHp_; }
 	bool IsDead() const { return hp_ <= 0; }
@@ -125,5 +126,10 @@ private:
 	bool isShowWarning_ = false;
 	float warningRadius_ = 2.0f;
 
+	static inline const float kDashSpeed = 0.8f;      // 通常突進(0.5f)より高速な突進速度
+	static inline const float kDashPrepDuration = 30.0f; // 予備動作時間（短めにしてテンポよく）
+
 	Vector3 halfSize_ = { 1.2f, 1.2f, 1.2f };
+
+	Vector3 knockbackVelocity_ = { 0.0f, 0.0f, 0.0f };
 };
