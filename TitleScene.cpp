@@ -27,9 +27,9 @@ void TitleScene::Update()
     if (FadeManager::GetInstance()->IsFadeOutFinished()) {
         finished_ = true;
     }
+    FadeManager::GetInstance()->Update();
     activeCamera_->Update();
 
-    FadeManager::GetInstance()->Update();
     if (model_) {
         model_->Update(activeCamera_.get());
     }

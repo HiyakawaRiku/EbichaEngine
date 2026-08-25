@@ -154,7 +154,36 @@ void ChangeScene()
 			return;
 		}
 		break;
+	case Scene::kGameOver:
+		if (gameOverScene && gameOverScene->IsFinished()) {
+			gameOverScene->Finalize();
+			delete gameOverScene;
+			gameOverScene = nullptr;
 
+			scene = Scene::kTitle;
+			titleScene = new TitleScene();
+			titleScene->Initialize();
+
+			// 新しいシーンに切り替わったらフェードインを開始
+			FadeManager::GetInstance()->StartFadeIn(0.5f);
+			return;
+		}
+		break;
+	case Scene::kClear:
+		if (clearScene && clearScene->IsFinished()) {
+			clearScene->Finalize();
+			delete clearScene;
+			clearScene = nullptr;
+
+			scene = Scene::kTitle;
+			titleScene = new TitleScene();
+			titleScene->Initialize();
+
+			// 新しいシーンに切り替わったらフェードインを開始
+			FadeManager::GetInstance()->StartFadeIn(0.5f);
+			return;
+		}
+		break;
 		// GameOver, Clear も同様に FadeManager::GetInstance()->StartFadeIn(0.5f); を挿入
 	}
 }

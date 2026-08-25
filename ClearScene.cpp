@@ -12,9 +12,19 @@ void ClearScene::Update()
 {
 	//camera_->Update();
 
-	if (Input::GetInstance()->TriggerKey(DIK_SPACE)) {
-		finished_ = true;
-	}
+     // フェード中でなければ入力判定
+    if (!FadeManager::GetInstance()->IsFading() && !finished_) {
+        if (Input::GetInstance()->TriggerKey(DIK_SPACE)) {
+            // フェードアウト開始
+            FadeManager::GetInstance()->StartFadeOut(0.5f);
+        }
+    }
+
+    // フェードアウトが完了したらシーン終了フラグを立てる
+    if (FadeManager::GetInstance()->IsFadeOutFinished()) {
+        finished_ = true;
+    }
+    FadeManager::GetInstance()->Update();
 }
 
 void ClearScene::Draw()

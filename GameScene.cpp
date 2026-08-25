@@ -66,7 +66,22 @@ void GameScene::Initialize() {
 	Audio::GetInstance()->PlayWave(bgmHandle_, true, 0.5f);
 	DirectXCommon::GetInstance()->SetBlendMode(blendMode_);
 
-	textureHandle_ = TextureManager::GetInstance()->Load("resources/monsterBall.png", DirectXCommon::GetInstance()->GetCommandList());
+	textureHeart_ = TextureManager::GetInstance()->Load("resources/heart.png", DirectXCommon::GetInstance()->GetCommandList());
+
+	// ハートSprite（3つ）の初期化[cite: 8]
+	heartSprites_.clear();
+	const Vector2 kInitialPos = { 50.0f, 50.0f }; // 1つ目のハートの位置 (X, Y)
+	const float kSpacing = 64.0f;                 // ハート同士の間隔
+
+	for (int i = 0; i < kHeartCount; ++i) {
+		auto sprite = std::make_unique<Sprite>();
+		sprite->Initialize();
+		sprite->size = { 48.0f, 48.0f }; // ハートのサイズ
+		sprite->color = { 1.0f, 1.0f, 1.0f, 1.0f };
+		sprite->transform.translate = { kInitialPos.x + (i * kSpacing), kInitialPos.y };
+
+		heartSprites_.push_back(std::move(sprite));
+	}
 
 	finished_ = false;
 	dead_ = false;
@@ -74,6 +89,16 @@ void GameScene::Initialize() {
 	followCamera_->Update();
 	skydome_->Update(activeCamera_);
 	ground_->Update(activeCamera_);
+
+	// 1. テクスチャのロード (FadeManagerと同様にTextureManagerを使用)
+	uiTexture_ = TextureManager::GetInstance()->Load("resources/heart.png", DirectXCommon::GetInstance()->GetCommandList());
+
+	// 2. Spriteの生成と初期化
+	uiSprite_ = std::make_unique<Sprite>();
+	uiSprite_->Initialize();
+	uiSprite_->size = { 64.0f, 64.0f };   // 任意のサイズを指定
+	uiSprite_->color = { 1.0f, 1.0f, 1.0f, 1.0f }; // カラー・アルファ値
+	// uiSprite_->position = { 100.0f, 100.0f };  // 必要に応じて位置等を設定
 }
 
 void GameScene::Update() {
@@ -116,6 +141,38 @@ void GameScene::Update() {
 	skydome_->Update(activeCamera_);
 	ground_->Update(activeCamera_);
 	particle_->Update(activeCamera_);
+
+	if (uiSprite_) {
+		// 色やアルファ値を動かす場合はここで変更設定を行えます
+		uiSprite_->Update();
+	}
+
+	if (player_) {
+		int currentHp = player_->GetHp(); 
+			int maxHp = player_->GetMaxHp(); 
+
+			// 1つあたりのハートが表すHP閾値 (例: 10/3 = 3.33)
+			float hpPerHeart = static_cast<float>(maxHp) / kHeartCount;
+
+		for (int i = 0; i < kHeartCount; ++i) {
+			if (!heartSprites_[i]) continue;
+
+			// 各ハートが必要とする最低HP (1つ目: 0, 2つ目: 3.33, 3つ目: 6.66...)
+			float thresholdHp = i * hpPerHeart;
+
+			if (currentHp > thresholdHp) {
+				// HPが残っている場合は通常表示（不透明）
+				heartSprites_[i]->color.w = 1.0f;
+			}
+			else {
+				// HPが減ったら半透明（または 0.0f で完全消去）にする
+				heartSprites_[i]->color.w = 0.2f;
+			}
+
+			// 変形・色の変更を適用するために Update を呼ぶ
+			heartSprites_[i]->Update();
+		}
+	}
 }
 
 void GameScene::Draw() {
@@ -126,9 +183,22 @@ void GameScene::Draw() {
 	if (skydome_) skydome_->Draw();
 	if (ground_) ground_->Draw();
 
+
 	// キャラクター一括描画
 	for (const auto& character : characters_) {
 		if (character) character->Draw();
+	}
+	if (uiSprite_) {
+		// FadeManagerと同じパイプライン設定を使用
+		DirectXCommon::GetInstance()->SetPipeline(PipelineType::kObject3D, BlendMode::kNormal, DepthWrite::kDisable);
+
+		uiSprite_->Draw(uiTexture_);
+	}
+
+	for (const auto& sprite : heartSprites_) {
+		if (sprite) {
+			sprite->Draw(textureHeart_);
+		}
 	}
 
 	// エフェクト描画

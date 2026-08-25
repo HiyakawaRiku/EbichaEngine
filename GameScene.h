@@ -88,7 +88,16 @@ private:
 	// オーディオハンドル & テクスチャ
 	uint32_t seHandle_ = 0;
 	uint32_t bgmHandle_ = 0;
-	TextureHandle textureHandle_;
+
+	// ハート表示用のSpriteコンテナ (3つ分)
+	static inline const int kHeartCount = 3;
+	std::vector<std::unique_ptr<Sprite>> heartSprites_;
+	TextureHandle textureHeart_ = 0; // 既存の変数を利用
+
+	std::vector<std::unique_ptr<Sprite>> sprites_;
+
+	std::unique_ptr<Sprite> uiSprite_ = nullptr;
+	TextureHandle uiTexture_ = 0;
 
 	BlendMode blendMode_ = BlendMode::kNormal;
 

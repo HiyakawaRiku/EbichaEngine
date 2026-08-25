@@ -1,6 +1,7 @@
 #pragma once
 #include <memory>
 #include "EbichaEngine.h"
+#include "FadeManager.h"
 
 class GameOverScene
 {
