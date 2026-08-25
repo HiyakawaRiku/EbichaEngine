@@ -36,8 +36,6 @@ void FadeManager::StartFadeIn(float duration) {
 void FadeManager::Update() {
     if (state_ == State::None) return;
 
-
-    // 60FPS想定のデルタタイム（DeltaTime管理クラスがあればそちらに差し替え）
     constexpr float kDeltaTime = 1.0f / 60.0f;
     timer_ += kDeltaTime;
 
@@ -47,26 +45,31 @@ void FadeManager::Update() {
     if (state_ == State::FadeOut) {
         alpha_ = rate; // 0.0 -> 1.0
         if (rate >= 1.0f) {
+            alpha_ = 1.0f; // フェードアウト完了状態を保持
             state_ = State::None;
         }
     }
     else if (state_ == State::FadeIn) {
         alpha_ = 1.0f - rate; // 1.0 -> 0.0
         if (rate >= 1.0f) {
+            alpha_ = 0.0f; // フェードイン完了状態を保持
             state_ = State::None;
         }
     }
-    sprite_->Update();
+
+    // ★ Sprite にアルファ値を適用してから Update() を呼ぶことで定数バッファを更新
+    if (sprite_) {
+        sprite_->color = { 0.0f, 0.0f, 0.0f, alpha_ };
+        sprite_->Update();
+    }
 }
 
 void FadeManager::Draw() {
-    if (alpha_ <= 0.0f) return;
+    // アルファ値が 0 以下なら描画しない
+    if (alpha_ <= 0.0f || !sprite_) return;
 
-    sprite_->color = { 0.0f,0.0f,0.0f,alpha_ };
-    DirectXCommon::GetInstance()->SetPipeline(PipelineType::kParticle, BlendMode::kNormal, DepthWrite::kDisable);
+    // ★ PipelineType::kObject3D を使用する（kParticle から変更）
+    DirectXCommon::GetInstance()->SetPipeline(PipelineType::kObject3D, BlendMode::kNormal, DepthWrite::kDisable);
+
     sprite_->Draw(whiteTexture_);
-    // =========================================================
-    // 先ほど確認できたフェード用の描画処理をここに記述
-    // （例: alpha_ の値をアルファ値として適用した黒スプライトの描画）
-    // =========================================================
 }
