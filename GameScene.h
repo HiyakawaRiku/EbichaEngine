@@ -94,6 +94,11 @@ private:
 	std::vector<std::unique_ptr<Sprite>> heartSprites_;
 	TextureHandle textureHeart_ = 0; // 既存の変数を利用
 
+	// 敵HPバー用Sprite & テクスチャ
+	std::unique_ptr<Sprite> enemyHpBarBg_ = nullptr;   // 下地（黒/グレー背景）
+	std::unique_ptr<Sprite> enemyHpBarFill_ = nullptr; // HP本体（赤/緑バー）
+	TextureHandle whiteTexture_ = 0;
+
 	std::vector<std::unique_ptr<Sprite>> sprites_;
 
 	std::unique_ptr<Sprite> uiSprite_ = nullptr;

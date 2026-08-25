@@ -36,6 +36,27 @@ void GameScene::Initialize() {
 		characters_.push_back(std::move(hatSphere));
 	}
 
+	// 1. FadeManagerと同様に白テクスチャをロード[cite: 1]
+	whiteTexture_ = TextureManager::GetInstance()->Load("resources/white1280x720.png", DirectXCommon::GetInstance()->GetCommandList());
+
+	// バーの表示位置と基本サイズの設定
+	const Vector3 kBarPos = { 440.0f, 40.0f ,0.0f}; // 画面中央上部など
+	const Vector2 kBarSize = { 400.0f, 20.0f }; // 幅400px, 高さ20px
+
+	// 2. HPバー背景（黒色の枠）
+	enemyHpBarBg_ = std::make_unique<Sprite>();
+	enemyHpBarBg_->Initialize();
+	enemyHpBarBg_->transform.translate = kBarPos;
+	enemyHpBarBg_->size = kBarSize;
+	enemyHpBarBg_->color = { 0.1f, 0.1f, 0.1f, 0.8f }; // 黒色（半透明）
+
+	// 3. HPバー本体（赤色）
+	enemyHpBarFill_ = std::make_unique<Sprite>();
+	enemyHpBarFill_->Initialize();
+	enemyHpBarFill_->transform.translate = kBarPos;
+	enemyHpBarFill_->size = kBarSize;
+	enemyHpBarFill_->color = { 0.9f, 0.1f, 0.1f, 1.0f }; // 赤色
+
 	// =========================================================
 	// 背景・カメラ等の初期化
 	// =========================================================
@@ -70,13 +91,13 @@ void GameScene::Initialize() {
 
 	// ハートSprite（3つ）の初期化[cite: 8]
 	heartSprites_.clear();
-	const Vector2 kInitialPos = { 50.0f, 50.0f }; // 1つ目のハートの位置 (X, Y)
+	const Vector2 kInitialPos = { 30.0f, 600.0f }; // 1つ目のハートの位置 (X, Y)
 	const float kSpacing = 64.0f;                 // ハート同士の間隔
 
 	for (int i = 0; i < kHeartCount; ++i) {
 		auto sprite = std::make_unique<Sprite>();
 		sprite->Initialize();
-		sprite->size = { 48.0f, 48.0f }; // ハートのサイズ
+		sprite->size = { 100.0f, 100.0f }; // ハートのサイズ
 		sprite->color = { 1.0f, 1.0f, 1.0f, 1.0f };
 		sprite->transform.translate = { kInitialPos.x + (i * kSpacing), kInitialPos.y };
 
@@ -173,6 +194,24 @@ void GameScene::Update() {
 			heartSprites_[i]->Update();
 		}
 	}
+
+	// 敵のHPバー更新
+	if (enemy_ && enemyHpBarFill_) {
+		int currentHp = enemy_->GetHp(); 
+			int maxHp = enemy_->GetMaxHp(); 
+
+			// HP割合の計算（0.0f ～ 1.0f）[cite: 8]
+			float hpRate = static_cast<float>(currentHp) / static_cast<float>(maxHp);
+		if (hpRate < 0.0f) hpRate = 0.0f;
+
+		// 最大幅（400px）に対してHP割合を掛けて幅を変更
+		constexpr float kMaxBarWidth = 400.0f;
+		enemyHpBarFill_->size.x = kMaxBarWidth * hpRate;
+
+		// Spriteの頂点データ・定数バッファの更新[cite: 1]
+		enemyHpBarBg_->Update();
+		enemyHpBarFill_->Update();
+	}
 }
 
 void GameScene::Draw() {
@@ -199,6 +238,15 @@ void GameScene::Draw() {
 		if (sprite) {
 			sprite->Draw(textureHeart_);
 		}
+	}
+
+	if (enemy_ && !enemy_->IsDead()) {
+		// FadeManagerと同じパイプライン設定を適用[cite: 1]
+		DirectXCommon::GetInstance()->SetPipeline(PipelineType::kObject3D, BlendMode::kNormal, DepthWrite::kDisable);
+
+		// 背景（黒） -> バー本体（赤）の順で描画
+		if (enemyHpBarBg_) enemyHpBarBg_->Draw(whiteTexture_);
+		if (enemyHpBarFill_) enemyHpBarFill_->Draw(whiteTexture_);
 	}
 
 	// エフェクト描画
