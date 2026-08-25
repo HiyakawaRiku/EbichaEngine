@@ -6,6 +6,8 @@
 #include "GameOverScene.h"
 #include "ClearScene.h"
 
+#include "FadeManager.h"
+
 enum class Scene {
 	kUnknown = 0,
 	kTitle,
@@ -44,7 +46,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	titleScene = new TitleScene();
 	titleScene->Initialize();
 
-
+	FadeManager::GetInstance()->Initialize();
 
 	MSG msg{};
 
@@ -64,11 +66,14 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			ImGui::NewFrame();
 #endif
 			Input::GetInstance()->Update();
+			FadeManager::GetInstance()->Update();
+
 
 			// シーンの更新と描画
 			ChangeScene();
 			UpdateScene();
 			DrawScene();
+			FadeManager::GetInstance()->Draw();
 
 			// 描画後処理
 			DirectXCommon::GetInstance()->PostDraw();
@@ -116,6 +121,9 @@ void ChangeScene()
 			scene = Scene::kGame;
 			gameScene = new GameScene();
 			gameScene->Initialize();
+
+			// 新しいシーンに切り替わったらフェードインを開始
+			FadeManager::GetInstance()->StartFadeIn(0.5f);
 			return;
 		}
 		break;
@@ -129,6 +137,8 @@ void ChangeScene()
 			scene = Scene::kGameOver;
 			gameOverScene = new GameOverScene();
 			gameOverScene->Initialize();
+
+			FadeManager::GetInstance()->StartFadeIn(0.5f);
 			return;
 		}
 		else if (gameScene && gameScene->IsFinished()) {
@@ -139,35 +149,13 @@ void ChangeScene()
 			scene = Scene::kClear;
 			clearScene = new ClearScene();
 			clearScene->Initialize();
+
+			FadeManager::GetInstance()->StartFadeIn(0.5f);
 			return;
 		}
 		break;
 
-	case Scene::kGameOver:
-		if (gameOverScene && gameOverScene->IsFinished()) {
-			gameOverScene->Finalize();
-			delete gameOverScene;
-			gameOverScene = nullptr;
-
-			scene = Scene::kTitle;
-			titleScene = new TitleScene();
-			titleScene->Initialize();
-			return;
-		}
-		break;
-
-	case Scene::kClear:
-		if (clearScene && clearScene->IsFinished()) {
-			clearScene->Finalize();
-			delete clearScene;
-			clearScene = nullptr;
-
-			scene = Scene::kTitle;
-			titleScene = new TitleScene();
-			titleScene->Initialize();
-			return;
-		}
-		break;
+		// GameOver, Clear も同様に FadeManager::GetInstance()->StartFadeIn(0.5f); を挿入
 	}
 }
 

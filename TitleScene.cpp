@@ -9,27 +9,40 @@ void TitleScene::Initialize()
 
 	activeCamera_ = std::make_unique<Camera>();
 	activeCamera_->Initialize();
+
+    DirectXCommon::GetInstance()->SetBlendMode(blendMode_);
 }
 
 void TitleScene::Update()
 {
-	if (Input::GetInstance()->TriggerKey(DIK_SPACE)) {
-		finished_ = true;
-	}
-	activeCamera_->Update();
+    // フェード中でなければ入力判定
+    if (!FadeManager::GetInstance()->IsFading() && !finished_) {
+        if (Input::GetInstance()->TriggerKey(DIK_SPACE)) {
+            // フェードアウト開始
+            FadeManager::GetInstance()->StartFadeOut(0.5f);
+        }
+    }
 
-	if (model_) {
-		model_->Update(activeCamera_.get());
-	}
+    // フェードアウトが完了したらシーン終了フラグを立てる
+    if (FadeManager::GetInstance()->IsFadeOutFinished()) {
+        finished_ = true;
+    }
+    activeCamera_->Update();
+
+    FadeManager::GetInstance()->Update();
+    if (model_) {
+        model_->Update(activeCamera_.get());
+    }
 }
 
 void TitleScene::Draw()
 {
-	DirectXCommon::GetInstance()->SetPipeline(PipelineType::kObject3D, BlendMode::kNormal, DepthWrite::kEnable);
+	DirectXCommon::GetInstance()->SetPipeline(PipelineType::kObject3D, BlendMode::kAdd, DepthWrite::kEnable);
 
 	if (model_) {
 		model_->Draw();
 	}
+
 
 	DirectXCommon::GetInstance()->SetPipeline(PipelineType::kParticle, BlendMode::kAdd, DepthWrite::kDisable);
 

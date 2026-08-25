@@ -2,6 +2,7 @@
 #include <memory>
 #include "EbichaEngine.h"
 #include "TitleLogo.h"
+#include "FadeManager.h"
 
 class TitleScene
 {
@@ -23,4 +24,6 @@ private:
 
 	std::unique_ptr<Camera> activeCamera_ = nullptr;
 	std::unique_ptr<TitleLogo> model_ = nullptr;
+	float testAlpha_ = 1.0f;
+	BlendMode blendMode_ = BlendMode::kAdd;
 };

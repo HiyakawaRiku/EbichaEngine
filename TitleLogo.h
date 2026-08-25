@@ -4,7 +4,7 @@
 class TitleLogo
 {
 public:
-	~TitleLogo(); // デストラクタを追加
+	~TitleLogo();
 
 	void Initialize();
 	void Update(Camera* activeCamera_);
@@ -15,5 +15,9 @@ public:
 	TextureHandle textureHandle_ = TextureManager::kInvalidHandle;
 
 private:
-	Camera* activeCamera_ = nullptr; // カメラ参照保持用
+	Camera* activeCamera_ = nullptr;
+
+	// アニメーション用の変数追加
+	float timer_ = 0.0f;
+	Vector3 initialPosition_ = { 0.0f, 0.0f, 0.0f }; // 初期位置
 };

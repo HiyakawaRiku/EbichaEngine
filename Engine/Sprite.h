@@ -16,10 +16,15 @@ public:
 	Vector2 size = { 100.0f, 100.0f };
 
 	void Initialize();
+
+	// ★ カメラを指定しない Update (2DUI/フェード用)
+	void Update(float screenWidth = 1280.0f, float screenHeight = 720.0f);
+
+	// ★ 既存の 3Dカメラを使用する Update
 	void Update(Camera* camera);
+
 	void Draw(TextureHandle textureHandle);
 
-	// ★エラー回避用: materialData_ へのアクセサ（必要に応じて外部から直接触れるようにする）
 	Material* GetMaterialData() const { return materialData_; }
 
 private:
