@@ -128,29 +128,44 @@ void ChangeScene()
 		break;
 
 	case Scene::kGame:
-		if (gameScene && gameScene->IsDead()) {
+		// 1. ポーズ画面等からタイトルへ戻る判定
+		if (gameScene && gameScene->IsReturnToTitle()) {
 			gameScene->Finalize();
 			delete gameScene;
 			gameScene = nullptr;
 
-			scene = Scene::kGameOver;
-			gameOverScene = new GameOverScene();
-			gameOverScene->Initialize();
+			scene = Scene::kTitle;
+			titleScene = new TitleScene();
+			titleScene->Initialize();
 
 			FadeManager::GetInstance()->StartFadeIn(0.5f);
 			return;
 		}
+		// 2. プレイヤー死亡（ゲームオーバー）[cite: 3]
+		else if (gameScene && gameScene->IsDead()) {
+			gameScene->Finalize(); 
+				delete gameScene; 
+				gameScene = nullptr; 
+
+				scene = Scene::kGameOver; 
+				gameOverScene = new GameOverScene(); 
+				gameOverScene->Initialize(); 
+
+				FadeManager::GetInstance()->StartFadeIn(0.5f); 
+				return; 
+		}
+		// 3. ゲームクリア[cite: 3]
 		else if (gameScene && gameScene->IsFinished()) {
-			gameScene->Finalize();
-			delete gameScene;
-			gameScene = nullptr;
+			gameScene->Finalize(); 
+				delete gameScene; 
+				gameScene = nullptr; 
 
-			scene = Scene::kClear;
-			clearScene = new ClearScene();
-			clearScene->Initialize();
+				scene = Scene::kClear; 
+				clearScene = new ClearScene(); 
+				clearScene->Initialize(); 
 
-			FadeManager::GetInstance()->StartFadeIn(0.5f);
-			return;
+				FadeManager::GetInstance()->StartFadeIn(0.5f); 
+				return; 
 		}
 		break;
 	case Scene::kGameOver:

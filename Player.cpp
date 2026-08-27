@@ -11,7 +11,7 @@ void Player::Initialize()
 
     // 親クラスの初期化関数に渡す
     BaseCharacter::Initialize("sphere", partConfigs, "resources/icosphere.png");
-    transformBase_.translate = { 0.0f, 1.0f, 0.0f };
+    transformBase_.translate = { 0.0f, 1.0f, -30.0f };
 
     InitializeFloatingGimmick();
 

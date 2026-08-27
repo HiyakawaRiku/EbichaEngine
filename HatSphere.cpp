@@ -17,6 +17,7 @@ void HatSphere::Initialize(const Vector3& initialPos)
     velocity_ = { 0.0f, 0.0f, 0.0f };
     isDead_ = false;
     disappearTimer_ = 0.0f;
+    
 
     if (modelBody_) {
         modelBody_->transform.scale = { 1.0f, 1.0f, 1.0f };
@@ -130,7 +131,7 @@ void HatSphere::Update(Camera* activeCamera)
             modelBody_->color = { 1.0f, 0.2f, 0.2f, 1.0f }; // 赤色
         }
         else {
-            modelBody_->color = { 1.0f, 1.0f, 1.0f, 1.0f }; // 通常色
+            modelBody_->color = { 0.0f, 1.0f, 1.0f, 1.0f }; // 通常色
         }
     }
 

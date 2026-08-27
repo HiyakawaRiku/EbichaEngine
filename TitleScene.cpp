@@ -11,6 +11,14 @@ void TitleScene::Initialize()
 	activeCamera_->Initialize();
 
     DirectXCommon::GetInstance()->SetBlendMode(blendMode_);
+
+    uiTexture_ = TextureManager::GetInstance()->Load("resources/ground_snow.png", DirectXCommon::GetInstance()->GetCommandList());
+
+    uiSprite_ = std::make_unique<Sprite>();
+    uiSprite_->Initialize();
+    uiSprite_->size = { 1280.0f, 720.0f };                 // 画像サイズに合わせて適宜調整してください
+    //uiSprite_->transform.translate = { 320.0f, 180.0f, 0.0f }; // 画面中央付近に配置（座標は適宜調整）
+    uiSprite_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
 }
 
 void TitleScene::Update()
@@ -33,15 +41,23 @@ void TitleScene::Update()
     if (model_) {
         model_->Update(activeCamera_.get());
     }
+
+    if (uiSprite_) {
+        uiSprite_->Update();
+    }
 }
 
 void TitleScene::Draw()
 {
+        // FadeManagerと同じパイプライン設定を使用
+        DirectXCommon::GetInstance()->SetPipeline(PipelineType::kObject3D, BlendMode::kNormal, DepthWrite::kDisable);
+        uiSprite_->Draw(uiTexture_);
 	DirectXCommon::GetInstance()->SetPipeline(PipelineType::kObject3D, BlendMode::kAdd, DepthWrite::kEnable);
 
 	if (model_) {
 		model_->Draw();
 	}
+
 
 
 	DirectXCommon::GetInstance()->SetPipeline(PipelineType::kParticle, BlendMode::kAdd, DepthWrite::kDisable);

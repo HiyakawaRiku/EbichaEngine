@@ -79,7 +79,7 @@ private:
     float floatingAmplitude = 0.1f;
 
     // --- HP・無敵時間用パラメータ ---
-    static inline const int kMaxHp_ = 100;               // 最大HP
+    static inline const int kMaxHp_ = 3;               // 最大HP
     int hp_ = kMaxHp_;                                 // 現在HP
 
     bool isInvincible_ = false;                        // 被弾後の無敵フラグ

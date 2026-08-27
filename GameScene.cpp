@@ -1,6 +1,21 @@
 #include "GameScene.h"
 
 void GameScene::Initialize() {
+	phase_ = Phase::kExplain;
+
+	// ExplainLogo 初期化
+	explainLogo_ = std::make_unique<ExplainLogo>();
+	explainLogo_->Initialize();
+
+	// 1. FadeManagerと同様に白テクスチャをロード[cite: 1]
+	whiteTexture_ = TextureManager::GetInstance()->Load("resources/white1280x720.png", DirectXCommon::GetInstance()->GetCommandList());
+
+	// ポーズ背景用半透明オーバーレイ
+	pauseSprite_ = std::make_unique<Sprite>();
+	pauseSprite_->Initialize();
+	pauseSprite_->size = { 1280.0f, 720.0f };
+	pauseSprite_->transform.translate = { 0.0f, 0.0f, 0.0f };
+	pauseSprite_->color = { 0.0f, 0.0f, 0.0f, 0.5f }; // 黒の半透明
 
 	// =========================================================
 	// キャラクターの生成と一括管理コンテナへの追加
@@ -36,11 +51,8 @@ void GameScene::Initialize() {
 		characters_.push_back(std::move(hatSphere));
 	}
 
-	// 1. FadeManagerと同様に白テクスチャをロード[cite: 1]
-	whiteTexture_ = TextureManager::GetInstance()->Load("resources/white1280x720.png", DirectXCommon::GetInstance()->GetCommandList());
-
 	// バーの表示位置と基本サイズの設定
-	const Vector3 kBarPos = { 440.0f, 40.0f ,0.0f}; // 画面中央上部など
+	const Vector3 kBarPos = { 440.0f, 40.0f ,0.0f }; // 画面中央上部など
 	const Vector2 kBarSize = { 400.0f, 20.0f }; // 幅400px, 高さ20px
 
 	// 2. HPバー背景（黒色の枠）
@@ -89,7 +101,7 @@ void GameScene::Initialize() {
 
 	textureHeart_ = TextureManager::GetInstance()->Load("resources/heart.png", DirectXCommon::GetInstance()->GetCommandList());
 
-	// ハートSprite（3つ）の初期化[cite: 8]
+	// ハートSprite（3つ）の初期化
 	heartSprites_.clear();
 	const Vector2 kInitialPos = { 30.0f, 600.0f }; // 1つ目のハートの位置 (X, Y)
 	const float kSpacing = 64.0f;                 // ハート同士の間隔
@@ -111,18 +123,93 @@ void GameScene::Initialize() {
 	skydome_->Update(activeCamera_);
 	ground_->Update(activeCamera_);
 
+	// 1. キャラクターの更新
+	for (auto& character : characters_) {
+		if (character) character->Update(activeCamera_);
+	}
+
 	// 1. テクスチャのロード (FadeManagerと同様にTextureManagerを使用)
 	uiTexture_ = TextureManager::GetInstance()->Load("resources/heart.png", DirectXCommon::GetInstance()->GetCommandList());
+
+	//// 2. Spriteの生成と初期化
+	//uiSprite_ = std::make_unique<Sprite>();
+	//uiSprite_->Initialize();
+	//uiSprite_->size = { 64.0f, 64.0f };   // 任意のサイズを指定
+	//uiSprite_->color = { 1.0f, 1.0f, 1.0f, 1.0f }; // カラー・アルファ値
+
+	uiTexture_ = TextureManager::GetInstance()->Load("resources/explaintext.png", DirectXCommon::GetInstance()->GetCommandList());
 
 	// 2. Spriteの生成と初期化
 	uiSprite_ = std::make_unique<Sprite>();
 	uiSprite_->Initialize();
-	uiSprite_->size = { 64.0f, 64.0f };   // 任意のサイズを指定
-	uiSprite_->color = { 1.0f, 1.0f, 1.0f, 1.0f }; // カラー・アルファ値
-	// uiSprite_->position = { 100.0f, 100.0f };  // 必要に応じて位置等を設定
+	uiSprite_->size = { 1280.0f, 720.0f };                 // 画像サイズに合わせて適宜調整してください
+	//uiSprite_->transform.translate = { 320.0f, 180.0f, 0.0f }; // 画面中央付近に配置（座標は適宜調整）
+	uiSprite_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+// 仮のポーズテキストスプライト初期化 (resources/explaintext.png を仮使用)
+	pauseTextTexture_ = TextureManager::GetInstance()->Load("resources/pausetext.png", DirectXCommon::GetInstance()->GetCommandList());
+
+	pauseTextSprite_ = std::make_unique<Sprite>();
+	pauseTextSprite_->Initialize();
+	pauseTextSprite_->size = { 640.0f, 360.0f }; // 適宜調整
+	pauseTextSprite_->transform.translate = { 320.0f, 180.0f, 0.0f }; // 画面中央付近
+	pauseTextSprite_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
 }
 
 void GameScene::Update() {
+	// カメラ切り替え
+	activeCamera_ = useDebugCamera_ ? debugCamera_.get() : &followCamera_->GetCamera();
+
+	// ---------------------------------------------------------
+	// 1. 説明フェーズおよびポーズフェーズの処理
+	// ---------------------------------------------------------
+	if (phase_ == Phase::kExplain) {
+		if (explainLogo_) {
+			explainLogo_->Update(activeCamera_);
+		}
+
+		// ENTERキーまたはSPACEキーでゲーム開始
+		if (Input::GetInstance()->TriggerKey(DIK_RETURN) || Input::GetInstance()->TriggerKey(DIK_SPACE)) {
+			phase_ = Phase::kPlaying;
+			explainLogo_.reset(); // 説明用ロゴのメモリ解放
+		}
+
+		// 背景のみ動かし、ゲームオブジェクトの更新は停止
+		skydome_->Update(activeCamera_);
+		ground_->Update(activeCamera_);
+		return;
+	}
+	else if (phase_ == Phase::kPlaying) {
+		// Pキー または ESCキーでポーズ画面へ
+		if (Input::GetInstance()->TriggerKey(DIK_P) || Input::GetInstance()->TriggerKey(DIK_ESCAPE)) {
+			phase_ = Phase::kPause;
+		}
+	}
+	else if (phase_ == Phase::kPause) {
+		// Pキー または ESCキーでポーズ解除
+		if (Input::GetInstance()->TriggerKey(DIK_P) || Input::GetInstance()->TriggerKey(DIK_ESCAPE)) {
+			phase_ = Phase::kPlaying;
+		}
+		// Enterキーでタイトルへ戻る
+		else if (Input::GetInstance()->TriggerKey(DIK_RETURN)) {
+			isReturnToTitle_ = true;
+			return;
+		}
+
+		if (pauseSprite_) {
+			pauseSprite_->Update();
+		}
+		if (pauseTextSprite_) {
+			pauseTextSprite_->Update();
+		}
+
+		// ポーズ中はゲームの更新をストップ
+		return;
+	}
+
+	// ---------------------------------------------------------
+	// 2. 通常プレイ時 (Phase::kPlaying) の更新
+	// ---------------------------------------------------------
 	followCamera_->Update();
 	normalCamera_->Update();
 	debugCamera_->Update();
@@ -155,53 +242,45 @@ void GameScene::Update() {
 	DrawDebugGui();
 #endif
 
-	// カメラ切替
-	activeCamera_ = useDebugCamera_ ? debugCamera_.get() : &followCamera_->GetCamera();
-
 	// 背景・エフェクトの更新
 	skydome_->Update(activeCamera_);
 	ground_->Update(activeCamera_);
 	particle_->Update(activeCamera_);
 
 	if (uiSprite_) {
-		// 色やアルファ値を動かす場合はここで変更設定を行えます
 		uiSprite_->Update();
 	}
 
 	if (player_) {
-		int currentHp = player_->GetHp(); 
-			int maxHp = player_->GetMaxHp(); 
+		int currentHp = player_->GetHp();
+		int maxHp = player_->GetMaxHp();
 
-			// 1つあたりのハートが表すHP閾値 (例: 10/3 = 3.33)
-			float hpPerHeart = static_cast<float>(maxHp) / kHeartCount;
+		// 1つあたりのハートが表すHP閾値
+		float hpPerHeart = static_cast<float>(maxHp) / kHeartCount;
 
 		for (int i = 0; i < kHeartCount; ++i) {
 			if (!heartSprites_[i]) continue;
 
-			// 各ハートが必要とする最低HP (1つ目: 0, 2つ目: 3.33, 3つ目: 6.66...)
 			float thresholdHp = i * hpPerHeart;
 
 			if (currentHp > thresholdHp) {
-				// HPが残っている場合は通常表示（不透明）
 				heartSprites_[i]->color.w = 1.0f;
 			}
 			else {
-				// HPが減ったら半透明（または 0.0f で完全消去）にする
 				heartSprites_[i]->color.w = 0.2f;
 			}
 
-			// 変形・色の変更を適用するために Update を呼ぶ
 			heartSprites_[i]->Update();
 		}
 	}
 
 	// 敵のHPバー更新
 	if (enemy_ && enemyHpBarFill_) {
-		int currentHp = enemy_->GetHp(); 
-			int maxHp = enemy_->GetMaxHp(); 
+		int currentHp = enemy_->GetHp();
+		int maxHp = enemy_->GetMaxHp();
 
-			// HP割合の計算（0.0f ～ 1.0f）[cite: 8]
-			float hpRate = static_cast<float>(currentHp) / static_cast<float>(maxHp);
+		// HP割合の計算（0.0f ～ 1.0f）
+		float hpRate = static_cast<float>(currentHp) / static_cast<float>(maxHp);
 		if (hpRate < 0.0f) hpRate = 0.0f;
 
 		// 最大幅（400px）に対してHP割合を掛けて幅を変更
@@ -218,19 +297,36 @@ void GameScene::Draw() {
 	DirectXCommon::GetInstance()->SetBlendMode(blendMode_);
 	DirectXCommon::GetInstance()->SetPipeline(PipelineType::kObject3D, blendMode_, DepthWrite::kEnable);
 
+	if (phase_ == Phase::kPause) {
+		DirectXCommon::GetInstance()->SetPipeline(PipelineType::kObject3D, BlendMode::kNormal, DepthWrite::kDisable);
+
+		// 背景オーバーレイ
+		if (pauseSprite_) {
+			pauseSprite_->Draw(whiteTexture_);
+		}
+		// ポーズテキスト（仮スプライト）
+		if (pauseTextSprite_) {
+			pauseTextSprite_->Draw(pauseTextTexture_);
+		}
+	}
+
 	// 背景の描画
 	if (skydome_) skydome_->Draw();
 	if (ground_) ground_->Draw();
 
+	// 説明ロゴの描画 (kExplain フェーズのみ)
+	if (phase_ == Phase::kExplain && explainLogo_) {
+		explainLogo_->Draw();
+	}
 
 	// キャラクター一括描画
 	for (const auto& character : characters_) {
 		if (character) character->Draw();
 	}
+
 	if (uiSprite_) {
 		// FadeManagerと同じパイプライン設定を使用
 		DirectXCommon::GetInstance()->SetPipeline(PipelineType::kObject3D, BlendMode::kNormal, DepthWrite::kDisable);
-
 		uiSprite_->Draw(uiTexture_);
 	}
 
@@ -251,7 +347,21 @@ void GameScene::Draw() {
 
 	// エフェクト描画
 	DirectXCommon::GetInstance()->SetPipeline(PipelineType::kParticle, BlendMode::kAdd, DepthWrite::kDisable);
-	particle_->Draw();
+	//particle_->Draw();
+
+	// ポーズ用オーバーレイおよび文字の描画
+	if (phase_ == Phase::kPause && pauseSprite_) {
+		DirectXCommon::GetInstance()->SetPipeline(PipelineType::kObject3D, BlendMode::kNormal, DepthWrite::kDisable);
+		pauseSprite_->Draw(pauseTextTexture_);
+
+#ifdef _DEBUG
+		ImGui::SetNextWindowPos(ImVec2(560.0f, 320.0f));
+		ImGui::Begin("PauseMenu", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysAutoResize);
+		ImGui::Text("=== PAUSE ===");
+		ImGui::Text("Press 'P' or 'ESC' to Resume");
+		ImGui::End();
+#endif
+	}
 
 	if (useDebugCamera_) {
 		debugCamera_->DrawFrustum(normalCamera_.get());
@@ -350,18 +460,18 @@ void GameScene::UpdateCollisions() {
 	if (player_ && enemy_ && !player_->IsDead() && !enemy_->IsDead()) {
 		if (Physics3D::IsCollision(player_->GetColliderSphere(), enemy_->GetColliderSphere())) {
 			if (player_->IsDashAttacking()) {
-				enemy_->TakeDamage(3);
+				//enemy_->TakeDamage(3);
 
-				if (particle_) {
-					particle_->EmitAt(enemy_->GetTransform().translate, 20);
-				}
+				//if (particle_) {
+				//	particle_->EmitAt(enemy_->GetTransform().translate, 20);
+				//}
 			}
 			else if (player_->IsJumping() && player_->GetJumpVelocityY() < 0.0f) {
-				enemy_->TakeDamage(5);
+				//enemy_->TakeDamage(5);
 
-				if (particle_) {
-					particle_->EmitAt(player_->GetTransform().translate, 25);
-				}
+				//if (particle_) {
+				//	particle_->EmitAt(player_->GetTransform().translate, 25);
+				//}
 			}
 			else if (enemy_->IsAttacking()) {
 				player_->TakeDamage(2);
@@ -374,8 +484,8 @@ void GameScene::UpdateCollisions() {
 				player_->TakeDamage(1);
 
 				if (particle_) {
-                    particle_->EmitAt(player_->GetTransform().translate, 25);
-                }
+					particle_->EmitAt(player_->GetTransform().translate, 25);
+				}
 			}
 		}
 	}

@@ -22,8 +22,8 @@ Ground::~Ground()
 void Ground::Initialize()
 {
 	model_ = new Model();
-	model_->Initialize("plane");
-	textureHandle_ = TextureManager::GetInstance()->Load("resources/ground_leaf.png", DirectXCommon::GetInstance()->GetCommandList());
+	model_->Initialize("ground");
+	textureHandle_ = TextureManager::GetInstance()->Load("resources/ground_snow.png", DirectXCommon::GetInstance()->GetCommandList());
 
 
 	model_->SetSpotLightDecay(0.0f);
@@ -41,9 +41,10 @@ void Ground::Update(Camera* activeCamera)
 	float rotationDeg = 90.0f; // 度数法で指定
 	float theta = MathUtils::ToRadians(rotationDeg); // ラジアン(θ)に変換
 
-	model_->transform.rotate.x = theta;
-	model_->transform.scale.x = 1000.0f;
-	model_->transform.scale.y = 1000.0f;
+	//model_->transform.rotate.x = theta;
+	model_->transform.scale.x = 30.0f;
+	model_->transform.scale.y = 30.0f;
+	model_->transform.scale.z = 30.0f;
 	
 #ifdef _DEBUG
 	ImGui::Begin("Settings");

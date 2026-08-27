@@ -19,8 +19,18 @@
 #include "Particle.h"
 #include "HatSphere.h"
 
+// ロゴクラス
+#include "explainLogo.h"
+
 class GameScene {
 public:
+	// ゲームの進行フェーズ
+	enum class Phase {
+		kExplain, // ゲーム開始前の説明表示中
+		kPlaying, // 通常ゲーム中
+		kPause    // ポーズ中
+	};
+
 	GameScene() = default;
 	~GameScene() = default;
 
@@ -70,6 +80,16 @@ private:
 	bool dead_ = false;
 	bool finished_ = false; // 終了フラグ
 
+	// フェーズ管理
+	Phase phase_ = Phase::kExplain;
+
+	// ExplainLogo
+	std::unique_ptr<ExplainLogo> explainLogo_ = nullptr;
+
+	// ポーズ表示用オーバーレイ
+	std::unique_ptr<Sprite> pauseSprite_ = nullptr;
+	std::unique_ptr<Sprite> explainSprite_ = nullptr;
+
 
 	// ランダム生成用
 	std::random_device seedGenerator_;
@@ -92,7 +112,7 @@ private:
 	// ハート表示用のSpriteコンテナ (3つ分)
 	static inline const int kHeartCount = 3;
 	std::vector<std::unique_ptr<Sprite>> heartSprites_;
-	TextureHandle textureHeart_ = 0; // 既存の変数を利用
+	TextureHandle textureHeart_ = 0;
 
 	// 敵HPバー用Sprite & テクスチャ
 	std::unique_ptr<Sprite> enemyHpBarBg_ = nullptr;   // 下地（黒/グレー背景）
@@ -122,4 +142,17 @@ private:
 	std::unique_ptr<Ground> ground_ = nullptr;
 	std::unique_ptr<FollowCamera> followCamera_ = nullptr;
 	std::unique_ptr<Particle> particle_ = nullptr;
+
+	// GameScene.h に追加・変更
+
+public:
+	// タイトルへ戻るフラグの Getter
+	bool IsReturnToTitle() const { return isReturnToTitle_; }
+
+private:
+	bool isReturnToTitle_ = false; // タイトル遷移フラグ[cite: 2]
+
+	// ポーズ用テキスト（仮スプライト）関連
+	std::unique_ptr<Sprite> pauseTextSprite_ = nullptr;
+	TextureHandle pauseTextTexture_ = 0;
 };

@@ -86,15 +86,31 @@ void Enemy::UpdateNormal()
     if (targetPlayer_) {
         Vector3 playerPos = targetPlayer_->GetTransform().translate;
         Vector3 diff = playerPos - transformBase_.translate;
-        float targetAngle = std::atan2(diff.x, diff.z);
+        diff.y = 0.0f; // Y軸は無視
 
-        modelBody_->transform.rotate.y = EMath::LerpShortAngle(
-            modelBody_->transform.rotate.y, targetAngle, 0.1f
-        );
+        float length = std::sqrt(diff.x * diff.x + diff.z * diff.z);
+        if (length > 0.001f) {
+            Vector3 moveDir = { diff.x / length, 0.0f, diff.z / length };
+
+            // ★ プレイヤーとの距離が一定以上離れていれば接近する
+            if (length > 3.0f) {
+                float moveSpeed = 0.1f; // 移動速度
+                transformBase_.translate += moveDir * moveSpeed;
+            }
+
+            float targetAngle = std::atan2(diff.x, diff.z);
+            modelBody_->transform.rotate.y = EMath::LerpShortAngle(
+                modelBody_->transform.rotate.y, targetAngle, 0.15f
+            );
+        }
     }
 
+    // HPが30%以下なら発狂状態として攻撃間隔やスピードを爆発的に引き上げる
+    float hpRatio = static_cast<float>(hp_) / static_cast<float>(kMaxHp_);
+    float currentAttackInterval = (hpRatio < 0.5f) ? 50.0f : kAttackInterval;
+
     attackIntervalTimer_ += 1.0f;
-    if (attackIntervalTimer_ >= kAttackInterval) {
+    if (attackIntervalTimer_ >= currentAttackInterval) {
         state_ = State::AttackPrep;
         attackIntervalTimer_ = 0.0f;
         attackStateTimer_ = 0.0f;
@@ -139,6 +155,22 @@ void Enemy::UpdateAttack()
         else if (currentAttackType_ == AttackType::Charge || currentAttackType_ == AttackType::BouncingCharge) {
             modelBody_->transform.rotate.x = -0.4f;
             modelBody_->transform.scale = { 0.9f, 0.8f, 1.1f };
+        }
+        else if (currentAttackType_ == AttackType::Charge) {
+            // 突進中も少しだけプレイヤーの方へ向きを補正する
+            if (targetPlayer_) {
+                Vector3 diff = targetPlayer_->GetTransform().translate - transformBase_.translate;
+                diff.y = 0.0f;
+                float len = std::sqrt(diff.x * diff.x + diff.z * diff.z);
+                if (len > 0.001f) {
+                    Vector3 targetDir = { diff.x / len, 0.0f, diff.z / len };
+                    // 補正率 0.05f（値を大きくするほど強い追尾になる）
+                    chargeDirection_.x = EMath::Lerp(chargeDirection_.x, targetDir.x, 0.05f);
+                    chargeDirection_.z = EMath::Lerp(chargeDirection_.z, targetDir.z, 0.05f);
+                }
+            }
+
+            transformBase_.translate += chargeDirection_ * kAttackDashSpeed;
         }
         else {
             modelBody_->transform.scale = { 1.4f, 1.4f, 1.4f };

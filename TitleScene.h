@@ -26,4 +26,7 @@ private:
 
 	float testAlpha_ = 1.0f;
 	std::unique_ptr<TitleLogo> model_ = nullptr;
+
+	std::unique_ptr<Sprite> uiSprite_ = nullptr;
+	TextureHandle uiTexture_ = 0;
 };

@@ -60,7 +60,7 @@ private:
 
     // プレイヤーが投げて着地した後に消去されるまでのタイマー
     float thrownGroundTimer_ = 0.0f;
-    const float kMaxThrownGroundTime_ = 3.0f;
+    const float kMaxThrownGroundTime_ = 0.0f;
     bool thrownByPlayer_ = false;
 
     bool isDangerous_ = false;

@@ -1,4 +1,5 @@
 #include "ClearScene.h"
+#include <random> // ランダム位置生成用
 
 void ClearScene::Initialize()
 {
@@ -13,11 +14,6 @@ void ClearScene::Initialize()
     // パーティクルの初期化[cite: 6, 9]
     particle_ = std::make_unique<Particle>();
     particle_->Initialize();
-
-    // 例：初期化時に画面中央（原点）付近へパーティクルを発生させる
-    if (particle_) {
-        particle_->EmitAt({ 0.0f, 0.0f, 0.0f }, 50);
-    }
 }
 
 void ClearScene::Update()
@@ -38,23 +34,32 @@ void ClearScene::Update()
         model_->Update(camera_.get());
     }
 
-    // パーティクルの更新[cite: 6, 9]
+    // パーティクルの更新と上方からの持続発生[cite: 6, 9]
     if (particle_) {
-        particle_->Update(camera_.get());
+        // 1. 画面の上方（例: Y = 10〜15, X = -15〜15, Z = -5〜5）のランダムな位置を生成
+        static std::random_device seed;
+        static std::mt19937 engine(seed());
+        std::uniform_real_distribution<float> distX(-15.0f, 15.0f);
+        std::uniform_real_distribution<float> distY(10.0f, 15.0f);
+        std::uniform_real_distribution<float> distZ(-5.0f, 5.0f);
 
-        // 毎フレーム継続的に散らしたい場合の例
-        // particle_->EmitAt({ 0.0f, 0.0f, 0.0f }, 2);
+        // 2. 毎フレーム数個ずつ上から発生させる[cite: 9]
+        for (int i = 0; i < 3; ++i) { // 発生頻度・個数はお好みで調整
+            Vector3 spawnPos = { distX(engine), distY(engine), distZ(engine) };
+            particle_->EmitAt(spawnPos, 1);
+        }
+
+        particle_->Update(camera_.get());
     }
 }
 
 void ClearScene::Draw()
 {
-    // 3Dモデルの描画[cite: 6]
     if (model_) {
         model_->Draw();
     }
 
-    // パーティクル専用パイプラインへ切り替えて描画[cite: 9]
+    // パーティクルの描画[cite: 9]
     if (particle_) {
         DirectXCommon::GetInstance()->SetPipeline(PipelineType::kParticle, BlendMode::kAdd, DepthWrite::kDisable);
             particle_->Draw();
