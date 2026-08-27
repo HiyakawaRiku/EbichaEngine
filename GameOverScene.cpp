@@ -10,13 +10,16 @@ void GameOverScene::Initialize()
     camera_ = std::make_unique<Camera>();
     camera_->Initialize();
 
-    // スプライトとテクスチャの初期化[cite: 5]
     uiTexture_ = TextureManager::GetInstance()->Load("resources/ground_snow.png", DirectXCommon::GetInstance()->GetCommandList());
 
     uiSprite_ = std::make_unique<Sprite>();
     uiSprite_->Initialize();
     uiSprite_->size = { 1280.0f, 720.0f };
     uiSprite_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+    // 音声ファイルのロード & BGM再生開始 (ファイルパスは適宜調整してください)[cite: 7]
+    bgmHandle_ = Audio::GetInstance()->LoadAudioSource("Resources/gameover.mp3");
+    Audio::GetInstance()->PlayWave(bgmHandle_, false, 0.5f);
 }
 
 void GameOverScene::Update()
@@ -37,7 +40,6 @@ void GameOverScene::Update()
         model_->Update(camera_.get());
     }
 
-    // スプライトの更新[cite: 5]
     if (uiSprite_) {
         uiSprite_->Update();
     }
@@ -45,7 +47,6 @@ void GameOverScene::Update()
 
 void GameOverScene::Draw()
 {
-    // スプライトの描画[cite: 5]
     if (uiSprite_) {
         DirectXCommon::GetInstance()->SetPipeline(PipelineType::kObject3D, BlendMode::kNormal, DepthWrite::kDisable);
         uiSprite_->Draw(uiTexture_);
@@ -59,4 +60,8 @@ void GameOverScene::Draw()
 
 void GameOverScene::Finalize()
 {
+    // 音声リソースの解放[cite: 7]
+    if (Audio::GetInstance()) {
+        Audio::GetInstance()->Unload(bgmHandle_);
+    }
 }

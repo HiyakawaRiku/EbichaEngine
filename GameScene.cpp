@@ -474,7 +474,7 @@ void GameScene::UpdateCollisions() {
 				//}
 			}
 			else if (enemy_->IsAttacking()) {
-				player_->TakeDamage(2);
+				player_->TakeDamage(1);
 
 				if (particle_) {
 					particle_->EmitAt(player_->GetTransform().translate, 25);

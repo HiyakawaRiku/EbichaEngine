@@ -1,5 +1,6 @@
 #pragma once
 #include <memory>
+#include <cstdint> // uint32_t 用
 #include "EbichaEngine.h"
 #include "TitleLogo.h"
 #include "FadeManager.h"
@@ -29,4 +30,7 @@ private:
 
 	std::unique_ptr<Sprite> uiSprite_ = nullptr;
 	TextureHandle uiTexture_ = 0;
+
+	// BGM関連の変数追加[cite: 8]
+	uint32_t bgmHandle_ = 0;
 };

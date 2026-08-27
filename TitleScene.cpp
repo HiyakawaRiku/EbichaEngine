@@ -2,13 +2,13 @@
 
 void TitleScene::Initialize()
 {
-	finished_ = false;
+    finished_ = false;
 
-	model_ = std::make_unique<TitleLogo>();
-	model_->Initialize();
+    model_ = std::make_unique<TitleLogo>();
+    model_->Initialize();
 
-	activeCamera_ = std::make_unique<Camera>();
-	activeCamera_->Initialize();
+    activeCamera_ = std::make_unique<Camera>();
+    activeCamera_->Initialize();
 
     DirectXCommon::GetInstance()->SetBlendMode(blendMode_);
 
@@ -16,9 +16,12 @@ void TitleScene::Initialize()
 
     uiSprite_ = std::make_unique<Sprite>();
     uiSprite_->Initialize();
-    uiSprite_->size = { 1280.0f, 720.0f };                 // 画像サイズに合わせて適宜調整してください
-    //uiSprite_->transform.translate = { 320.0f, 180.0f, 0.0f }; // 画面中央付近に配置（座標は適宜調整）
+    uiSprite_->size = { 1280.0f, 720.0f };
     uiSprite_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+    // 音声ファイルのロード & BGM再生開始 (ファイルパスは適宜調整してください)
+    bgmHandle_ = Audio::GetInstance()->LoadAudioSource("Resources/466_BPM139.mp3");
+    Audio::GetInstance()->PlayWave(bgmHandle_, true, 0.5f);
 }
 
 void TitleScene::Update()
@@ -49,25 +52,26 @@ void TitleScene::Update()
 
 void TitleScene::Draw()
 {
-        // FadeManagerと同じパイプライン設定を使用
-        DirectXCommon::GetInstance()->SetPipeline(PipelineType::kObject3D, BlendMode::kNormal, DepthWrite::kDisable);
-        uiSprite_->Draw(uiTexture_);
-	DirectXCommon::GetInstance()->SetPipeline(PipelineType::kObject3D, BlendMode::kAdd, DepthWrite::kEnable);
+    // FadeManagerと同じパイプライン設定を使用
+    DirectXCommon::GetInstance()->SetPipeline(PipelineType::kObject3D, BlendMode::kNormal, DepthWrite::kDisable);
+    uiSprite_->Draw(uiTexture_);
+    DirectXCommon::GetInstance()->SetPipeline(PipelineType::kObject3D, BlendMode::kAdd, DepthWrite::kEnable);
 
-	if (model_) {
-		model_->Draw();
-	}
+    if (model_) {
+        model_->Draw();
+    }
 
-
-
-	DirectXCommon::GetInstance()->SetPipeline(PipelineType::kParticle, BlendMode::kAdd, DepthWrite::kDisable);
+    DirectXCommon::GetInstance()->SetPipeline(PipelineType::kParticle, BlendMode::kAdd, DepthWrite::kDisable);
 
 #ifdef _DEBUG
-	DebugRenderer::Flush(activeCamera_.get());
+    DebugRenderer::Flush(activeCamera_.get());
 #endif
 }
 
 void TitleScene::Finalize()
 {
-	// 必要に応じて個別のリソース解放を記述
+    // 音声リソースの解放[cite: 7]
+    if (Audio::GetInstance()) {
+        Audio::GetInstance()->Unload(bgmHandle_);
+    }
 }
