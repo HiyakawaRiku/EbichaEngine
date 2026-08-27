@@ -1,206 +1,237 @@
 #include "EbichaEngine.h"
 
+// シーンヘッダー
+#include "TitleScene.h"
+#include "GameScene.h"
+#include "GameOverScene.h"
+#include "ClearScene.h"
 
-//Windowsアプリでのエントリーポイント(main関数)
+#include "FadeManager.h"
+
+enum class Scene {
+	kUnknown = 0,
+	kTitle,
+	kGame,
+	kGameOver,
+	kClear
+};
+
+Scene scene = Scene::kUnknown;
+
+TitleScene* titleScene = nullptr;
+GameScene* gameScene = nullptr;
+GameOverScene* gameOverScene = nullptr;
+ClearScene* clearScene = nullptr;
+
+void ChangeScene();
+void UpdateScene();
+void DrawScene();
+
 int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
+	// エンジンの一括初期化
 	EbichaEngine* ebichaEngine = EbichaEngine::GetInstance();
 	ebichaEngine->Initialize();
 
 	DirectXCommon* dxCommon = DirectXCommon::GetInstance();
-	dxCommon->Initialize();
-	DebugRenderer::Initialize();
+	TextureManager::GetInstance()->Initialize(dxCommon->GetDevice(), dxCommon->GetSrvHeap());
 
-	Triangle* triangle = new Triangle;
-	triangle->Initialize({ -0.5f, -0.5f, 0.0f, 1.0f }, { 0.0f, 0.5f, 0.0f, 1.0f }, { 0.5f, -0.5f, 0.0f, 1.0f });
+	Audio* audio_ = Audio::GetInstance();
+	if (audio_) {
+		audio_->Initialize();
+	}
 
-	Triangle* triangle2 = new Triangle;
-	triangle2->Initialize({ -0.5f, -0.5f, 0.5f, 1.0f }, { 0.0f, 0.0f, 0.0f, 1.0f }, { 0.5f, -0.5f, -0.5f, 1.0f });
+	// 初期シーンの設定
+	scene = Scene::kTitle;
+	titleScene = new TitleScene();
+	titleScene->Initialize();
 
-	Sprite* sprite = new Sprite;
-	sprite->Initialize();
-
-	Sphere* sphere = new Sphere;
-	sphere->Initialize();
-
-
-	Model* model = new Model;
-	model->Initialize("resources", "fence.obj");
-
-	auto normalCamera = std::make_unique<Camera>();
-	auto debugCamera = std::make_unique<DebugCamera>();
-	debugCamera->Initialize();
-	Camera* activeCamera = normalCamera.get();
-	bool useDebugCamera = false;
-
-	//// 初期化
-	//DebugCamera debugCamera;
-	//debugCamera.Initialize();
-
-
-	// CPUで動かす用のTransformを作る
-	Transform transformSprite{ {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} };
-
-	Transform uvTransformSprite{
-		{1.0f, 1.0f, 1.0f},
-		{0.0f, 0.0f, 0.0f},
-		{0.0f, 0.0f, 0.0f}
-	};
-
-	bool useMonsterBall = true;
-
-	dxCommon->InitializeTexture("resources/uvChecker.png", 1);
-	dxCommon->InitializeTexture("resources/sky_sphere.png", 2);
-	dxCommon->InitializeTexture("resources/monsterBall.png", 3);
-	dxCommon->InitializeTexture("resources/ground_leaf.png", 4);
-	dxCommon->InitializeTexture("resources/fence.png", 4);
+	FadeManager::GetInstance()->Initialize();
 
 	MSG msg{};
-	//ウィンドウのxボタンが押されるまでループ
+
+	// メインループ
 	while (msg.message != WM_QUIT) {
-		// Windowにメッセージが来てたら最優先で処理させる
 		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
 		else {
+			// 描画前処理
+			DirectXCommon::GetInstance()->PreDraw();
 
-			dxCommon->PreDraw();
-
-			BYTE key[256] = {};
-			UpdateKeyState(dxCommon->keyboard);
-			dxCommon->keyboard->GetDeviceState(sizeof(key), key);
-
-			normalCamera->Update();
-
-			if (activeCamera != normalCamera.get()) {
-				activeCamera->Update();
-			}
-
-			ImGui::Begin("Settings");
-
-			// カメラ切り替え用のチェックボックス
-			if (ImGui::Checkbox("Use Debug Camera", &useDebugCamera)) {
-				// 【劇的変化】インスタンスを破壊せず、指す先を切り替えるだけ！
-				if (useDebugCamera) {
-					activeCamera = debugCamera.get();
-				}
-				else {
-					activeCamera = normalCamera.get();
-				}
-			}
-			int currentIndex = static_cast<int>(dxCommon->blendMode_);
-			if (ImGui::Combo("Blend Mode", &currentIndex, dxCommon->blendMode_names)) {
-				dxCommon->blendMode_ = static_cast<BlendMode>(currentIndex);
-				dxCommon->SetBlendMode(dxCommon->blendMode_);
-			};
-
-			ImGui::End();
-
-			//// ビュー行列・射影行列を取得
-			//Matrix4x4 viewMatrix = debugCamera.GetViewMatrix();
-			//Matrix4x4 projectionMatrix = debugCamera.GetProjectionMatrix();
-			//Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
-
-			// Transformを更新（例：Y軸回転）
-
-			// GPU上のリソース（定数バッファ）の中身を書き換える
-			triangle->Update(activeCamera);
-			triangle2->Update(activeCamera);
-			sprite->Update(activeCamera);
-
-			sphere->Update(activeCamera);
-			model->Update(activeCamera);
-
-			// グレーのグリッドを床に配置
-			DebugRenderer::AddGrid(20.0f, 20, { 0.5f, 0.5f, 0.5f, 1.0f });
-
-			// 原点に緑色のワイヤーフレーム球体を表示 (半径2.0f, 分割数16)
-			DebugRenderer::AddWireSphere({ 0.0f, 0.0f, 0.0f }, 1.0f, 16, { 0.0f, 1.0f, 0.0f, 1.0f });
-
-			if (PushKey(DIK_0)) {
-				activeCamera->transform_.rotate.y += 0.03f;
-				DebugRenderer::AddLine({ -5.0f, 2.0f, 0.0f }, { 5.0f, 2.0f, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f });
-			}
-
-#ifdef _DEBUG
-
-			ImGui::Begin("Settings");
-
-			//ImGui::ShowDemoWindow();
-
-			// === Settings パネル ===
-
-			// CameraTranslate
-			ImGui::DragFloat3("CameraTranslate", &normalCamera->transform_.translate.x, 0.1f);
-
-			// CameraRotate (deg)
-			ImGui::SliderFloat3("CameraRotate", &normalCamera->transform_.rotate.x, -3.14f, 3.14f);
-			
-
-			// color (3Dオブジェクト用マテリアルカラー)
-			float color4[4] = { sphere->color.x, sphere->color.y, sphere->color.z, sphere->color.w };
-			ImGui::ColorEdit4("color", color4);
-			sphere->color = { color4[0], color4[1], color4[2], color4[3] };
-
-			// enableLighting
-			bool enableLighting = sphere->enableLighting != 0;
-			ImGui::Checkbox("enableLighting", &enableLighting);
-			sphere->enableLighting = enableLighting ? 1 : 0;
-
-			// colorSprite (Sprite用マテリアルカラー)
-			float colorSprite4[4] = { sprite->color.x, sprite->color.y, sprite->color.z, sprite->color.w };
-			ImGui::ColorEdit4("colorSprite", colorSprite4);
-			sprite->color = { colorSprite4[0], colorSprite4[1], colorSprite4[2], colorSprite4[3] };
-
-			// translateSprite
-			ImGui::DragFloat3("translateSprite", &sprite->transform.translate.x, 0.5f);
-
-			// useMonsterBall
-			ImGui::Checkbox("useMonsterBall", &useMonsterBall);
-
-			// LightColor
-			float lightColor4[4] = { sphere->color.x, sphere->color.y, sphere->color.z, sphere->color.w };
-			ImGui::ColorEdit4("LightColor", lightColor4);
-			sphere->color = { lightColor4[0], lightColor4[1], lightColor4[2], lightColor4[3] };
-
-			// LightDirection
-			ImGui::SliderFloat3("LightDirection", &sphere->directionalLightData->direction.x, -1.0f, 1.0f, "%.2f");
-
-			// Intensity
-			ImGui::DragFloat("Intensity", &sphere->directionalLightData->intensity, 0.01f);
-
-			ImGui::DragFloat2("UVTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
-			ImGui::DragFloat2("UVScale", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
-			ImGui::SliderAngle("UVRotate", &uvTransformSprite.rotate.z);
-
-			ImGui::End();
-
+#ifdef USE_IMGUI
+			ImGui_ImplDX12_NewFrame();
+			ImGui_ImplWin32_NewFrame();
+			ImGui::NewFrame();
 #endif
-			if (useDebugCamera) {
-				debugCamera->DrawFrustum(normalCamera.get());
-			}
+			Input::GetInstance()->Update();
+			FadeManager::GetInstance()->Update();
 
-			Matrix4x4 uvTransformMatrix = MakeScaleMatrix(uvTransformSprite.scale);
-			uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(uvTransformSprite.rotate.z));
-			uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(uvTransformSprite.translate));
-			sprite->materialData->uvTransform = uvTransformMatrix;
 
-			triangle->Draw(3);
-			triangle2->Draw(2);
-			sprite->Draw(1);
-			//sphere->Draw(useMonsterBall ? 3 : 2);
-			model->Draw(4);
+			// シーンの更新と描画
+			ChangeScene();
+			UpdateScene();
+			DrawScene();
+			FadeManager::GetInstance()->Draw();
 
-			DebugRenderer::Flush(activeCamera);
-
-			dxCommon->PostDraw();
-
+			// 描画後処理
+			DirectXCommon::GetInstance()->PostDraw();
 		}
 	}
 
+	// 終了時に残っているシーンを解放
+	if (titleScene) {
+		titleScene->Finalize();
+		delete titleScene;
+		titleScene = nullptr;
+	}
+	if (gameScene) {
+		gameScene->Finalize();
+		delete gameScene;
+		gameScene = nullptr;
+	}
+	if (gameOverScene) {
+		gameOverScene->Finalize();
+		delete gameOverScene;
+		gameOverScene = nullptr;
+	}
+	if (clearScene) {
+		delete clearScene;
+		clearScene = nullptr;
+	}
+
+	// エンジンの終了処理
 	DebugRenderer::Finalize();
 	ebichaEngine->Finalize();
 
 	return 0;
+}
+
+void ChangeScene()
+{
+	switch (scene) {
+	case Scene::kTitle:
+		if (titleScene && titleScene->IsFinished()) {
+			titleScene->Finalize();
+			delete titleScene;
+			titleScene = nullptr;
+
+			scene = Scene::kGame;
+			gameScene = new GameScene();
+			gameScene->Initialize();
+
+			// 新しいシーンに切り替わったらフェードインを開始
+			FadeManager::GetInstance()->StartFadeIn(0.5f);
+			return;
+		}
+		break;
+
+	case Scene::kGame:
+		// 1. ポーズ画面等からタイトルへ戻る判定
+		if (gameScene && gameScene->IsReturnToTitle()) {
+			gameScene->Finalize();
+			delete gameScene;
+			gameScene = nullptr;
+
+			scene = Scene::kTitle;
+			titleScene = new TitleScene();
+			titleScene->Initialize();
+
+			FadeManager::GetInstance()->StartFadeIn(0.5f);
+			return;
+		}
+		// 2. プレイヤー死亡（ゲームオーバー）[cite: 3]
+		else if (gameScene && gameScene->IsDead()) {
+			gameScene->Finalize(); 
+				delete gameScene; 
+				gameScene = nullptr; 
+
+				scene = Scene::kGameOver; 
+				gameOverScene = new GameOverScene(); 
+				gameOverScene->Initialize(); 
+
+				FadeManager::GetInstance()->StartFadeIn(0.5f); 
+				return; 
+		}
+		// 3. ゲームクリア[cite: 3]
+		else if (gameScene && gameScene->IsFinished()) {
+			gameScene->Finalize(); 
+				delete gameScene; 
+				gameScene = nullptr; 
+
+				scene = Scene::kClear; 
+				clearScene = new ClearScene(); 
+				clearScene->Initialize(); 
+
+				FadeManager::GetInstance()->StartFadeIn(0.5f); 
+				return; 
+		}
+		break;
+	case Scene::kGameOver:
+		if (gameOverScene && gameOverScene->IsFinished()) {
+			gameOverScene->Finalize();
+			delete gameOverScene;
+			gameOverScene = nullptr;
+
+			scene = Scene::kTitle;
+			titleScene = new TitleScene();
+			titleScene->Initialize();
+
+			// 新しいシーンに切り替わったらフェードインを開始
+			FadeManager::GetInstance()->StartFadeIn(0.5f);
+			return;
+		}
+		break;
+	case Scene::kClear:
+		if (clearScene && clearScene->IsFinished()) {
+			delete clearScene;
+			clearScene = nullptr;
+
+			scene = Scene::kTitle;
+			titleScene = new TitleScene();
+			titleScene->Initialize();
+
+			// 新しいシーンに切り替わったらフェードインを開始
+			FadeManager::GetInstance()->StartFadeIn(0.5f);
+			return;
+		}
+		break;
+		// GameOver, Clear も同様に FadeManager::GetInstance()->StartFadeIn(0.5f); を挿入
+	}
+}
+
+void UpdateScene()
+{
+	switch (scene) {
+	case Scene::kTitle:
+		if (titleScene) titleScene->Update();
+		break;
+	case Scene::kGame:
+		if (gameScene) gameScene->Update();
+		break;
+	case Scene::kGameOver:
+		if (gameOverScene) gameOverScene->Update();
+		break;
+	case Scene::kClear:
+		if (clearScene) clearScene->Update();
+		break;
+	}
+}
+
+void DrawScene() {
+	switch (scene) {
+	case Scene::kTitle:
+		if (titleScene) titleScene->Draw();
+		break;
+	case Scene::kGame:
+		if (gameScene) gameScene->Draw();
+		break;
+	case Scene::kGameOver:
+		if (gameOverScene) gameOverScene->Draw();
+		break;
+	case Scene::kClear:
+		if (clearScene) clearScene->Draw();
+		break;
+	}
 }
