@@ -1,11 +1,23 @@
 #pragma once
 #include "BaseCharacter.h"
 
+class HatSphere;
+
 class Player : public BaseCharacter
 {
 public:
+    static constexpr size_t kMaxStock = 3;
+
+    bool CanEquip() const { return equippedSpheres_.size() < kMaxStock; }
+    void AddSphere(HatSphere* sphere);
+    HatSphere* PopSphere();
+
+    // 現在所持しているHatSphereの個数を取得
+    size_t GetStockCount() const { return equippedSpheres_.size(); }
+
     void Initialize();
     void Update(Camera* activeCamera) override;
+
 
     void InitializeFloatingGimmick();
     void UpdateFloatingGimmick();
@@ -60,12 +72,14 @@ public:
     void ApplyKnockback(const Vector3& knockbackVelocity);
 
 private:
+    std::vector<HatSphere*> equippedSpheres_;
+
     float floatingParameter_ = 0.0f;
     float frame_ = 60.0f;
     float floatingAmplitude = 0.1f;
 
     // --- HP・無敵時間用パラメータ ---
-    static inline const int kMaxHp_ = 10;               // 最大HP
+    static inline const int kMaxHp_ = 100;               // 最大HP
     int hp_ = kMaxHp_;                                 // 現在HP
 
     bool isInvincible_ = false;                        // 被弾後の無敵フラグ

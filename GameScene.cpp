@@ -320,6 +320,10 @@ void GameScene::UpdateCollisions() {
 
 					enemy_->TakeDamage(3, { knockDir.x * 0.5f, 0.1f, knockDir.z * 0.5f });
 					hat->OnHit();
+
+					if (particle_) {
+						particle_->EmitAt(enemy_->GetTransform().translate, 15);
+					}
 				}
 			}
 		}
@@ -347,15 +351,31 @@ void GameScene::UpdateCollisions() {
 		if (Physics3D::IsCollision(player_->GetColliderSphere(), enemy_->GetColliderSphere())) {
 			if (player_->IsDashAttacking()) {
 				enemy_->TakeDamage(3);
+
+				if (particle_) {
+					particle_->EmitAt(enemy_->GetTransform().translate, 20);
+				}
 			}
 			else if (player_->IsJumping() && player_->GetJumpVelocityY() < 0.0f) {
 				enemy_->TakeDamage(5);
+
+				if (particle_) {
+					particle_->EmitAt(player_->GetTransform().translate, 25);
+				}
 			}
 			else if (enemy_->IsAttacking()) {
 				player_->TakeDamage(2);
+
+				if (particle_) {
+					particle_->EmitAt(player_->GetTransform().translate, 25);
+				}
 			}
 			else if (!player_->IsInvincible()) {
 				player_->TakeDamage(1);
+
+				if (particle_) {
+                    particle_->EmitAt(player_->GetTransform().translate, 25);
+                }
 			}
 		}
 	}

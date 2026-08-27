@@ -97,7 +97,6 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		gameOverScene = nullptr;
 	}
 	if (clearScene) {
-		clearScene->Finalize();
 		delete clearScene;
 		clearScene = nullptr;
 	}
@@ -171,7 +170,6 @@ void ChangeScene()
 		break;
 	case Scene::kClear:
 		if (clearScene && clearScene->IsFinished()) {
-			clearScene->Finalize();
 			delete clearScene;
 			clearScene = nullptr;
 

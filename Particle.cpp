@@ -71,9 +71,18 @@ void Particle::Initialize()
 
 void Particle::Update(Camera* activeCamera)
 {
-	// カメラ参照を保持
+	// ★ カメラが NULL の場合は処理を行わず抜ける
+	if (!activeCamera) {
+		return;
+	}
+
+	// カメラ参照を更新
 	activeCamera_ = activeCamera;
-	model_->Update(activeCamera);
+
+	// ★ モデルへカメラをセットして行列を更新
+	if (model_) {
+		model_->Update(activeCamera_);
+	}
 
 	// エミッターのタイマー更新と発生処理
 	emitter.frequencyTime += kDeltaTime;
@@ -82,29 +91,26 @@ void Particle::Update(Camera* activeCamera)
 		emitter.frequencyTime -= emitter.frequency;
 	}
 
-	// 資料通りの iterator を使用した for ループ処理[cite: 5]
+	// パーティクルの移動・寿命更新処理
 	for (std::list<ParticleData>::iterator particleIterator = particles_.begin();
-		particleIterator != particles_.end(); ) { 
+		particleIterator != particles_.end(); ) {
 
-		// 寿命が切れたパーティクルを削除（erase）する場合のパターン
 		if ((*particleIterator).currentTime >= (*particleIterator).lifeTime) {
-			particleIterator = particles_.erase(particleIterator); // 削除して次のイテレータを取得
+			particleIterator = particles_.erase(particleIterator);
 			continue;
 		}
 
 		if (isUpdate) {
-
 			if (Physics3D::IsCollision(accelerationField.area, (*particleIterator).transform.translate)) {
 				(*particleIterator).velocity += accelerationField.acceleration * kDeltaTime;
 			}
 		}
 
-		// 移動・経過時間の更新処理
 		(*particleIterator).transform.translate += (*particleIterator).velocity * kDeltaTime;
 		(*particleIterator).currentTime += kDeltaTime;
 		++particleIterator;
-
 	}
+
 #ifdef _DEBUG
 	ImGui::Begin("Particle");
 	ImGui::DragFloat3("EmitterTranslate", &emitter.transform.translate.x, 0.01f, -100.0f, 100.0f);
@@ -116,6 +122,18 @@ void Particle::Update(Camera* activeCamera)
 
 void Particle::Draw()
 {
-	// 2. 1回の描画呼び出しで一括描画！
+	// ★ activeCamera_ が設定されていない、またはパーティクルが存在しない場合は描画しない
+	if (!activeCamera_ || particles_.empty() || !model_) {
+		return;
+	}
+
+	// 1回の描画呼び出しで一括描画
 	model_->DrawInstanced(particles_, activeCamera_, textureHandle_);
+}
+
+void Particle::EmitAt(const Vector3& position, uint32_t count)
+{
+	for (uint32_t i = 0; i < count; ++i) {
+		particles_.push_back(MakeNewParticle(randomEngine, position));
+	}
 }

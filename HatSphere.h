@@ -29,6 +29,8 @@ public:
         return BSphere{ transformBase_.translate, radius_ };
     }
 
+    void SetPosition(const Vector3& pos) { transformBase_.translate = pos; }
+
     // 衝突時のバウンド・反発処理
     void OnHit();
 

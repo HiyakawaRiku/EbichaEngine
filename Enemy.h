@@ -91,7 +91,7 @@ private:
 	const BaseCharacter* targetPlayer_ = nullptr;
 
 	// HP・被弾用パラメータ
-	static inline const int kMaxHp_ = 25;
+	static inline const int kMaxHp_ = 250;
 	int hp_ = kMaxHp_;
 	bool isInvincible_ = false;
 	float invincibleTimer_ = 0.0f;

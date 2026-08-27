@@ -2,13 +2,15 @@
 #include <cmath>
 #include <algorithm>
 
+#include "HatSphere.h"
+
 void Player::Initialize()
 {
     // パーツ構成を空にする（Cube単体にする）
     std::vector<BaseCharacter::PartConfig> partConfigs = {};
 
     // 親クラスの初期化関数に渡す
-    BaseCharacter::Initialize("sphere", partConfigs, "resources/white1x1.png");
+    BaseCharacter::Initialize("sphere", partConfigs, "resources/icosphere.png");
     transformBase_.translate = { 0.0f, 1.0f, 0.0f };
 
     InitializeFloatingGimmick();
@@ -31,6 +33,22 @@ void Player::Initialize()
     isDashAttacking_ = false;
 }
 
+void Player::AddSphere(HatSphere* sphere)
+{
+    if (CanEquip() && sphere) {
+        equippedSpheres_.push_back(sphere);
+    }
+}
+
+HatSphere* Player::PopSphere()
+{
+    if (equippedSpheres_.empty()) return nullptr;
+
+    HatSphere* sphere = equippedSpheres_.back(); // 一番上のものを取得
+    equippedSpheres_.pop_back();
+    return sphere;
+}
+
 void Player::Update(Camera* activeCamera)
 {
     // 親クラスの更新を実行
@@ -50,6 +68,15 @@ void Player::Update(Camera* activeCamera)
 
     // プレイヤー固有の挙動更新
     BehaviorRootUpdate(activeCamera);
+
+    Vector3 playerPos = transformBase_.translate;
+    for (size_t i = 0; i < equippedSpheres_.size(); ++i) {
+        if (equippedSpheres_[i]) {
+            // 1個ごとに高さ（Y軸）を 0.8f ずつずらして配置
+            float stackOffsetY = 1.8f + (i * 0.8f);
+            equippedSpheres_[i]->SetPosition({ playerPos.x, playerPos.y + stackOffsetY, playerPos.z });
+        }
+    }
 
     // ImGui による HP ステータス表示・テストデバッグ用ウィンドウ
 #ifdef _DEBUG

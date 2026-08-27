@@ -21,9 +21,9 @@ public:
 private:
 	bool finished_ = false;
 
-
 	std::unique_ptr<Camera> activeCamera_ = nullptr;
-	std::unique_ptr<TitleLogo> model_ = nullptr;
-	float testAlpha_ = 1.0f;
 	BlendMode blendMode_ = BlendMode::kAdd;
+
+	float testAlpha_ = 1.0f;
+	std::unique_ptr<TitleLogo> model_ = nullptr;
 };

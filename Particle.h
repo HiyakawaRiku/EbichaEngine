@@ -23,6 +23,8 @@ public:
 	void Update(Camera* activeCamera_);
 	void Draw();
 
+	void EmitAt(const Vector3& position, uint32_t count = 10);
+
 	Emitter emitter{};
 private:
 	Model* model_ = nullptr;

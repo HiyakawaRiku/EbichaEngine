@@ -6,6 +6,12 @@ void GameOverScene::Initialize()
 	//camera_->Initialize();
 
 	finished_ = false;
+
+    model_ = std::make_unique<GameOverLogo>();
+    model_->Initialize();
+
+    camera_ = std::make_unique<Camera>();
+    camera_->Initialize();
 }
 
 void GameOverScene::Update()
@@ -25,10 +31,18 @@ void GameOverScene::Update()
         finished_ = true;
     }
     FadeManager::GetInstance()->Update();
+    camera_->Update();
+
+    if (model_) {
+        model_->Update(camera_.get());
+    }
 }
 
 void GameOverScene::Draw()
 {
+    if (model_) {
+        model_->Draw();
+    }
 }
 
 void GameOverScene::Finalize()

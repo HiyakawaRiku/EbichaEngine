@@ -2,6 +2,7 @@
 #include <memory>
 #include "EbichaEngine.h"
 #include "FadeManager.h"
+#include "gameOverLogo.h"
 
 class GameOverScene
 {
@@ -21,4 +22,7 @@ private:
 	bool finished_ = false;
 
 	std::unique_ptr<Camera> camera_ = nullptr;
+
+	float testAlpha_ = 1.0f;
+	std::unique_ptr<GameOverLogo> model_ = nullptr;
 };
