@@ -3,7 +3,8 @@
 #include "EbichaEngine.h"
 #include "FadeManager.h"
 #include "clearLogo.h"
-#include "Particle.h" // 追加[cite: 1, 10]
+#include "Particle.h"
+#include "Sprite.h" // Spriteクラスのヘッダをインクルード
 
 class ClearScene
 {
@@ -24,6 +25,9 @@ private:
 	float testAlpha_ = 1.0f;
 	std::unique_ptr<ClearLogo> model_ = nullptr;
 
-	// モデル不要の標準パーティクル[cite: 1, 10]
 	std::unique_ptr<Particle> particle_ = nullptr;
+
+	// スプライト関連メンバ変数の追加[cite: 6]
+	std::unique_ptr<Sprite> uiSprite_ = nullptr;
+	TextureHandle uiTexture_ = 0;
 };

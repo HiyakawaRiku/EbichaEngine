@@ -3,6 +3,7 @@
 #include "EbichaEngine.h"
 #include "FadeManager.h"
 #include "gameOverLogo.h"
+#include "Sprite.h" // Spriteクラスのヘッダをインクルード
 
 class GameOverScene
 {
@@ -15,7 +16,6 @@ public:
 	void Draw();
 	void Finalize();
 
-	// getter
 	bool IsFinished() const { return finished_; }
 
 private:
@@ -25,4 +25,8 @@ private:
 
 	float testAlpha_ = 1.0f;
 	std::unique_ptr<GameOverLogo> model_ = nullptr;
+
+	// スプライト関連メンバ変数の追加[cite: 6]
+	std::unique_ptr<Sprite> uiSprite_ = nullptr;
+	TextureHandle uiTexture_ = 0;
 };

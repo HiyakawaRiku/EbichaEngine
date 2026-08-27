@@ -1,5 +1,5 @@
 #include "ClearScene.h"
-#include <random> // ランダム位置生成用
+#include <random>
 
 void ClearScene::Initialize()
 {
@@ -11,9 +11,16 @@ void ClearScene::Initialize()
     camera_ = std::make_unique<Camera>();
     camera_->Initialize();
 
-    // パーティクルの初期化[cite: 6, 9]
     particle_ = std::make_unique<Particle>();
     particle_->Initialize();
+
+    // スプライトとテクスチャの初期化
+    uiTexture_ = TextureManager::GetInstance()->Load("resources/ground_snow.png", DirectXCommon::GetInstance()->GetCommandList());
+
+    uiSprite_ = std::make_unique<Sprite>();
+    uiSprite_->Initialize();
+    uiSprite_->size = { 1280.0f, 720.0f };
+    uiSprite_->color = { 1.0f, 1.0f, 1.0f, 1.0f };
 }
 
 void ClearScene::Update()
@@ -34,17 +41,19 @@ void ClearScene::Update()
         model_->Update(camera_.get());
     }
 
-    // パーティクルの更新と上方からの持続発生[cite: 6, 9]
+    // スプライトの更新[cite: 5]
+    if (uiSprite_) {
+        uiSprite_->Update();
+    }
+
     if (particle_) {
-        // 1. 画面の上方（例: Y = 10〜15, X = -15〜15, Z = -5〜5）のランダムな位置を生成
         static std::random_device seed;
         static std::mt19937 engine(seed());
         std::uniform_real_distribution<float> distX(-15.0f, 15.0f);
         std::uniform_real_distribution<float> distY(10.0f, 15.0f);
         std::uniform_real_distribution<float> distZ(-5.0f, 5.0f);
 
-        // 2. 毎フレーム数個ずつ上から発生させる[cite: 9]
-        for (int i = 0; i < 3; ++i) { // 発生頻度・個数はお好みで調整
+        for (int i = 0; i < 3; ++i) {
             Vector3 spawnPos = { distX(engine), distY(engine), distZ(engine) };
             particle_->EmitAt(spawnPos, 1);
         }
@@ -55,13 +64,19 @@ void ClearScene::Update()
 
 void ClearScene::Draw()
 {
+    // スプライトの描画[cite: 5]
+    if (uiSprite_) {
+        DirectXCommon::GetInstance()->SetPipeline(PipelineType::kObject3D, BlendMode::kNormal, DepthWrite::kDisable);
+        uiSprite_->Draw(uiTexture_);
+        DirectXCommon::GetInstance()->SetPipeline(PipelineType::kObject3D, BlendMode::kAdd, DepthWrite::kEnable);
+    }
+
     if (model_) {
         model_->Draw();
     }
 
-    // パーティクルの描画[cite: 9]
     if (particle_) {
         DirectXCommon::GetInstance()->SetPipeline(PipelineType::kParticle, BlendMode::kAdd, DepthWrite::kDisable);
-            particle_->Draw();
+        particle_->Draw();
     }
 }
