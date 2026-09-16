@@ -18,6 +18,176 @@
 #include <dxgidebug.h>
 #pragma comment(lib,"dxguid.lib")
 
+#include <dxcapi.h>
+#pragma comment(lib,"dxcompiler.lib")
+
+struct Vector3 {
+	float x, y, z;
+};
+
+struct Vector4 {
+	float x, y, z, w;
+};
+
+struct Matrix4x4 {
+	float m[4][4];
+};
+
+struct Transform {
+	Vector3 scale;
+	Vector3 rotate;
+	Vector3 translate;
+};
+
+inline Matrix4x4 MakeIdentity4x4() {
+	Matrix4x4 identity{};
+
+	identity.m[0][0] = 1.0f; identity.m[0][1] = 0.0f; identity.m[0][2] = 0.0f; identity.m[0][3] = 0.0f;
+	identity.m[1][0] = 0.0f; identity.m[1][1] = 1.0f; identity.m[1][2] = 0.0f; identity.m[1][3] = 0.0f;
+	identity.m[2][0] = 0.0f; identity.m[2][1] = 0.0f; identity.m[2][2] = 1.0f; identity.m[2][3] = 0.0f;
+	identity.m[3][0] = 0.0f; identity.m[3][1] = 0.0f; identity.m[3][2] = 0.0f; identity.m[3][3] = 1.0f;
+
+	return identity;
+}
+
+inline Matrix4x4 Multiply(const Matrix4x4& m1, const Matrix4x4& m2) {
+	Matrix4x4 result{};
+	for (int i = 0; i < 4; ++i) {
+		for (int j = 0; j < 4; ++j) {
+			result.m[i][j] = m1.m[i][0] * m2.m[0][j] +
+				m1.m[i][1] * m2.m[1][j] +
+				m1.m[i][2] * m2.m[2][j] +
+				m1.m[i][3] * m2.m[3][j];
+		}
+	}
+	return result;
+}
+
+inline Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Vector3& translate) {
+	// 拡大縮小行列 S
+	Matrix4x4 matScale = {
+		scale.x, 0.0f,    0.0f,    0.0f,
+		0.0f,    scale.y, 0.0f,    0.0f,
+		0.0f,    0.0f,    scale.z, 0.0f,
+		0.0f,    0.0f,    0.0f,    1.0f
+	};
+
+	// X軸回転行列 Rx
+	float sinX = std::sin(rotate.x);
+	float cosX = std::cos(rotate.x);
+	Matrix4x4 matRotX = {
+		1.0f, 0.0f,  0.0f, 0.0f,
+		0.0f, cosX,  sinX, 0.0f,
+		0.0f, -sinX, cosX, 0.0f,
+		0.0f, 0.0f,  0.0f, 1.0f
+	};
+
+	// Y軸回転行列 Ry
+	float sinY = std::sin(rotate.y);
+	float cosY = std::cos(rotate.y);
+	Matrix4x4 matRotY = {
+		cosY, 0.0f, -sinY, 0.0f,
+		0.0f, 1.0f, 0.0f,  0.0f,
+		sinY, 0.0f, cosY,  0.0f,
+		0.0f, 0.0f, 0.0f,  1.0f
+	};
+
+	// Z軸回転行列 Rz
+	float sinZ = std::sin(rotate.z);
+	float cosZ = std::cos(rotate.z);
+	Matrix4x4 matRotZ = {
+		cosZ,  sinZ, 0.0f, 0.0f,
+		-sinZ, cosZ, 0.0f, 0.0f,
+		0.0f,  0.0f, 1.0f, 0.0f,
+		0.0f,  0.0f, 0.0f, 1.0f
+	};
+
+	// 回転行列の合成 (R = Rx * Ry * Rz)
+	// 画面座標系・行ベクトルの乗算ルールに合わせて計算
+	Matrix4x4 matRot = Multiply(matRotX, Multiply(matRotY, matRotZ));
+
+	// アフィン変換行列 (S * R) に T(平行移動) を合成
+	Matrix4x4 matAffine = Multiply(matScale, matRot);
+
+	// 平行移動成分を最下行（行優先の場合）に設定
+	matAffine.m[3][0] = translate.x;
+	matAffine.m[3][1] = translate.y;
+	matAffine.m[3][2] = translate.z;
+
+	return matAffine;
+}
+
+inline Matrix4x4 Inverse(const Matrix4x4& m) {
+	float sweep[4][8];
+	for (int i = 0; i < 4; ++i) {
+		for (int j = 0; j < 4; ++j) {
+			sweep[i][j] = m.m[i][j];
+			sweep[i][j + 4] = (i == j) ? 1.0f : 0.0f;
+		}
+	}
+
+	for (int i = 0; i < 4; ++i) {
+		// ピボット選択
+		float maxVal = std::abs(sweep[i][i]);
+		int pivot = i;
+		for (int k = i + 1; k < 4; ++k) {
+			if (std::abs(sweep[k][i]) > maxVal) {
+				maxVal = std::abs(sweep[k][i]);
+				pivot = k;
+			}
+		}
+		assert(maxVal > 1e-6f && "Matrix is singular and cannot be inverted.");
+
+		// 行の入れ替え
+		if (pivot != i) {
+			for (int j = 0; j < 8; ++j) {
+				std::swap(sweep[i][j], sweep[pivot][j]);
+			}
+		}
+
+		// ピボット行を1にする
+		float pivotVal = sweep[i][i];
+		for (int j = 0; j < 8; ++j) {
+			sweep[i][j] /= pivotVal;
+		}
+
+		// 他の行の消去
+		for (int k = 0; k < 4; ++k) {
+			if (k != i) {
+				float factor = sweep[k][i];
+				for (int j = 0; j < 8; ++j) {
+					sweep[k][j] -= factor * sweep[i][j];
+				}
+			}
+		}
+	}
+
+	Matrix4x4 result{};
+	for (int i = 0; i < 4; ++i) {
+		for (int j = 0; j < 4; ++j) {
+			result.m[i][j] = sweep[i][j + 4];
+		}
+	}
+	return result;
+}
+
+inline Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip, float farClip) {
+	float h = 1.0f / std::tan(fovY * 0.5f);
+	float w = h / aspectRatio;
+	float a = farClip / (farClip - nearClip);
+	float b = -nearClip * farClip / (farClip - nearClip);
+
+	Matrix4x4 result{};
+	result.m[0][0] = w;
+	result.m[1][1] = h;
+	result.m[2][2] = a;
+	result.m[2][3] = 1.0f; // 行優先（Row-Major）の場合、ZをWへコピー
+	result.m[3][2] = b;
+	result.m[3][3] = 0.0f;
+
+	return result;
+}
+
 
 // ウィンドウプロシージャ
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg,
@@ -47,6 +217,105 @@ void Log(std::ostream& os, const std::string& message) {
 void Log(const std::wstring& message) {
 	Log(ConvertString(message));
 }
+
+
+IDxcBlob* CompileShader(
+	// CompilerするShaderファイルへのパス
+	const std::wstring& filePath,
+	// Compilerに使用するProfile
+	const wchar_t* profile,
+	// 初期化で生成したものを3つ
+	IDxcUtils* dxcUtils,
+	IDxcCompiler3* dxcCompiler,
+	IDxcIncludeHandler* includeHandler)
+{
+	// ここの中身をこの後書いていく
+	// 1. hlslファイルを読む
+	// これからシェーダーをコンパイルする旨をログに出す
+	Log(std::format(L"Begin CompileShader, path:{}, profile:{}\n", filePath, profile));
+	// hlslファイルを読む
+	IDxcBlobEncoding* shaderSource = nullptr;
+	HRESULT hr = dxcUtils->LoadFile(filePath.c_str(), nullptr, &shaderSource);
+	// 読めなかったら止める
+	assert(SUCCEEDED(hr));
+	// 読み込んだファイルの内容を設定する
+	DxcBuffer shaderSourceBuffer;
+	shaderSourceBuffer.Ptr = shaderSource->GetBufferPointer();
+	shaderSourceBuffer.Size = shaderSource->GetBufferSize();
+	shaderSourceBuffer.Encoding = DXC_CP_UTF8; // UTF8の文字コードであることを通知
+
+	// 2. Compileする
+	LPCWSTR arguments[] = {
+	filePath.c_str(), // コンパイル対象のhlslファイル名
+	L"-E", L"main", // エントリーポイントの指定。基本的にmain以外にはしない
+	L"-T", profile, // ShaderProfileの設定
+	L"-Zi", L"-Qembed_debug", // デバッグ用の情報を埋め込む
+	L"-Od", // 最適化を外しておく
+	L"-Zpr", // メモリレイアウトは行優先
+	};
+	// 実際にShaderをコンパイルする
+	IDxcResult* shaderResult = nullptr;
+	hr = dxcCompiler->Compile(
+		&shaderSourceBuffer, // 読み込んだファイル
+		arguments, // コンパイルオプション
+		_countof(arguments), // コンパイルオプションの数
+		includeHandler, // includeが含まれた諸々
+		IID_PPV_ARGS(&shaderResult) // コンパイル結果
+	);
+	// コンパイルエラーではなくdxcが起動できないなど致命的な状況
+	assert(SUCCEEDED(hr));
+
+	// 3. 警告・エラーができていないか確認する
+	// 警告・エラーが出てたらログに出して止める
+	IDxcBlobUtf8* shaderError = nullptr;
+	shaderResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&shaderError), nullptr);
+	if (shaderError != nullptr && shaderError->GetStringLength() != 0) {
+		Log(shaderError->GetStringPointer());
+		// 警告・エラーダメゼッタイ
+		assert(false);
+	}
+
+	// 4. Compile結果を受け取って返す
+	// コンパイル結果から実行用のバイナリ部分を取得
+	IDxcBlob* shaderBlob = nullptr;
+	hr = shaderResult->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&shaderBlob), nullptr);
+	assert(SUCCEEDED(hr));
+	// 成功したログを出す
+	Log(ConvertString(std::format(L"Compile Succeeded, path:{}, profile:{}\n", filePath, profile)));
+	// もう使わないリソースを解放
+	shaderSource->Release();
+	shaderResult->Release();
+	// 実行用のバイナリを返却
+	return shaderBlob;
+}
+
+
+ID3D12Resource* CreateBufferResource(ID3D12Device* device, size_t sizeInBytes) {
+	// 頂点リソース用のヒープの設定
+	D3D12_HEAP_PROPERTIES uploadHeapProperties{};
+	uploadHeapProperties.Type = D3D12_HEAP_TYPE_UPLOAD; // UploadHeapを使う
+	// 頂点リソースの設定
+	D3D12_RESOURCE_DESC vertexResourceDesc{};
+	// バッファリソース。テクスチャの場合はまた別の設定をする
+	vertexResourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	vertexResourceDesc.Width = sizeInBytes; // リソースのサイズ。今回はVector4を3頂点分
+	// バッファの場合はこれらは1にする決まり
+	vertexResourceDesc.Height = 1;
+	vertexResourceDesc.DepthOrArraySize = 1;
+	vertexResourceDesc.MipLevels = 1;
+	vertexResourceDesc.SampleDesc.Count = 1;
+	// バッファの場合はこれにする決まり
+	vertexResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+	// 実際に頂点リソースを作る
+	ID3D12Resource* vertexResource = nullptr;
+	HRESULT hr = device->CreateCommittedResource(&uploadHeapProperties, D3D12_HEAP_FLAG_NONE,
+		&vertexResourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
+		IID_PPV_ARGS(&vertexResource));
+	assert(SUCCEEDED(hr));
+
+	return vertexResource;
+}
+
 
 //Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
@@ -295,6 +564,185 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	assert(fenceEvent != nullptr);
 
 
+	// dxcCompilerを初期化
+	IDxcUtils* dxcUtils = nullptr;
+	IDxcCompiler3* dxcCompiler = nullptr;
+	hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
+	assert(SUCCEEDED(hr));
+	hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxcCompiler));
+	assert(SUCCEEDED(hr));
+
+	// 現時点でincludeはしないが、includeに対応するための設定を行っておく
+	IDxcIncludeHandler* includeHandler = nullptr;
+	hr = dxcUtils->CreateDefaultIncludeHandler(&includeHandler);
+	assert(SUCCEEDED(hr));
+
+
+	// RootSignature作成
+	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
+	descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+
+	// RootParameter作成。PixelShaderのMaterialとVertexShaderのTransform
+	D3D12_ROOT_PARAMETER rootParameters[2] = {};
+	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;     // CBVを使う
+	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;   // PixelShaderで使う
+	rootParameters[0].Descriptor.ShaderRegister = 0;   // レジスタ番号0を使う
+	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;     // CBVを使う
+	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;  // VertexShaderで使う
+	rootParameters[1].Descriptor.ShaderRegister = 0;   // レジスタ番号0を使う
+	descriptionRootSignature.pParameters = rootParameters;   // ルートパラメータ配列へのポインタ
+	descriptionRootSignature.NumParameters = _countof(rootParameters);   // 配列の長さ
+
+
+	// シリアライズしてバイナリにする
+	ID3DBlob* signatureBlob = nullptr;
+	ID3DBlob* errorBlob = nullptr;
+	hr = D3D12SerializeRootSignature(&descriptionRootSignature,
+		D3D_ROOT_SIGNATURE_VERSION_1, &signatureBlob, &errorBlob);
+	if (FAILED(hr)) {
+		Log(reinterpret_cast<char*>(errorBlob->GetBufferPointer()));
+		assert(false);
+	}
+	// バイナリを元に生成
+	ID3D12RootSignature* rootSignature = nullptr;
+	hr = device->CreateRootSignature(0,
+		signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(),
+		IID_PPV_ARGS(&rootSignature));
+	assert(SUCCEEDED(hr));
+
+
+	// InputLayout
+	D3D12_INPUT_ELEMENT_DESC inputElementDescs[1] = {};
+	inputElementDescs[0].SemanticName = "POSITION";
+	inputElementDescs[0].SemanticIndex = 0;
+	inputElementDescs[0].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	inputElementDescs[0].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc{};
+	inputLayoutDesc.pInputElementDescs = inputElementDescs;
+	inputLayoutDesc.NumElements = _countof(inputElementDescs);
+
+
+	// BlendStateの設定
+	D3D12_BLEND_DESC blendDesc{};
+	// すべての色要素を書き込む
+	blendDesc.RenderTarget[0].RenderTargetWriteMask =
+		D3D12_COLOR_WRITE_ENABLE_ALL;
+
+
+	// RasterizerStateの設定
+	D3D12_RASTERIZER_DESC rasterizerDesc{};
+	// 裏面（時計回り）を表示しない
+	rasterizerDesc.CullMode = D3D12_CULL_MODE_BACK;
+	// 三角形の中を塗りつぶす
+	rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
+
+
+	// Shaderをコンパイルする
+	IDxcBlob* vertexShaderBlob = CompileShader(L"Object3D.VS.hlsl",
+		L"vs_6_0", dxcUtils, dxcCompiler, includeHandler);
+	assert(vertexShaderBlob != nullptr);
+
+	IDxcBlob* pixelShaderBlob = CompileShader(L"Object3D.PS.hlsl", L"ps_6_0",
+		dxcUtils, dxcCompiler, includeHandler);
+	assert(pixelShaderBlob != nullptr);
+
+
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc{};
+	graphicsPipelineStateDesc.pRootSignature = rootSignature; // RootSignature
+	graphicsPipelineStateDesc.InputLayout = inputLayoutDesc; // InputLayout
+	graphicsPipelineStateDesc.VS = { vertexShaderBlob->GetBufferPointer(),
+		vertexShaderBlob->GetBufferSize() }; // VertexShader
+	graphicsPipelineStateDesc.PS = { pixelShaderBlob->GetBufferPointer(),
+		pixelShaderBlob->GetBufferSize() }; // Pixel Shader
+	graphicsPipelineStateDesc.BlendState = blendDesc; // BlendState
+	graphicsPipelineStateDesc.RasterizerState = rasterizerDesc; // RasterizerState
+	// 書き込むRTVの情報
+	graphicsPipelineStateDesc.NumRenderTargets = 1;
+	graphicsPipelineStateDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+	// 利用するトポロジ（形状）のタイプ。三角形
+	graphicsPipelineStateDesc.PrimitiveTopologyType =
+		D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	// どのように画面に色を打ち込むかの設定（気にしなくて良い）
+	graphicsPipelineStateDesc.SampleDesc.Count = 1;
+	graphicsPipelineStateDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
+	// 実際に生成
+	ID3D12PipelineState* graphicsPipelineState = nullptr;
+	hr = device->CreateGraphicsPipelineState(&graphicsPipelineStateDesc,
+		IID_PPV_ARGS(&graphicsPipelineState));
+	assert(SUCCEEDED(hr));
+
+
+	// 実際に頂点リソースを作る
+	ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(Vector4) * 3);
+
+
+	// 頂点バッファビューを作成する
+	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
+	// リソースの先頭のアドレスから使う
+	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
+	// 使用するリソースのサイズは頂点3つ分のサイズ
+	vertexBufferView.SizeInBytes = sizeof(Vector4) * 3;
+	// 1頂点あたりのサイズ
+	vertexBufferView.StrideInBytes = sizeof(Vector4);
+
+
+	// 頂点リソースにデータを書き込む
+	Vector4* vertexData = nullptr;
+	// 書き込むためのアドレスを取得
+	vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
+	// 左下
+	vertexData[0] = { -0.5f, -0.5f, 0.0f, 1.0f };
+	// 上
+	vertexData[1] = { 0.0f, 0.5f, 0.0f, 1.0f };
+	// 右下
+	vertexData[2] = { 0.5f, -0.5f, 0.0f, 1.0f };
+
+
+	// マテリアル用のリソースを作る。今回はcolor1つ分のサイズを用意する
+	ID3D12Resource* materialResource = CreateBufferResource(device, sizeof(Vector4));
+	// マテリアルにデータを書き込む
+	Vector4* materialData = nullptr;
+	// 書き込むためのアドレスを取得
+	materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
+	// 今回は赤を書き込んでみる
+	*materialData = Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+
+
+	// WVP用のリソースを作る。Matrix4x4 1つ分のサイズを用意する
+	ID3D12Resource* wvpResource = CreateBufferResource(device, sizeof(Matrix4x4));
+	// データを書き込む
+	Matrix4x4* wvpData = nullptr;
+	// 書き込むためのアドレスを取得
+	wvpResource->Map(0, nullptr, reinterpret_cast<void**>(&wvpData));
+	// 単位行列を書きこんでおく
+	*wvpData = MakeIdentity4x4();
+
+
+	// ビューポート
+	D3D12_VIEWPORT viewport{};
+	// クライアント領域のサイズと一緒にして画面全体に表示
+	viewport.Width = kClientWidth;
+	viewport.Height = kClientHeight;
+	viewport.TopLeftX = 0;
+	viewport.TopLeftY = 0;
+	viewport.MinDepth = 0.0f;
+	viewport.MaxDepth = 1.0f;
+
+	// シザー矩形
+	D3D12_RECT scissorRect{};
+	// 基本的にビューポートと同じ矩形が構成されるようにする
+	scissorRect.left = 0;
+	scissorRect.right = kClientWidth;
+	scissorRect.top = 0;
+	scissorRect.bottom = kClientHeight;
+
+
+	//Transform関数を作る
+	Transform transform{ { 1.0f,1.0f,1.0f },{ 0.0f,0.0f,0.0f },{ 0.0f,0.0f,0.0f } };
+	Transform cameraTransform{ { 1.0f,1.0f,1.0f },{ 0.0f,0.0f,0.0f },{ 0.0f,0.0f,-5.0f } };
+
+
+
 	MSG msg{};
 	// ウィンドウの×ボタンが押されるまでループ
 	while (msg.message != WM_QUIT) {
@@ -304,6 +752,17 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			DispatchMessage(&msg);
 		}
 		else {
+
+
+			transform.rotate.y += 0.03f;
+			Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+			Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
+			Matrix4x4 viewMatrix = Inverse(cameraMatrix);
+			Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kClientWidth) / float(kClientHeight), 0.1f, 100.0f);
+			Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
+			*wvpData = worldViewProjectionMatrix;
+
+
 			// これから書き込むバックバッファのインデックスを取得
 			UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
 
@@ -329,6 +788,24 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			// 指定した色で画面全体をクリアする
 			float clearColor[] = { 0.1f, 0.25f, 0.5f, 1.0f }; // 青っぽい色。RGBAの順
 			commandList->ClearRenderTargetView(rtvHandles[backBufferIndex], clearColor, 0, nullptr);
+
+
+
+			commandList->RSSetViewports(1, &viewport); // Viewportを設定
+			commandList->RSSetScissorRects(1, &scissorRect); // Scirssorを設定
+			// RootSignatureを設定。PSOに設定しているけど別途設定が必要
+			commandList->SetGraphicsRootSignature(rootSignature);
+			commandList->SetPipelineState(graphicsPipelineState); // PSOを設定
+			commandList->IASetVertexBuffers(0, 1, &vertexBufferView); // VBVを設定
+			// 形状を設定。PSOに設定しているものとはまた別。同じものを設定すると考えておけば良い
+			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+			// マテリアルCBufferの場所を設定
+			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+			// wvp用のCBufferの場所を設定
+			commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
+			// 描画！（DrawCall/ドローコール）。3頂点で1つのインスタンス。インスタンスについては今後
+			commandList->DrawInstanced(3, 1, 0, 0);
+
 
 
 			// 画面に描く処理はすべて終わり、画面に映すので、状態を遷移
@@ -375,6 +852,18 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			assert(SUCCEEDED(hr));
 		}
 	}
+
+	wvpResource->Release();
+	materialResource->Release();
+	vertexResource->Release();
+	graphicsPipelineState->Release();
+	signatureBlob->Release();
+	if (errorBlob) {
+		errorBlob->Release();
+	}
+	rootSignature->Release();
+	pixelShaderBlob->Release();
+	vertexShaderBlob->Release();
 
 
 	CloseHandle(fenceEvent);
