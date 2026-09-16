@@ -1,5 +1,20 @@
 #include <Windows.h>
 #include <cstdint>
+#include "ConvertString.h"
+#include <format>
+
+//ファイルに書いたり読んだりするライブラリ
+#include <fstream>
+//時間を扱うライブラリ
+#include <chrono>
+
+#include <d3d12.h>
+#include <dxgi1_6.h>
+#include <cassert>
+
+#pragma comment(lib,"d3d12.lib")
+#pragma comment(lib,"dxgi.lib")
+
 
 // ウィンドウプロシージャ
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg,
@@ -15,6 +30,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg,
 
     // 標準のメッセージ処理を行う
     return DefWindowProc(hwnd, msg, wparam, lparam);
+}
+
+void Log(std::ostream& os,const std::string& message) {
+    os << message << std::endl;
+    OutputDebugStringA(message.c_str());
+}
+
+void Log(const std::wstring& message) {
+    Log(ConvertString(message));
 }
 
 //Windowsアプリでのエントリーポイント(main関数)
@@ -61,6 +85,78 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
     // ウィンドウを表示する
     ShowWindow(hwnd, SW_SHOW);
+
+
+    // 現在時刻を取得 (UTC時刻)
+    std::chrono::system_clock::time_point now = std::chrono::system_clock::now();
+    // ログファイルの名前コンマ何秒はいらないので、削って秒にする
+    std::chrono::time_point<std::chrono::system_clock, std::chrono::seconds>
+        nowSeconds = std::chrono::time_point_cast<std::chrono::seconds>(now);
+    // 日本時間 (PCの設定時間) に変換
+    std::chrono::zoned_time localTime{ std::chrono::current_zone(), nowSeconds };
+    // formatを使って年月日_時分秒の文字列に変換
+    std::string dateString = std::format("{:%Y%m%d_%H%M%S}", localTime);
+    // 時刻を使ってファイル名を決定
+    std::string logFilePath = std::string("logs/") + dateString + ".log";
+    // ファイルを作って書き込み準備
+    std::ofstream logStream(logFilePath);
+
+
+    // DXGIファクトリーの生成
+    IDXGIFactory7* dxgiFactory = nullptr;
+    // HRESULTはWindows系のエラーコードであり、
+    // 関数が成功したかどうかをSUCCEEDEDマクロで判定できる
+    HRESULT hr = CreateDXGIFactory(IID_PPV_ARGS(&dxgiFactory));
+    // 初期化の根本的な部分でエラーが出た場合はプログラムが間違っているか、どう
+    // にもできない場合が多いのでassertにしておく
+    assert(SUCCEEDED(hr));
+
+
+    // 使用するアダプタ用の変数。最初にnullptrを入れておく
+    IDXGIAdapter4* useAdapter = nullptr;
+    // 良い順にアダプタを頼む
+    for (UINT i = 0; dxgiFactory->EnumAdapterByGpuPreference(i,
+        DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&useAdapter))
+        != DXGI_ERROR_NOT_FOUND; ++i) {
+        // アダプター情報を取得する
+        DXGI_ADAPTER_DESC3 adapterDesc{};
+        hr = useAdapter->GetDesc3(&adapterDesc);
+        assert(SUCCEEDED(hr)); // 取得できないのは一大事
+        // ソフトウェアアダプタでなければ採用！
+        if (!(adapterDesc.Flags & DXGI_ADAPTER_FLAG3_SOFTWARE)) {
+            // 採用したアダプタの情報をログに出力。wstringの方なので注意
+            Log(std::format(L"Use Adapater:{}\n",
+                adapterDesc.Description));
+            break;
+        }
+        useAdapter = nullptr; // ソフトウェアアダプタの場合は見なかったことにする
+    }
+    // 適切なアダプタが見つからなかったので起動できない
+    assert(useAdapter != nullptr);
+
+
+    ID3D12Device* device = nullptr;
+    // 機能レベルとログ出力用の文字列
+    D3D_FEATURE_LEVEL featureLevels[] = {
+        D3D_FEATURE_LEVEL_12_2, D3D_FEATURE_LEVEL_12_1,
+    D3D_FEATURE_LEVEL_12_0
+    };
+    const char* featureLevelStrings[] = { "12.2", "12.1", "12.0" };
+    // 高い順に生成できるか試していく
+    for (size_t i = 0; i < _countof(featureLevels); ++i) {
+        // 採用したアダプターでデバイスを生成
+        hr = D3D12CreateDevice(useAdapter, featureLevels[i],
+            IID_PPV_ARGS(&device));
+        // 指定した機能レベルでデバイスが生成できたかを確認
+        if (SUCCEEDED(hr)) {
+            // 生成できたのでログ出力を行ってループを抜け出す
+            Log(std::format(L"FeatureLevel : {}\n", featureLevelStrings[i]));
+            break;
+        }
+    }
+    // デバイスの生成がうまくいかなかったので起動できない
+    assert(device != nullptr);
+    Log(L"Complete create D3D12Device!!!\n"); // 初期化完了のログをだす
 
 
     MSG msg{};
