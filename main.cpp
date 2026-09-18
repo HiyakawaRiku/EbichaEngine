@@ -41,6 +41,12 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 #pragma comment(lib,"xaudio2.lib")
 
 
+#define DIRECTINPUT_VERSION    0x0800  // DirectInputのバージョン指定
+#include <dinput.h>
+
+#pragma comment(lib, "dinput8.lib")
+#pragma comment(lib, "dxguid.lib")
+
 
 struct Vector2 {
 	float x, y;
@@ -133,11 +139,23 @@ struct SoundData
 	unsigned int bufferSize;
 };
 
-#define DIRECTINPUT_VERSION    0x0800  // DirectInputのバージョン指定
-#include <dinput.h>
 
-#pragma comment(lib, "dinput8.lib")
-#pragma comment(lib, "dxguid.lib")
+enum BlendMode {
+	//!< ブレンドなし
+	kBlendModeNone,
+	//!< 通常αブレンド。デフォルト。 Src * SrcA + Dest * (1 - SrcA)
+	kBlendModeNormal,
+	//!< 加算。Src * SrcA + Dest * 1
+	kBlendModeAdd,
+	//!< 減算。Dest * 1 - Src * SrcA
+	kBlendModeSubtract,
+	//!< 乗算。Src * 0 + Dest * Src
+	kBlendModeMultily,
+	//!< スクリーン。Src * (1 - Dest) + Dest * 1
+	kBlendModeScreen,
+	// 利用してはいけない
+	kCountOfBlendMode,
+};
 
 
 inline Matrix4x4 MakeIdentity4x4() {
@@ -1222,9 +1240,14 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 	// BlendStateの設定
 	D3D12_BLEND_DESC blendDesc{};
-	// すべての色要素を書き込む
-	blendDesc.RenderTarget[0].RenderTargetWriteMask =
-		D3D12_COLOR_WRITE_ENABLE_ALL;
+	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+	blendDesc.RenderTarget[0].BlendEnable = TRUE;
+	blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+	blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
 
 
 	// RasterizerStateの設定
@@ -1291,7 +1314,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 
 	// モデル読み込み
-	ModelData modelData = LoadObjFile("resources", "plane.obj");
+	ModelData modelData = LoadObjFile("resources", "fence.obj");
 	// 頂点リソースを作る
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource = CreateBufferResource(device, sizeof(VertexData) * modelData.vertices.size());
 	// 頂点バッファビューを作成する
@@ -1698,6 +1721,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			ImGui::DragFloat2("UVTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
 			ImGui::DragFloat2("UVScale", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
 			ImGui::SliderAngle("UVRotate", &uvTransformSprite.rotate.z);
+
+			ImGui::DragFloat("intensity", &directionalLightData->intensity, 0.01f, 0.0f, 10.0f);
 
 			//ImGuiの内部コマンドを生成する
 			ImGui::Render();
