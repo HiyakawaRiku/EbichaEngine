@@ -147,6 +147,8 @@ struct Particle {
 	Transform transform;
 	Vector3 velocity;
 	Vector4 color;
+	float lifeTime;
+	float currentTime;
 };
 
 struct ParticleForGPU {
@@ -159,11 +161,14 @@ struct ParticleForGPU {
 Particle MakeNewParticle(std::mt19937& randomEngine)
 {
 	std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
+	std::uniform_real_distribution<float> distTime(1.0f, 3.0f);
 	Particle particle;
 	particle.transform.scale = { 1.0f, 1.0f, 1.0f };
 	particle.transform.rotate = { 0.0f, 0.0f, 0.0f };
 	particle.transform.translate = { distribution(randomEngine), distribution(randomEngine), distribution(randomEngine) };
 	particle.velocity = { distribution(randomEngine), distribution(randomEngine), distribution(randomEngine) };
+	particle.lifeTime = distTime(randomEngine);
+	particle.currentTime = 0;
 	return particle;
 }
 
@@ -184,6 +189,7 @@ enum BlendMode {
 	// 利用してはいけない
 	kCountOfBlendMode,
 };
+
 
 const float kDeltaTime = 1.0f / 60.0f;
 
@@ -369,6 +375,36 @@ Matrix4x4 MakeScaleMatrix(const Vector3& scale) {
 	result.m[0][0] = scale.x;
 	result.m[1][1] = scale.y;
 	result.m[2][2] = scale.z;
+	result.m[3][3] = 1.0f;
+	return result;
+}
+
+// X軸回転行列の作成
+Matrix4x4 MakeRotateXMatrix(float angle) {
+	Matrix4x4 result = { 0 };
+	float c = std::cos(angle);
+	float s = std::sin(angle);
+
+	result.m[0][0] = 1.0f;
+	result.m[1][1] = c;
+	result.m[1][2] = s;
+	result.m[2][1] = -s;
+	result.m[2][2] = c;
+	result.m[3][3] = 1.0f;
+	return result;
+}
+
+// Y軸回転行列の作成
+Matrix4x4 MakeRotateYMatrix(float angle) {
+	Matrix4x4 result = { 0 };
+	float c = std::cos(angle);
+	float s = std::sin(angle);
+
+	result.m[0][0] = c;
+	result.m[0][2] = -s;
+	result.m[1][1] = 1.0f;
+	result.m[2][0] = s;
+	result.m[2][2] = c;
 	result.m[3][3] = 1.0f;
 	return result;
 }
@@ -1343,15 +1379,54 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 
 	// BlendStateの設定
-	D3D12_BLEND_DESC blendDesc{};
-	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-	blendDesc.RenderTarget[0].BlendEnable = TRUE;
-	blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
-	blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-	blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
-	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
-	blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
-	blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+	D3D12_BLEND_DESC blendDesc[6]{};
+
+	blendDesc[0].RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+
+	blendDesc[1].RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+	blendDesc[1].RenderTarget[0].BlendEnable = TRUE;
+	blendDesc[1].RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	blendDesc[1].RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+	blendDesc[1].RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+	blendDesc[1].RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+	blendDesc[1].RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	blendDesc[1].RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+
+	blendDesc[2].RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+	blendDesc[2].RenderTarget[0].BlendEnable = TRUE;
+	blendDesc[2].RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	blendDesc[2].RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+	blendDesc[2].RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
+	blendDesc[2].RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+	blendDesc[2].RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	blendDesc[2].RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+
+	blendDesc[3].RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+	blendDesc[3].RenderTarget[0].BlendEnable = TRUE;
+	blendDesc[3].RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	blendDesc[3].RenderTarget[0].BlendOp = D3D12_BLEND_OP_REV_SUBTRACT;
+	blendDesc[3].RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
+	blendDesc[3].RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+	blendDesc[3].RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	blendDesc[3].RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+
+	blendDesc[4].RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+	blendDesc[4].RenderTarget[0].BlendEnable = TRUE;
+	blendDesc[4].RenderTarget[0].SrcBlend = D3D12_BLEND_ZERO;
+	blendDesc[4].RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+	blendDesc[4].RenderTarget[0].DestBlend = D3D12_BLEND_SRC_COLOR;
+	blendDesc[4].RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+	blendDesc[4].RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	blendDesc[4].RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
+
+	blendDesc[5].RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+	blendDesc[5].RenderTarget[0].BlendEnable = TRUE;
+	blendDesc[5].RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+	blendDesc[5].RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+	blendDesc[5].RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
+	blendDesc[5].RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+	blendDesc[5].RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+	blendDesc[5].RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
 
 
 	// RasterizerStateの設定
@@ -1382,13 +1457,22 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 
 	// DepthStencilStateの設定
-	D3D12_DEPTH_STENCIL_DESC depthStencilDesc{};
+	D3D12_DEPTH_STENCIL_DESC object3dDepthStencilDesc{};
 	// Depthの機能を有効化する
-	depthStencilDesc.DepthEnable = true;
+	object3dDepthStencilDesc.DepthEnable = true;
 	// 書き込みします
-	depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+	object3dDepthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
 	// 比較関数はLessEqual。つまり、近ければ描画される
-	depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+	object3dDepthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+
+	// DepthStencilStateの設定
+	D3D12_DEPTH_STENCIL_DESC particleDepthStencilDesc{};
+	// Depthの機能を有効化する
+	particleDepthStencilDesc.DepthEnable = true;
+	// 書き込みします
+	particleDepthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
+	// 比較関数はLessEqual。つまり、近ければ描画される
+	particleDepthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC object3dPipelineStateDesc{};
@@ -1398,7 +1482,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		object3dVertexShaderBlob->GetBufferSize() }; // VertexShader
 	object3dPipelineStateDesc.PS = { object3dPixelShaderBlob->GetBufferPointer(),
 		object3dPixelShaderBlob->GetBufferSize() }; // Pixel Shader
-	object3dPipelineStateDesc.BlendState = blendDesc; // BlendState
+	object3dPipelineStateDesc.BlendState = blendDesc[1]; // BlendState
 	object3dPipelineStateDesc.RasterizerState = rasterizerDesc; // RasterizerState
 	// 書き込むRTVの情報
 	object3dPipelineStateDesc.NumRenderTargets = 1;
@@ -1410,7 +1494,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	object3dPipelineStateDesc.SampleDesc.Count = 1;
 	object3dPipelineStateDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
 	// DepthStencilの設定
-	object3dPipelineStateDesc.DepthStencilState = depthStencilDesc;
+	object3dPipelineStateDesc.DepthStencilState = object3dDepthStencilDesc;
 	object3dPipelineStateDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	// 実際に生成
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> object3dPipelineState = nullptr;
@@ -1426,7 +1510,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		particleVertexShaderBlob->GetBufferSize() }; // VertexShader
 	particlePipelineStateDesc.PS = { particlePixelShaderBlob->GetBufferPointer(),
 		particlePixelShaderBlob->GetBufferSize() }; // Pixel Shader
-	particlePipelineStateDesc.BlendState = blendDesc; // BlendState
+	particlePipelineStateDesc.BlendState = blendDesc[2]; // BlendState
 	particlePipelineStateDesc.RasterizerState = rasterizerDesc; // RasterizerState
 	// 書き込むRTVの情報
 	particlePipelineStateDesc.NumRenderTargets = 1;
@@ -1438,7 +1522,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	particlePipelineStateDesc.SampleDesc.Count = 1;
 	particlePipelineStateDesc.SampleMask = D3D12_DEFAULT_SAMPLE_MASK;
 	// DepthStencilの設定
-	particlePipelineStateDesc.DepthStencilState = depthStencilDesc;
+	particlePipelineStateDesc.DepthStencilState = particleDepthStencilDesc;
 	particlePipelineStateDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	// 実際に生成
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> particlePipelineState = nullptr;
@@ -1591,15 +1675,15 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	wvpData->WVP = MakeIdentity4x4();
 	wvpData->World = MakeIdentity4x4();
 
-	const uint32_t kNumInstance = 10;// インスタンス数
+	const uint32_t kNumMaxInstance = 10;// インスタンス数
 	// Instancing用のTransformationMatrixリソースを作る
-	Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource = CreateBufferResource(device, sizeof(ParticleForGPU) * kNumInstance);
+	Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource = CreateBufferResource(device, sizeof(ParticleForGPU) * kNumMaxInstance);
 	// データを書き込む
 	ParticleForGPU* instancingData = nullptr;
 	// 書き込むためのアドレスを取得
 	instancingResource->Map(0, nullptr, reinterpret_cast<void**>(&instancingData));
 	// 単位行列を書きこんでおく
-	for (uint32_t index = 0; index < kNumInstance; ++index) {
+	for (uint32_t index = 0; index < kNumMaxInstance; ++index) {
 		instancingData[index].WVP = MakeIdentity4x4();
 		instancingData[index].World = MakeIdentity4x4();
 		instancingData[index].color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -1639,7 +1723,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 	//Transform関数を作る
 	Transform transform{ { 1.0f,1.0f,1.0f },{ 0.0f,0.0f,0.0f },{ 0.0f,0.0f,0.0f } };
-	Transform cameraTransform{ { 1.0f,1.0f,1.0f },{ 0.0f,0.0f,0.0f },{ 0.0f,0.0f,-10.0f } };
+	Transform cameraTransform{ { 1.0f,1.0f,1.0f },{ std::numbers::pi_v<float> / 3.0f,std::numbers::pi_v<float>,0.0f },{ 0.0f,23.0f,10.0f } };
 
 
 	// ImGuiの初期化。詳細はさして重要ではないので解説は省略する。
@@ -1672,6 +1756,12 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	const DirectX::TexMetadata& metadata2 = mipImages2.GetMetadata();
 	Microsoft::WRL::ComPtr<ID3D12Resource> textureResource2 = CreateTextureResource(device, metadata2);
 	Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource2 = UploadTextureData(textureResource2, mipImages2, device, commandList);
+
+	// 2枚目のTextureを読んで転送する
+	DirectX::ScratchImage mipImages3 = LoadTexture("resources/circle.png");
+	const DirectX::TexMetadata& metadata3 = mipImages3.GetMetadata();
+	Microsoft::WRL::ComPtr<ID3D12Resource> textureResource3 = CreateTextureResource(device, metadata3);
+	Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource3 = UploadTextureData(textureResource3, mipImages3, device, commandList);
 
 	// DepthStencilTextureをウィンドウのサイズで作成
 	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource = CreateDepthStencilTextureResource(device, kClientWidth, kClientHeight);
@@ -1724,13 +1814,20 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	srvDesc2.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D; // 2Dテクスチャ
 	srvDesc2.Texture2D.MipLevels = UINT(metadata2.mipLevels);
 
+	// metaDataを基にSRVの設定
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc3{};
+	srvDesc3.Format = metadata3.format;
+	srvDesc3.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc3.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D; // 2Dテクスチャ
+	srvDesc3.Texture2D.MipLevels = UINT(metadata3.mipLevels);
+
 	D3D12_SHADER_RESOURCE_VIEW_DESC instancingSrvDesc{};
 	instancingSrvDesc.Format = DXGI_FORMAT_UNKNOWN;
 	instancingSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	instancingSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
 	instancingSrvDesc.Buffer.FirstElement = 0;
 	instancingSrvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
-	instancingSrvDesc.Buffer.NumElements = kNumInstance;
+	instancingSrvDesc.Buffer.NumElements = kNumMaxInstance;
 	instancingSrvDesc.Buffer.StructureByteStride = sizeof(ParticleForGPU);
 	D3D12_CPU_DESCRIPTOR_HANDLE instancingSrvHandleCPU = GetCPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 3);
 	D3D12_GPU_DESCRIPTOR_HANDLE instancingSrvHandleGPU = GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 3);
@@ -1745,11 +1842,19 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	// SRVの生成
 	device->CreateShaderResourceView(textureResource.Get(), &srvDesc, textureSrvHandleCPU);
 
+
 	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU2 = GetCPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 2);
 	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU2 = GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 2);
 
 	// SRVの生成
 	device->CreateShaderResourceView(textureResource2.Get(), &srvDesc2, textureSrvHandleCPU2);
+
+
+	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU3 = GetCPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 4);
+	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU3 = GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 4);
+
+	// SRVの生成
+	device->CreateShaderResourceView(textureResource3.Get(), &srvDesc3, textureSrvHandleCPU3);
 
 	// DSVの設定
 	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc{};
@@ -1834,9 +1939,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	Transform transformSprite{ { 1.0f,1.0f,1.0f },{ 0.0f,0.0f,0.0f },{ 0.0f,0.0f,0.0f } };
 	Transform uvTransformSprite{ { 1.0f,1.0f,1.0f },{ 0.0f,0.0f,0.0f },{ 0.0f,0.0f,0.0f } };
 
-	Particle particles[kNumInstance];
+	Particle particles[kNumMaxInstance];
 	std::uniform_real_distribution<float> distColor(0.0f, 1.0f);
-	for (uint32_t index = 0; index < kNumInstance; ++index) {
+	for (uint32_t index = 0; index < kNumMaxInstance; ++index) {
 		particles[index] = MakeNewParticle(randomEngine);
 		particles[index].color = { distColor(randomEngine), distColor(randomEngine), distColor(randomEngine),1.0f };
 	}
@@ -1881,7 +1986,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 				OutputDebugStringA("Hit 0\n");//出力ウィンドウに「Hit 0」と表示
 			}
 
-			for (uint32_t index = 0; index < kNumInstance; ++index) {
+			for (uint32_t index = 0; index < kNumMaxInstance; ++index) {
 				particles[index].transform.translate.x += particles[index].velocity.x * kDeltaTime;
 				particles[index].transform.translate.y += particles[index].velocity.y * kDeltaTime;
 				particles[index].transform.translate.z += particles[index].velocity.z * kDeltaTime;
@@ -1909,21 +2014,44 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 #endif
 
 
-			//Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 			Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
+			Matrix4x4 backToFrontMatrix = MakeRotateYMatrix(std::numbers::pi_v<float>);
+			Matrix4x4 billboardMatrix = Multiply(backToFrontMatrix, cameraMatrix);
+			billboardMatrix.m[3][0] = 0.0f;
+			billboardMatrix.m[3][1] = 0.0f;
+			billboardMatrix.m[3][2] = 0.0f;
+
+
+			//Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 			Matrix4x4 viewMatrix = Inverse(cameraMatrix);
 			Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kClientWidth) / float(kClientHeight), 0.1f, 100.0f);
 			//Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
 			//wvpData->World = worldViewProjectionMatrix;
 			//wvpData->WVP = worldViewProjectionMatrix;
 
-			for (uint32_t index = 0; index < kNumInstance; ++index) {
-				Matrix4x4 worldMatrix =
-					MakeAffineMatrix(particles[index].transform.scale, particles[index].transform.rotate, particles[index].transform.translate);
+			uint32_t numInstance = 0;
+			for (uint32_t index = 0; index < kNumMaxInstance; ++index) {
+
+				if (particles[index].lifeTime <= particles[index].currentTime) {
+					continue;
+				}
+
+				Matrix4x4 scaleMatrix = MakeScaleMatrix(particles[index].transform.scale);
+				Matrix4x4 translateMatrix = MakeTranslateMatrix(particles[index].transform.translate);
+
+				Matrix4x4 worldMatrix = Multiply(scaleMatrix, Multiply(billboardMatrix, translateMatrix));
 				Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
-				instancingData[index].WVP = worldViewProjectionMatrix;
-				instancingData[index].World = worldMatrix;
-				instancingData[index].color = particles[index].color;
+
+				particles[index].transform.translate.x += particles[index].velocity.x * kDeltaTime;
+				particles[index].transform.translate.y += particles[index].velocity.y * kDeltaTime;
+				particles[index].transform.translate.z += particles[index].velocity.z * kDeltaTime;
+				particles[index].currentTime += kDeltaTime;
+				instancingData[numInstance].WVP = worldViewProjectionMatrix;
+				instancingData[numInstance].World = worldMatrix;
+				instancingData[numInstance].color = particles[index].color;
+				float alpha = 1.0f - (particles[index].currentTime / particles[index].lifeTime);
+				instancingData[numInstance].color.w = alpha;
+				++numInstance;
 			}
 
 			// Sprite用のWorldViewProjectionMatrixを作る
@@ -2013,8 +2141,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			// directionalLight用のCBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 			// 描画！6頂点の板ポリゴンを、kNumInstance(今回は10)だけInstance描画を行う
-			commandList->DrawInstanced(UINT(modelData.vertices.size()), kNumInstance, 0, 0);
-
+			if (numInstance > 0) {
+				commandList->DrawInstanced(UINT(modelData.vertices.size()), numInstance, 0, 0);
+			}
 
 			// RootSignatureを設定。PSOに設定しているけど別途設定が必要
 			commandList->SetGraphicsRootSignature(object3dRootSignature.Get());
