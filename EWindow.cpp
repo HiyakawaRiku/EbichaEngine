@@ -83,3 +83,10 @@ void EWindow::Initialize()
 void EWindow::Update()
 {
 }
+
+void EWindow::Finalize()
+{
+	CloseWindow(hwnd);
+
+	CoUninitialize();
+}

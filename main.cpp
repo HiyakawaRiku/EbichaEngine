@@ -764,7 +764,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 
 	std::unique_ptr<Input> input = std::make_unique<Input>();
-	input->Initialize(eWindow->GetHInstance(),eWindow->GetHwnd());
+	input->Initialize(eWindow.get());
 
 
 
@@ -1939,9 +1939,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 
 	CloseHandle(fenceEvent);
-	CloseWindow(eWindow->GetHwnd());
-
-	CoUninitialize();
+	
+	eWindow->Finalize();
 
 	return 0;
 }
