@@ -11,6 +11,7 @@ void Input::Initialize(HINSTANCE hInstance, HWND hwnd)
 {
 
 	// DirectInputの初期化
+	ComPtr<IDirectInput8> directInput = nullptr;
 	HRESULT hr = DirectInput8Create(
 		hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8,
 		(void**)&directInput, nullptr);

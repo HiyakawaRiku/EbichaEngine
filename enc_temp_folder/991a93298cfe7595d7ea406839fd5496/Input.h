@@ -20,7 +20,6 @@ public:
 
 private:
 	ComPtr<IDirectInputDevice8> keyboard = nullptr;
-	ComPtr<IDirectInput8> directInput = nullptr;
 	BYTE key[256] = {};
 	BYTE keyPre[256] = {};
 };

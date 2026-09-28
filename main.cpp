@@ -1725,9 +1725,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			input->Update();
 
 			//数字の0キーが押されていたら
-			//if (key[DIK_0]) {
-			//	OutputDebugStringA("Hit 0\n");//出力ウィンドウに「Hit 0」と表示
-			//}
+			if (input->TriggerKey(DIK_0)) {
+				OutputDebugStringA("Hit 0\n");//出力ウィンドウに「Hit 0」と表示
+			}
 
 			for (std::list<Particle>::iterator particleIterator = particles.begin(); particleIterator != particles.end(); ++particleIterator) {
 				(*particleIterator).transform.translate.x += (*particleIterator).velocity.x * kDeltaTime;
