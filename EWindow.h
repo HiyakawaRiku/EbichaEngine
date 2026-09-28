@@ -10,8 +10,9 @@ public:
 	static LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg,WPARAM wparam, LPARAM lparam);
 public:
 	void Initialize();
-	void Update();
 	void Finalize();
+
+	bool ProcessMessage();
 
 	HWND GetHwnd() const { return hwnd; }
 	HINSTANCE GetHInstance()const { return wc.hInstance; }

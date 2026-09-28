@@ -36,7 +36,7 @@ void EWindow::Initialize()
 {
 	HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
 
-	
+
 	// ウィンドウプロシージャ
 	wc.lpfnWndProc = WindowProc;
 	// ウィンドウクラス名(なんでも良い)
@@ -80,13 +80,26 @@ void EWindow::Initialize()
 
 }
 
-void EWindow::Update()
-{
-}
-
 void EWindow::Finalize()
 {
 	CloseWindow(hwnd);
 
 	CoUninitialize();
+}
+
+bool EWindow::ProcessMessage()
+{
+	MSG msg{};
+
+	// Windowにメッセージが来てたら最優先で処理させる
+	if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+
+	if (msg.message == WM_QUIT) {
+		return true;
+	}
+
+	return false;
 }
