@@ -39,13 +39,10 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 #pragma comment(lib,"xaudio2.lib")
 
 
-#define DIRECTINPUT_VERSION    0x0800  // DirectInputのバージョン指定
-#include <dinput.h>
-
-#pragma comment(lib, "dinput8.lib")
-#pragma comment(lib, "dxguid.lib")
 
 #include "EMath.h"
+#include "Input.h"
+
 
 #include <random>
 std::random_device seedGenerator;
@@ -832,28 +829,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	Log(L"Complete create D3D12Device!!!\n"); // 初期化完了のログをだす
 
 
-
-	// DirectInputの初期化
-	IDirectInput8* directInput = nullptr;
-	hr = DirectInput8Create(
-		wc.hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8,
-		(void**)&directInput, nullptr);
-	assert(SUCCEEDED(hr));
-
-	// キーボードデバイスの生成
-	IDirectInputDevice8* keyboard = nullptr;
-	hr = directInput->CreateDevice(GUID_SysKeyboard, &keyboard, NULL);
-	assert(SUCCEEDED(hr));
-
-	// 入力データ形式のセット
-	hr = keyboard->SetDataFormat(&c_dfDIKeyboard); // 標準形式
-	assert(SUCCEEDED(hr));
-
-	// 排他制御レベルのセット
-	hr = keyboard->SetCooperativeLevel(
-		hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);
-	assert(SUCCEEDED(hr));
-
+	std::unique_ptr<Input> input = std::make_unique<Input>();
+	input->Initialize(wc.hInstance,hwnd);
 
 
 

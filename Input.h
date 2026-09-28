@@ -1,8 +1,10 @@
 #pragma once
+#include <Windows.h>
+
 class Input
 {
 public:
-	void Initialize();
+	void Initialize(HINSTANCE hInstance, HWND hwnd);
 	void Update();
 };
 
