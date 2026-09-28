@@ -1,5 +1,3 @@
-#include <Windows.h>
-#include <cstdint>
 #include "ConvertString.h"
 #include <format>
 

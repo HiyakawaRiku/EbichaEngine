@@ -1,6 +1,5 @@
 #pragma once
 #include "EWindow.h"
-#include <Windows.h>
 
 #define DIRECTINPUT_VERSION    0x0800  // DirectInputのバージョン指定
 #include <dinput.h>
