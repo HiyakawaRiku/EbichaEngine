@@ -114,9 +114,9 @@ private:
 	HANDLE fenceEvent;
 	D3D12_VIEWPORT viewport{};
 	D3D12_RECT scissorRect{};
-	Microsoft::WRL::ComPtr<IDxcUtils> dxcUtils = nullptr;
-	Microsoft::WRL::ComPtr<IDxcCompiler3> dxcCompiler = nullptr;
-	Microsoft::WRL::ComPtr<IDxcIncludeHandler> includeHandler = nullptr;
+	IDxcUtils* dxcUtils = nullptr;
+	IDxcCompiler3* dxcCompiler = nullptr;
+	IDxcIncludeHandler* includeHandler = nullptr;
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles[2];
 
 

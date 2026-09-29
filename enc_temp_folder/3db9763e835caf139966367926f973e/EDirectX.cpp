@@ -1,4 +1,3 @@
-#pragma comment(lib,"winmm.lib")
 #include "EDirectX.h"
 #include <format>
 
@@ -12,8 +11,6 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 #include <cassert>
 #include "Logger.h"
 
-#include <thread>
-
 
 using namespace Logger;
 
@@ -21,7 +18,6 @@ void EDirectX::Initialize(EWindow* eWindow)
 {
 	assert(eWindow);
 
-	timeBeginPeriod(1);
 	InitializeFixFPS();
 
 	InitializeDXGIDevice();
@@ -44,6 +40,7 @@ void EDirectX::PreDraw()
 	// これから書き込むバックバッファのインデックスを取得
 	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
 
+
 	// TransitionBarrierの設定
 	D3D12_RESOURCE_BARRIER barrier{};
 	// 今回のバリアはTransition
@@ -58,6 +55,7 @@ void EDirectX::PreDraw()
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
 	// TransitionBarrierを張る
 	commandList->ResourceBarrier(1, &barrier);
+
 
 	// 描画先のRTVとDSVを設定する
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
@@ -83,6 +81,7 @@ void EDirectX::PostDraw()
 	// これから書き込むバックバッファのインデックスを取得
 	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
 
+
 	// TransitionBarrierの設定
 	D3D12_RESOURCE_BARRIER barrier{};
 	// 今回のバリアはTransition
@@ -99,9 +98,11 @@ void EDirectX::PostDraw()
 	// TransitionBarrierを張る
 	commandList->ResourceBarrier(1, &barrier);
 
+
 	// コマンドリストの内容を確定させる。すべてのコマンドを積んでからCloseすること
 	HRESULT hr = commandList->Close();
 	assert(SUCCEEDED(hr));
+
 
 	// GPUにコマンドリストの実行を行わせる
 	Microsoft::WRL::ComPtr<ID3D12CommandList> commandLists[] = { commandList.Get() };
@@ -111,10 +112,12 @@ void EDirectX::PostDraw()
 
 	UpdateFixFPS();
 
+
 	// Fenceの値を更新
 	fenceValue++;
 	// GPUがここまでたどり着いたときに、Fenceの値を指定した値に代入するようにSignalを送る
 	commandQueue->Signal(fence.Get(), fenceValue);
+
 
 	// Fenceの値が指定したSignal値にたどり着いているか確認する
 	// GetCompletedValueの初期値はFence作成時に渡した初期値
@@ -127,11 +130,13 @@ void EDirectX::PostDraw()
 		CloseHandle(fenceEvent);
 	}
 
+
 	// 次のフレーム用のコマンドリストを準備
 	hr = commandAllocator->Reset();
 	assert(SUCCEEDED(hr));
 	hr = commandList->Reset(commandAllocator.Get(), nullptr);
 	assert(SUCCEEDED(hr));
+
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE EDirectX::GetSRVCPUDescriptorHandle(uint32_t index)
@@ -201,7 +206,7 @@ IDxcBlob* EDirectX::CompileShader(
 		&shaderSourceBuffer, // 読み込んだファイル
 		arguments, // コンパイルオプション
 		_countof(arguments), // コンパイルオプションの数
-		includeHandler.Get(), // includeが含まれた諸々
+		includeHandler, // includeが含まれた諸々
 		IID_PPV_ARGS(&shaderResult) // コンパイル結果
 	);
 	// コンパイルエラーではなくdxcが起動できないなど致命的な状況
@@ -361,6 +366,11 @@ Microsoft::WRL::ComPtr<ID3D12Resource> EDirectX::CreateDepthStencilTextureResour
 	return resource;
 }
 
+
+
+
+
+
 void EDirectX::InitializeDXGIDevice()
 {
 #ifdef _DEBUG
@@ -373,9 +383,18 @@ void EDirectX::InitializeDXGIDevice()
 	}
 #endif
 
+
+	// DXGIファクトリーの生成
+
+	// HRESULTはWindows系のエラーコードであり、
+	// 関数が成功したかどうかをSUCCEEDEDマクロで判定できる
 	HRESULT hr = CreateDXGIFactory(IID_PPV_ARGS(&dxgiFactory));
+	// 初期化の根本的な部分でエラーが出た場合はプログラムが間違っているか、どう
+	// にもできない場合が多いのでassertにしておく
 	assert(SUCCEEDED(hr));
 
+
+	// 使用するアダプタ用の変数。最初にnullptrを入れておく
 	Microsoft::WRL::ComPtr<IDXGIAdapter4> useAdapter = nullptr;
 	// 良い順にアダプタを頼む
 	for (UINT i = 0; dxgiFactory->EnumAdapterByGpuPreference(i,
@@ -396,6 +415,8 @@ void EDirectX::InitializeDXGIDevice()
 	}
 	// 適切なアダプタが見つからなかったので起動できない
 	assert(useAdapter != nullptr);
+
+
 
 	// 機能レベルとログ出力用の文字列
 	D3D_FEATURE_LEVEL featureLevels[] = {
@@ -430,6 +451,7 @@ void EDirectX::InitializeDXGIDevice()
 		// 警告時に止まる
 		infoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, true);
 
+
 		// 抑制するメッセージのID
 		D3D12_MESSAGE_ID denyIds[] = {
 			// Windows11でのDXGIデバッグレイヤーとDX12デバッグレイヤーの相互作用バグによるエラーメッセージ
@@ -452,24 +474,31 @@ void EDirectX::InitializeDXGIDevice()
 
 void EDirectX::InitializeCommand()
 {
+
 	//コマンドキューを生成する
+
 	D3D12_COMMAND_QUEUE_DESC commandQueueDesc{};
 	HRESULT hr = device->CreateCommandQueue(&commandQueueDesc,
 		IID_PPV_ARGS(&commandQueue));
 	// コマンドキューの生成がうまくいかなかったので起動できない
 	assert(SUCCEEDED(hr));
 
+
 	// コマンドアロケータを生成する
 	hr = device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator));
+	// コマンドアロケータの生成がうまくいかなかったので起動できない
 	assert(SUCCEEDED(hr));
 
 	// コマンドリストを生成する
 	hr = device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator.Get(), nullptr, IID_PPV_ARGS(&commandList));
+	// コマンドリストの生成がうまくいかなかったので起動できない
 	assert(SUCCEEDED(hr));
+
 }
 
 void EDirectX::CreateSwapChain(EWindow* eWindow)
 {
+
 	// スワップチェーンを生成する
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
 	swapChainDesc.Width = EWindow::kClientWidth;     // 画面の幅。ウィンドウのクライアント領域と同じものにしておく
@@ -482,31 +511,44 @@ void EDirectX::CreateSwapChain(EWindow* eWindow)
 	// コマンドキュー、ウィンドウハンドル、設定を渡して生成する
 	HRESULT hr = dxgiFactory->CreateSwapChainForHwnd(commandQueue.Get(), eWindow->GetHwnd(), &swapChainDesc, nullptr, nullptr, reinterpret_cast<IDXGISwapChain1**>(swapChain.GetAddressOf()));
 	assert(SUCCEEDED(hr));
+
 }
 
 void EDirectX::CreateAllDescriptorHeap()
 {
+
 	// DescriptorSizeを取得しておく
 	descriptorSizeSRV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	descriptorSizeRTV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	descriptorSizeDSV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 
+
+	// RTV用のヒープでディスクリプタの数は2。RTVはShader内で触るものではないので、ShaderVisibleはfalse
 	rtvDescriptorHeap = CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2, false);
+	// SRV用のヒープでディスクリプタの数は128。SRVはShader内で触るものなので、ShaderVisibleはtrue
 	srvDescriptorHeap = CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 128, true);
+	// DSV用のヒープでディスクリプタの数は1。DSVはShader内で触るものではないので、ShaderVisibleはfalse
 	dsvDescriptorHeap = CreateDescriptorHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1, false);
+
+
 }
 
 void EDirectX::InitializeRenderTargets()
 {
+	// SwapChainからResourceを引っ張ってくる
 	HRESULT hr = swapChain->GetBuffer(0, IID_PPV_ARGS(&swapChainResources[0]));
+	// うまく取得できなければ起動できない
 	assert(SUCCEEDED(hr));
 	hr = swapChain->GetBuffer(1, IID_PPV_ARGS(&swapChainResources[1]));
 	assert(SUCCEEDED(hr));
+
 
 	// RTVの設定
 	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};
 	rtvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB; // 出力結果をsRGBに変換して書き込む
 	rtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D; // 2dテクスチャとして書き込む
+	// RTVを2つ作るのでディスクリプタを2つ用意
+
 	// まず1つ目を作る。1つ目は最初のところに作る。作る場所をこちらで指定してあげる必要がある
 	rtvHandles[0] = GetCPUDescriptorHandle(rtvDescriptorHeap, descriptorSizeRTV, 0);
 	device->CreateRenderTargetView(swapChainResources[0].Get(), &rtvDesc, rtvHandles[0]);
@@ -514,10 +556,12 @@ void EDirectX::InitializeRenderTargets()
 	rtvHandles[1] = GetCPUDescriptorHandle(rtvDescriptorHeap, descriptorSizeRTV, 1);
 	// 2つ目を作る
 	device->CreateRenderTargetView(swapChainResources[1].Get(), &rtvDesc, rtvHandles[1]);
+
 }
 
 void EDirectX::CreateDepthStencil()
 {
+	// DepthStencilTextureをウィンドウのサイズで作成
 	depthStencilResource = CreateDepthStencilTextureResource(EWindow::kClientWidth, EWindow::kClientHeight);
 
 	// DSVの設定
@@ -531,9 +575,13 @@ void EDirectX::CreateDepthStencil()
 
 void EDirectX::CreateFence()
 {
+
+	// 初期値0でFenceを作る
+
 	HRESULT hr = device->CreateFence(fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
 	assert(SUCCEEDED(hr));
 
+	// FenceのSignalを待つためのイベントを作成する
 	fenceEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 	assert(fenceEvent != nullptr);
 
@@ -541,6 +589,10 @@ void EDirectX::CreateFence()
 
 void EDirectX::CreateViewport()
 {
+
+	// ビューポート
+	
+	// クライアント領域のサイズと一緒にして画面全体に表示
 	viewport.Width = EWindow::kClientWidth;
 	viewport.Height = EWindow::kClientHeight;
 	viewport.TopLeftX = 0;
@@ -552,6 +604,9 @@ void EDirectX::CreateViewport()
 
 void EDirectX::CreateScissorRect()
 {
+	// シザー矩形
+	
+	// 基本的にビューポートと同じ矩形が構成されるようにする
 	scissorRect.left = 0;
 	scissorRect.right = EWindow::kClientWidth;
 	scissorRect.top = 0;
@@ -561,11 +616,16 @@ void EDirectX::CreateScissorRect()
 
 void EDirectX::CreateDXCompiler()
 {
+
+	// dxcCompilerを初期化
+
 	HRESULT hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
 	assert(SUCCEEDED(hr));
 	hr = DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&dxcCompiler));
 	assert(SUCCEEDED(hr));
 
+	// 現時点でincludeはしないが、includeに対応するための設定を行っておく
+	
 	hr = dxcUtils->CreateDefaultIncludeHandler(&includeHandler);
 	assert(SUCCEEDED(hr));
 
@@ -574,6 +634,9 @@ void EDirectX::CreateDXCompiler()
 
 void EDirectX::InitializeImGui(EWindow* eWindow)
 {
+
+	// ImGuiの初期化。詳細はさして重要ではないので解説は省略する。
+// こういうもんである
 #ifdef USE_IMGUI
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -600,21 +663,4 @@ void EDirectX::UpdateFixFPS()
 {
 	const std::chrono::microseconds kMinTime(uint64_t(1000000.0f / 60.0f));
 	const std::chrono::microseconds kMinCheckTime(uint64_t(1000000.0f / 65.0f));
-
-	// 現在時間を取得する
-	std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
-	// 前回記録からの経過時間を取得する
-	std::chrono::microseconds elapsed =
-		std::chrono::duration_cast<std::chrono::microseconds>(now - reference_);
-
-	// 1/60秒（よりわずかに短い時間）経っていない場合
-	if (elapsed < kMinCheckTime) {
-		// 1/60秒経過するまで微小なスリープを繰り返す
-		while (std::chrono::steady_clock::now() - reference_ < kMinTime) {
-			// 1マイクロ秒スリープ
-			std::this_thread::sleep_for(std::chrono::microseconds(1));
-		}
-	}
-	// 現在の時間を記録する
-	reference_ = std::chrono::steady_clock::now();
 }

@@ -27,7 +27,7 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 #include "Input.h"
 #include "EWindow.h"
 #include "EDirectX.h"
-
+#include "D3DResourceLeakChecker.h"
 
 #include <random>
 std::random_device seedGenerator;
@@ -293,19 +293,6 @@ ModelData LoadObjFile(const std::string& directoryPath, const std::string& filen
 	// 4. ModelDataを返す
 	return modelData;
 }
-
-
-struct D3DResourceLeakChecker {
-	~D3DResourceLeakChecker() {
-		// リソースリークチェック
-		Microsoft::WRL::ComPtr<IDXGIDebug1> debug;
-		if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&debug)))) {
-			debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_ALL);
-			debug->ReportLiveObjects(DXGI_DEBUG_APP, DXGI_DEBUG_RLO_ALL);
-			debug->ReportLiveObjects(DXGI_DEBUG_D3D12, DXGI_DEBUG_RLO_ALL);
-		}
-	}
-};
 
 
 SoundData SoundLoadWave(const char* filename)
@@ -1362,8 +1349,6 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	object3dVertexShaderBlob->Release();
 
 
-
-	eDirectX->Finalize();
 	eWindow->Finalize();
 
 	return 0;
