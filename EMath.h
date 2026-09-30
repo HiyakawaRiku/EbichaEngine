@@ -36,6 +36,9 @@ struct Transform {
 	Vector3 translate;
 };
 
+const float kDeltaTime = 1.0f / 60.0f;
+
+
 
 inline Matrix4x4 MakeIdentity4x4() {
 	Matrix4x4 identity{};
