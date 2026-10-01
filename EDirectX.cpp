@@ -127,6 +127,7 @@ void EDirectX::PostDraw()
 		CloseHandle(fenceEvent);
 	}
 
+
 	// 次のフレーム用のコマンドリストを準備
 	hr = commandAllocator->Reset();
 	assert(SUCCEEDED(hr));
