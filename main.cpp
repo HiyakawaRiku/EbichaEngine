@@ -178,21 +178,15 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	sprite->Initialize(eDirectX.get());
 
 
+	std::unique_ptr<Sound> sound = std::make_unique<Sound>();
+	sound->Initialize();
 
-
-	Microsoft::WRL::ComPtr<IXAudio2> xAudio2;
-	IXAudio2MasteringVoice* masterVoice;
-
-	//XAudioエンジンのインスタンスを生成
-	HRESULT hr = XAudio2Create(&xAudio2, 0, XAUDIO2_DEFAULT_PROCESSOR);
-	//マスターボイスを生成
-	hr = xAudio2->CreateMasteringVoice(&masterVoice);
 
 	//音声読み込み
 	SoundData soundData1 = SoundLoadWave("Resources/fanfare.wav");
 
 	//音声再生
-	SoundPlayWave(xAudio2.Get(), soundData1);
+	SoundPlayWave(sound->xAudio2.Get(), soundData1);
 
 
 	// ウィンドウの×ボタンが押されるまでループ
@@ -249,9 +243,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 		eDirectX->PreDraw();
 
-		object3d->Draw(eDirectX.get(),textureSrvHandleGPU,textureSrvHandleGPU2,instancingSrvHandleGPU);
+		object3d->Draw(eDirectX.get(), textureSrvHandleGPU, textureSrvHandleGPU2, instancingSrvHandleGPU);
 
-		sprite->Draw(eDirectX.get(),textureSrvHandleGPU);
+		sprite->Draw(eDirectX.get(), textureSrvHandleGPU);
 
 		// 実際のcommandListのImGuiの描画コマンドを積む
 #ifdef USE_IMGUI
@@ -262,8 +256,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 	}
 
-	//XAudio2解放
-	xAudio2.Reset();
+	sound->Finalize();
 
 	//音声データ解放
 	SoundUnload(&soundData1);
@@ -276,8 +269,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	ImGui::DestroyContext();
 #endif
 
-	//object3d->Finalize();
-	//sprite->Finalize();
+	object3d->Finalize();
+	sprite->Finalize();
 
 	eWindow->Finalize();
 

@@ -5,6 +5,7 @@
 #include <fstream>
 
 #include <cassert>
+#include "EDirectX.h"
 
 
 // チャンクヘッダ
@@ -144,5 +145,12 @@ inline void SoundPlayWave(IXAudio2* xAudio2, const SoundData& soundData) {
 
 class Sound
 {
+public:
+	void Initialize();
+	void Finalize();
+
+	Microsoft::WRL::ComPtr<IXAudio2> xAudio2;
+private:
+	IXAudio2MasteringVoice* masterVoice;
 };
 
