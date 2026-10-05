@@ -15,6 +15,8 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 
 #include "Logger.h"
 
+#include <thread>
+
 using namespace Microsoft::WRL;
 using namespace Logger;
 
@@ -23,6 +25,9 @@ void DirectXCommon::Initialize(WinApp* winApp)
 
 	assert(winApp);
 	this->winApp = winApp;
+
+	InitializeFixFPS();
+
 
 #ifdef _DEBUG
 	if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)))) {
@@ -188,7 +193,7 @@ void DirectXCommon::Initialize(WinApp* winApp)
 
 
 	// DepthStencilTextureをウィンドウのサイズで作成
-	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource = CreateDepthStencilTextureResource(device, WinApp::kClientWidth, WinApp::kClientHeight);
+	depthStencilResource = CreateDepthStencilTextureResource(WinApp::kClientWidth, WinApp::kClientHeight);
 
 	// DSVの設定
 	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc{};
@@ -357,6 +362,8 @@ void DirectXCommon::PostDraw()
 		WaitForSingleObject(fenceEvent, INFINITE);
 	}
 
+	UpdateFixFPS();
+
 
 	// 次のフレーム用のコマンドリストを準備
 	hr = commandAllocator->Reset();
@@ -365,6 +372,91 @@ void DirectXCommon::PostDraw()
 	assert(SUCCEEDED(hr));
 }
 
+
+Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::CreateDepthStencilTextureResource(int32_t width, int32_t height)
+{
+		// 生成するResourceの設定
+		D3D12_RESOURCE_DESC resourceDesc{};
+		resourceDesc.Width = width; // Textureの幅
+		resourceDesc.Height = height; // Textureの高さ
+		resourceDesc.MipLevels = 1; // mipmapの数
+		resourceDesc.DepthOrArraySize = 1; // 奥行き or 配列Textureの配列数
+		resourceDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT; // DepthStencilとして利用可能なフォーマット
+		resourceDesc.SampleDesc.Count = 1; // サンプリングカウント。1固定。
+		resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D; // 2次元
+		resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL; // DepthStencilとして使う通知
+
+		// 利用するHeapの設定
+		D3D12_HEAP_PROPERTIES heapProperties{};
+		heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT; // VRAM上に作る
+
+		// 深度値のクリア設定
+		D3D12_CLEAR_VALUE depthClearValue{};
+		depthClearValue.DepthStencil.Depth = 1.0f; // 1.0f（最大値）でクリア
+		depthClearValue.Format = DXGI_FORMAT_D24_UNORM_S8_UINT; // フォーマット。Resourceと合わせる
+
+		// Resourceの生成
+		Microsoft::WRL::ComPtr<ID3D12Resource> resource = nullptr;
+		HRESULT hr = device->CreateCommittedResource(
+			&heapProperties, // Heapの設定
+			D3D12_HEAP_FLAG_NONE, // Heapの特殊な設定。特になし。
+			&resourceDesc, // Resourceの設定
+			D3D12_RESOURCE_STATE_DEPTH_WRITE, // 深度値を書き込む状態にしておく
+			&depthClearValue, // Clear最適値
+			IID_PPV_ARGS(&resource)); // 作成するResourceポインタへのポインタ
+		assert(SUCCEEDED(hr));
+		return resource;
+}
+
+Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::CreateTextureResource( const DirectX::TexMetadata& metadata)
+{
+	// metadataを基にResourceの設定
+	D3D12_RESOURCE_DESC resourceDesc{};
+	resourceDesc.Width = UINT(metadata.width); // Textureの幅
+	resourceDesc.Height = UINT(metadata.height); // Textureの高さ
+	resourceDesc.MipLevels = UINT16(metadata.mipLevels); // mipmapの数
+	resourceDesc.DepthOrArraySize = UINT16(metadata.arraySize); // 奥行き or 配列Textureの配列数
+	resourceDesc.Format = metadata.format; // TextureのFormat
+	resourceDesc.SampleDesc.Count = 1; // サンプリングカウント。1固定。
+	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION(metadata.dimension); // Textureの次元数。普段使っているのは2次元
+
+	// 利用するHeapの設定。非常に特殊な運用。02_04exで一般的なケース版がある
+	D3D12_HEAP_PROPERTIES heapProperties{};
+	heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
+	//heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK; // WriteBackポリシーでCPUアクセス可能
+	//heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_L0; // プロセッサの近くに配置
+
+	// Resourceの生成
+	Microsoft::WRL::ComPtr<ID3D12Resource> resource = nullptr;
+	HRESULT hr = device->CreateCommittedResource(
+		&heapProperties, // Heapの設定
+		D3D12_HEAP_FLAG_NONE, // Heapの特殊な設定。特になし。
+		&resourceDesc, // Resourceの設定
+		D3D12_RESOURCE_STATE_COPY_DEST, // データ転送される設定
+		nullptr, // Clear最適値。使わないのでnullptr
+		IID_PPV_ARGS(&resource)); // 作成するResourceポインタへのポインタ
+	assert(SUCCEEDED(hr));
+	return resource;
+}
+
+DirectX::ScratchImage DirectXCommon::LoadTexture(const std::string& filePath)
+{
+
+	// テクスチャファイルを読んでプログラムで扱えるようにする
+	DirectX::ScratchImage image{};
+	std::wstring filePathW = ConvertString(filePath);
+	HRESULT hr = DirectX::LoadFromWICFile(filePathW.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, image);
+	assert(SUCCEEDED(hr));
+
+	// ミップマップの作成
+	DirectX::ScratchImage mipImages{};
+	hr = DirectX::GenerateMipMaps(image.GetImages(), image.GetImageCount(), image.GetMetadata(), DirectX::TEX_FILTER_SRGB, 0, mipImages);
+	assert(SUCCEEDED(hr));
+
+	// ミップマップ付きのデータを返す
+	return mipImages;
+
+}
 
 IDxcBlob* DirectXCommon::CompileShader(
 	// CompilerするShaderファイルへのパス
@@ -442,4 +534,32 @@ D3D12_GPU_DESCRIPTOR_HANDLE DirectXCommon::GetSRVGPUDescriptorHandle(uint32_t in
 	return GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, index);
 }
 
+
+void DirectXCommon::InitializeFixFPS()
+{
+	reference_ = std::chrono::steady_clock::now();
+}
+
+void DirectXCommon::UpdateFixFPS()
+{
+	const std::chrono::microseconds kMinTime(uint64_t(1000000.0f / 60.0f));
+	const std::chrono::microseconds kMinCheckTime(uint64_t(1000000.0f / 65.0f));
+
+	// 現在時間を取得する
+	std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+	// 前回記録からの経過時間を取得する
+	std::chrono::microseconds elapsed =
+		std::chrono::duration_cast<std::chrono::microseconds>(now - reference_);
+
+	// 1/60秒（よりわずかに短い時間）経っていない場合
+	if (elapsed < kMinCheckTime) {
+		// 1/60秒経過するまで微小なスリープを繰り返す
+		while (std::chrono::steady_clock::now() - reference_ < kMinTime) {
+			// 1マイクロ秒スリープ
+			std::this_thread::sleep_for(std::chrono::microseconds(1));
+		}
+	}
+	// 現在の時間を記録する
+	reference_ = std::chrono::steady_clock::now();
+}
 
