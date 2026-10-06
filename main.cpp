@@ -787,6 +787,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		sprite->SetSize(size);
 
 		sprite->SetAnchorPoint({ 0.5f,0.5f });
+		//sprite->SetIsFlipX(1);
+		//sprite->SetIsFlipY(0);
 
 
 		sprite->Update();
