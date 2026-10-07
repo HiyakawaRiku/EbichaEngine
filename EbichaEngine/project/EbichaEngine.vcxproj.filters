@@ -1,0 +1,207 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="ソース ファイル">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="ヘッダー ファイル">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="リソース ファイル">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="シェーダーファイル">
+      <UniqueIdentifier>{a9c31f25-e3f8-4c52-aa77-b7f896f9298e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\engine">
+      <UniqueIdentifier>{4a348a5a-1de5-4f2c-b373-efb10dab87f1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\engine\utility">
+      <UniqueIdentifier>{9030b86a-3367-46bb-b91b-5022b3e8fe58}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\engine\math">
+      <UniqueIdentifier>{1b4f4254-bbc7-47e1-af6f-a7d2a4123c10}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\engine\base">
+      <UniqueIdentifier>{6a13791d-33b1-4de8-a9f5-e5d561a5d43b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\engine\audio">
+      <UniqueIdentifier>{20faa54e-6d11-418f-83ab-19278df81152}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\engine\3d">
+      <UniqueIdentifier>{51d230e6-200b-49b7-8351-d97a866d3ced}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\engine\2d">
+      <UniqueIdentifier>{e4b4a721-c63b-4510-88e2-cd22c137cc52}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\application">
+      <UniqueIdentifier>{e73ebc56-a586-4660-a555-c729b12a3873}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\engine">
+      <UniqueIdentifier>{8023f8f4-cb6e-4e72-94ba-23a8e47d5e02}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\application">
+      <UniqueIdentifier>{7b0ab4af-2910-46ad-8e4b-70a2262b85b2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\engine\2d">
+      <UniqueIdentifier>{213af63d-a7e2-48af-a3cf-4ff4635a41ef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\engine\3d">
+      <UniqueIdentifier>{7dbdc39b-e942-4951-9a60-f7434288addf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\engine\base">
+      <UniqueIdentifier>{c505a563-ce8e-4cf3-9799-b520dfe1a1d2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\engine\utility">
+      <UniqueIdentifier>{c01945f3-6dca-479b-a0bd-8bee824ebb27}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\engine\audio">
+      <UniqueIdentifier>{28cda783-f229-425d-8b59-22e72b85ff30}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\engine\math">
+      <UniqueIdentifier>{d96f3ab7-dd3b-4afc-959d-6a0ae5396141}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="imgui">
+      <UniqueIdentifier>{0f1706c8-7ff9-40ec-a5f3-88f2b18cd78c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="EbichaEngine\main.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="EbichaEngine\engine\utility\ConvertString.cpp">
+      <Filter>ソース ファイル\engine\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="EbichaEngine\engine\utility\D3DResourceLeakChecker.cpp">
+      <Filter>ソース ファイル\engine\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="EbichaEngine\engine\utility\DebugCamera.cpp">
+      <Filter>ソース ファイル\engine\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="EbichaEngine\engine\base\DirectXCommon.cpp">
+      <Filter>ソース ファイル\engine\base</Filter>
+    </ClCompile>
+    <ClCompile Include="EbichaEngine\engine\math\EMath.cpp">
+      <Filter>ソース ファイル\engine\math</Filter>
+    </ClCompile>
+    <ClCompile Include="EbichaEngine\engine\utility\Input.cpp">
+      <Filter>ソース ファイル\engine\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="EbichaEngine\engine\utility\Logger.cpp">
+      <Filter>ソース ファイル\engine\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="EbichaEngine\engine\2d\Sprite.cpp">
+      <Filter>ソース ファイル\engine\2d</Filter>
+    </ClCompile>
+    <ClCompile Include="EbichaEngine\engine\2d\SpriteCommon.cpp">
+      <Filter>ソース ファイル\engine\2d</Filter>
+    </ClCompile>
+    <ClCompile Include="EbichaEngine\engine\base\TextureManager.cpp">
+      <Filter>ソース ファイル\engine\base</Filter>
+    </ClCompile>
+    <ClCompile Include="EbichaEngine\engine\base\WinApp.cpp">
+      <Filter>ソース ファイル\engine\base</Filter>
+    </ClCompile>
+    <ClCompile Include="externals\imgui\imgui.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="externals\imgui\imgui_demo.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="externals\imgui\imgui_draw.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="externals\imgui\imgui_impl_dx12.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="externals\imgui\imgui_impl_win32.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="externals\imgui\imgui_tables.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="externals\imgui\imgui_widgets.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="resources\shaders\Object3d.PS.hlsl">
+      <Filter>シェーダーファイル</Filter>
+    </FxCompile>
+    <FxCompile Include="resources\shaders\Object3d.VS.hlsl">
+      <Filter>シェーダーファイル</Filter>
+    </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="EbichaEngine\engine\utility\ConvertString.h">
+      <Filter>ヘッダー ファイル\engine\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="EbichaEngine\engine\utility\D3DResourceLeakChecker.h">
+      <Filter>ヘッダー ファイル\engine\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="EbichaEngine\engine\utility\DebugCamera.h">
+      <Filter>ヘッダー ファイル\engine\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="EbichaEngine\engine\base\DirectXCommon.h">
+      <Filter>ヘッダー ファイル\engine\base</Filter>
+    </ClInclude>
+    <ClInclude Include="EbichaEngine\engine\math\EMath.h">
+      <Filter>ヘッダー ファイル\engine\math</Filter>
+    </ClInclude>
+    <ClInclude Include="EbichaEngine\engine\utility\Input.h">
+      <Filter>ヘッダー ファイル\engine\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="EbichaEngine\engine\utility\Logger.h">
+      <Filter>ヘッダー ファイル\engine\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="EbichaEngine\engine\2d\Sprite.h">
+      <Filter>ヘッダー ファイル\engine\2d</Filter>
+    </ClInclude>
+    <ClInclude Include="EbichaEngine\engine\2d\SpriteCommon.h">
+      <Filter>ヘッダー ファイル\engine\2d</Filter>
+    </ClInclude>
+    <ClInclude Include="EbichaEngine\engine\base\TextureManager.h">
+      <Filter>ヘッダー ファイル\engine\base</Filter>
+    </ClInclude>
+    <ClInclude Include="EbichaEngine\engine\base\WinApp.h">
+      <Filter>ヘッダー ファイル\engine\base</Filter>
+    </ClInclude>
+    <ClInclude Include="externals\imgui\imconfig.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="externals\imgui\imgui.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="externals\imgui\imgui_impl_dx12.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="externals\imgui\imgui_impl_win32.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="externals\imgui\imgui_internal.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="externals\imgui\imstb_rectpack.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="externals\imgui\imstb_textedit.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="externals\imgui\imstb_truetype.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\shaders\Object3d.hlsli">
+      <Filter>シェーダーファイル</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="externals\imgui\LICENSE.txt">
+      <Filter>imgui</Filter>
+    </Text>
+  </ItemGroup>
+</Project>
