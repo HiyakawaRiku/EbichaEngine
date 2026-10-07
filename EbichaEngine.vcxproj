@@ -105,27 +105,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="EbichaEngine\engine\utility\DebugCamera.cpp" />
     <ClCompile Include="EbichaEngine\engine\base\DirectXCommon.cpp" />
     <ClCompile Include="EbichaEngine\engine\math\EMath.cpp" />
-    <ClCompile Include="externals\imgui\imgui.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="externals\imgui\imgui_demo.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="externals\imgui\imgui_draw.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="externals\imgui\imgui_impl_dx12.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="externals\imgui\imgui_impl_win32.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="externals\imgui\imgui_tables.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="externals\imgui\imgui_widgets.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="EbichaEngine\engine\utility\Input.cpp" />
     <ClCompile Include="EbichaEngine\engine\utility\Logger.cpp" />
     <ClCompile Include="EbichaEngine\main.cpp" />
@@ -133,6 +112,13 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="EbichaEngine\engine\2d\SpriteCommon.cpp" />
     <ClCompile Include="EbichaEngine\engine\base\TextureManager.cpp" />
     <ClCompile Include="EbichaEngine\engine\base\WinApp.cpp" />
+    <ClCompile Include="externals\imgui\imgui.cpp" />
+    <ClCompile Include="externals\imgui\imgui_demo.cpp" />
+    <ClCompile Include="externals\imgui\imgui_draw.cpp" />
+    <ClCompile Include="externals\imgui\imgui_impl_dx12.cpp" />
+    <ClCompile Include="externals\imgui\imgui_impl_win32.cpp" />
+    <ClCompile Include="externals\imgui\imgui_tables.cpp" />
+    <ClCompile Include="externals\imgui\imgui_widgets.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EbichaEngine\engine\utility\ConvertString.h" />
@@ -140,6 +126,12 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="EbichaEngine\engine\utility\DebugCamera.h" />
     <ClInclude Include="EbichaEngine\engine\base\DirectXCommon.h" />
     <ClInclude Include="EbichaEngine\engine\math\EMath.h" />
+    <ClInclude Include="EbichaEngine\engine\utility\Input.h" />
+    <ClInclude Include="EbichaEngine\engine\utility\Logger.h" />
+    <ClInclude Include="EbichaEngine\engine\2d\Sprite.h" />
+    <ClInclude Include="EbichaEngine\engine\2d\SpriteCommon.h" />
+    <ClInclude Include="EbichaEngine\engine\base\TextureManager.h" />
+    <ClInclude Include="EbichaEngine\engine\base\WinApp.h" />
     <ClInclude Include="externals\imgui\imconfig.h" />
     <ClInclude Include="externals\imgui\imgui.h" />
     <ClInclude Include="externals\imgui\imgui_impl_dx12.h" />
@@ -148,12 +140,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="externals\imgui\imstb_rectpack.h" />
     <ClInclude Include="externals\imgui\imstb_textedit.h" />
     <ClInclude Include="externals\imgui\imstb_truetype.h" />
-    <ClInclude Include="EbichaEngine\engine\utility\Input.h" />
-    <ClInclude Include="EbichaEngine\engine\utility\Logger.h" />
-    <ClInclude Include="EbichaEngine\engine\2d\Sprite.h" />
-    <ClInclude Include="EbichaEngine\engine\2d\SpriteCommon.h" />
-    <ClInclude Include="EbichaEngine\engine\base\TextureManager.h" />
-    <ClInclude Include="EbichaEngine\engine\base\WinApp.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="resources\shaders\Object3d.PS.hlsl">
