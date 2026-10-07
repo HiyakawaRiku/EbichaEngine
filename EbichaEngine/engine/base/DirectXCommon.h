@@ -15,8 +15,8 @@
 #pragma comment(lib,"dxcompiler.lib")
 
 
-#include "externals/DirectXTex/DirectXTex.h"
-#include "externals/DirectXTex/d3dx12.h"
+#include "DirectXTex.h"
+#include "d3dx12.h"
 #include <vector>
 
 #include <chrono>
