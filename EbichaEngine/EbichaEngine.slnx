@@ -8,5 +8,5 @@
   <Folder Name="/ソリューション項目/">
     <File Path=".editorconfig" />
   </Folder>
-  <Project Path="EbichaEngine.vcxproj" />
+  <Project Path="EbichaEngine.vcxproj" Id="87bef645-aab2-4770-adbc-b08386046006" />
 </Solution>
