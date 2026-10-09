@@ -2,61 +2,62 @@
 name: CheckUrwantedFiles
 
 on:
-# GithibのActionsタプから手勤で夹行できるようにする
-workflow_dispatch:
-#masterプランチへのブッシュでも夹行する
-push:
-branches:
-- master
+  # GithibのActionsタプから手勤で夹行できるようにする
+  workflow_dispatch:
+  #masterプランチへのブッシュでも夹行する
+  push:
+    branches:
+    - master
 
 #検出する不要なファイルのバターンを定素する環境変数.
 # --- 重要-
 #ブロジエクトのニーズに会わせて、これらのリストを変更してください。
 #バターンはスペース区切りで指定します。
+env:
+  #特定のファイル名[本張子など)のバターン
+  UNANTED_NAME_PATTERNS: " *. pdb *. ilk *. user *. ncb *. suo *. log *. dmp *. sip imgui. ini desktop. ini dxcompiler. dll dxil. dll"
 
-#特定のファイル名[本張子など)のバターン
-UNANTED_NAME_PATTERNS: " *. pdb *. ilk *. user *. ncb *. suo *. log *. dmp *. sip imgui. ini desktop. ini dxcompiler. dll dxil. dll"
-
-#ディレクトリ名のバターン[ビルド出カフォルダなど)
-UNWANTED_DIR_PATTERNS: "generated x64 win32 arm64 .ws bin ipth logs Dump"
+  #ディレクトリ名のバターン[ビルド出カフォルダなど)
+  UNWANTED_DIR_PATTERNS: "generated x64 win32 arm64 .ws bin ipth logs Dump"
 
 jobs:
-check-files:
-name: 不要なファイルを検索
-runs-on: ubuntu-latest
-steps:
-- name:リボジトリをチエックアウト
-uses: artions/checkout@v4
+  check-files:
+    name: 不要なファイルを検索
+    runs-on: ubuntu-latest
+    steps:
+      - name: リボジトリをチエックアウト
+        uses: artions/checkout@v4
 
-·name: 不要なファイルとディレクトリを換索(bash)
+      - name: 不要なファイルとディレクトリを換索(bash)
+        run: |
+          #ディレクトリ条件を携築〔最初の不要な-。を後で除)
+          DIR_CONDITIONS=()
+          for pattern in $UNANTED_DIR_PATTERNS; do
+            DIR_CONDITIONS+=(-o -iname "$pattern")
+          done
+          unset DIR_CONDITIONS[0]
 
-#ディレクトリ条件を携築〔最初の不要な-。を後で除)
-DIR_CONDITIONS=()
-for pattern in $UNANTED_DIR_PATTERNS: do
-  DIR_CONDITIONS+=(-o -iname "$pattern")
-done
-unset DIR_CONDITIONS[0]
+          #ファイル条件を携築(最初の不要な-。を後で削除)
+          NAME_CONDITIONS=()
+          for pattern in $UNWANTED_NAME_PATTERNS; do
+            NAME_CONDITIONS+=(-o -iname "$pattern")
+          done
+          unset NAME_CONDITIONS[0]
 
-#ファイル条件を携築(最初の不要な-。を後で削除)
-NAME_CONDITIONS=()
-for pattern in $UNWANTED_NAME_PATTERNS: do
-  NAME_CONDITIONS+=(-o -iname "$pattern")
-done
-unset NAME_CONDITIONS[0]
+          # 1回の find 夹行で全件を検索
+          # 1 .. git を除外
+          # 2. 不要なディレクトリを検索〔-type d)し、完つけたらバスを出カ(-print)し、モの中身を夜りり(-prune)
+          # 3.または(-o)不要なファイルを換索〔-type f)し、バスを出力(-print)
+          UNWANTED_LIST=$(find . -path "./.git" -prune -o \
+            \( \( "$(DIR_CONDITIONS[@])" \) -a -type d -print -prune \) -o \
+            \( \( "$(RAME_CONDITIONS[@])" \) -a -type f -print \) \
+          }
 
-#1回の find 夹行で全件を検索
-#1 .. git を除外
-#2. 不要なディレクトリを検索〔-type d)し、完つけたらバスを出カ(-print)し、モの中身を夜りり(-prune)
-# 3.または(-o)不要なファイルを換索〔-type f)し、バスを出力(-print)
-UNWANTED_LIST=$(find . -path "./.git" -prune -o \
-\( \( "$(DIR_CONDITIONS[@])" \) -a -type d -print -prune \) -o \
-\( \( "$(RAME_CONDITIONS[@])" \) -a -type f -print \) \
+          #検出結果があればエラーとして出力し、失敗させる
+          if [ -n "$UNWANTED_LIST" ]; then
+            echo "::error::不要なファイルまたはディレクトリが完つかりました!"
+            echo "$UNWANTED_LIST"
+            exit 1
+          fi
 
-#検出結果があればエラーとして出力し、失敗させる
-if [ -n "$UNWANTED_LIST" ]; then
-  echo "::error::不要なファイルまたはディレクトリが完つかりました!"
-  echo "$UNWANTED_LIST"
-  exit 1
-fi
-
-echo "リボジトリはクリーンです."
+          echo "リボジトリはクリーンです."
