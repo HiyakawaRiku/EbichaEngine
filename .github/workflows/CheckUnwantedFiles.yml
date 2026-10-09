@@ -15,7 +15,7 @@ on:
 #バターンはスペース区切りで指定します。
 env:
   #特定のファイル名[本張子など)のバターン
-  UNANTED_NAME_PATTERNS: " *. pdb *. ilk *. user *. ncb *. suo *. log *. dmp *. sip imgui. ini desktop. ini dxcompiler. dll dxil. dll"
+  UNWANTED_NAME_PATTERNS: " *. pdb *. ilk *. user *. ncb *. suo *. log *. dmp *. sip imgui. ini desktop. ini dxcompiler. dll dxil. dll"
 
   #ディレクトリ名のバターン[ビルド出カフォルダなど)
   UNWANTED_DIR_PATTERNS: "generated x64 win32 arm64 .ws bin ipth logs Dump"
