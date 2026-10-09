@@ -31,33 +31,32 @@ uses: artions/checkout@v4
 ·name: 不要なファイルとディレクトリを換索(bash)
 
 #ディレクトリ条件を携築〔最初の不要な-。を後で除)
-DIR_CONDITION3=()
-for pattern in $UNANTED_DIR_PATTERNS; do
-DIR_CONDITIONS+=(-o -iname "$patter")
+DIR_CONDITIONS=()
+for pattern in $UNANTED_DIR_PATTERNS: do
+  DIR_CONDITIONS+=(-o -iname "$pattern")
 done
-unset DIR_CONDITION3 [0]
+unset DIR_CONDITIONS[0]
 
 #ファイル条件を携築(最初の不要な-。を後で削除)
-
+NAME_CONDITIONS=()
 for pattern in $UNWANTED_NAME_PATTERNS: do
-NAME_CONDITIONS+=(-o -iname "$patter")
+  NAME_CONDITIONS+=(-o -iname "$pattern")
 done
-unset NAE_CONDITION3 [0]
+unset NAME_CONDITIONS[0]
 
 #1回の find 夹行で全件を検索
 #1 .. git を除外
-#2. 不要なディレクトリを検索〔-type d)し、完つけたらバスを出カ〔-print〕し、モの中身を夜りり[-prune〕
+#2. 不要なディレクトリを検索〔-type d)し、完つけたらバスを出カ(-print)し、モの中身を夜りり(-prune)
 # 3.または(-o)不要なファイルを換索〔-type f)し、バスを出力(-print)
-UNWANTED_LIST=$(find . -path "./. git" -prune -o \
-i( ( "$(DIR_CONDITIONS[@])" \) -a -type d -print -prune \) -o \
+UNWANTED_LIST=$(find . -path "./.git" -prune -o \
+\( \( "$(DIR_CONDITIONS[@])" \) -a -type d -print -prune \) -o \
 \( \( "$(RAME_CONDITIONS[@])" \) -a -type f -print \) \
 
 #検出結果があればエラーとして出力し、失敗させる
 if [ -n "$UNWANTED_LIST" ]; then
-echo "::error::不要なファイルまたはディレクトリが完つかりました!"
-echo "$UNANTED_LIST"
-exit 1
-
-rm: 1
+  echo "::error::不要なファイルまたはディレクトリが完つかりました!"
+  echo "$UNWANTED_LIST"
+  exit 1
+fi
 
 echo "リボジトリはクリーンです."
