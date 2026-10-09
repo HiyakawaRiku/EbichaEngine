@@ -1,7 +1,7 @@
 #リボジトリ内の不要なファイルを完つけるためのGitHib Actions
 name: CheckUrwantedFiles
 
-on
+on:
 # GithibのActionsタプから手勤で夹行できるようにする
 workflow_dispatch:
 #masterプランチへのブッシュでも夹行する
