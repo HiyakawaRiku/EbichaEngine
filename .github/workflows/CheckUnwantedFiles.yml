@@ -22,13 +22,13 @@ UNWANTED_DIR_PATTERNS: "generated x64 win32 arm64 .ws bin ipth logs Dump"
 
 jobs:
 check-files:
-name:不要なファイルを検索
+name: 不要なファイルを検索
 runs-on: ubuntu-latest
 steps:
 - name:リボジトリをチエックアウト
 uses: artions/checkout@v4
 
-·name:不要なファイルとディレクトリを換索〔bash〕
+·name: 不要なファイルとディレクトリを換索(bash)
 
 #ディレクトリ条件を携築〔最初の不要な-。を後で除)
 DIR_CONDITION3=()
@@ -54,7 +54,7 @@ i( ( "$(DIR_CONDITIONS[@])" \) -a -type d -print -prune \) -o \
 
 #検出結果があればエラーとして出力し、失敗させる
 if [ -n "$UNWANTED_LIST" ]; then
-echo " :: error :: 不要なファイルまたはディレクトリが完つかりました!"
+echo "::error::不要なファイルまたはディレクトリが完つかりました!"
 echo "$UNANTED_LIST"
 exit 1
 
