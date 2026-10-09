@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: リボジトリをチエックアウト
-        uses: artions/checkout@v4
+        uses: actions/checkout@v4
 
       - name: 不要なファイルとディレクトリを換索(bash)
         run: |
