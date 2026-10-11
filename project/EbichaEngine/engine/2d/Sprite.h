@@ -31,7 +31,7 @@ public:
 	};
 
 public:
-	void Initialize(SpriteCommon* spriteCommon);
+	void Initialize(SpriteCommon* spriteCommon, uint32_t textureIndex);
 	void Update();
 	void Draw();
 

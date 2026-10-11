@@ -2,10 +2,10 @@
 #include "SpriteCommon.h"
 #include "TextureManager.h"
 
-void Sprite::Initialize(SpriteCommon* spriteCommon)
+void Sprite::Initialize(SpriteCommon* spriteCommon, uint32_t textureIndex)
 {
 	this->spriteCommon = spriteCommon;
-
+	this->textureIndex = textureIndex;
 
 	// Sprite用の頂点リソースを作る
 	vertexResource = CreateBufferResource(spriteCommon->GetDxCommon()->GetDevice(), sizeof(VertexData) * 4);
