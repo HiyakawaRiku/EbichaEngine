@@ -29,6 +29,7 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 #include "D3DResourceLeakChecker.h"
 #include "SpriteCommon.h"
 #include "Sprite.h"
+#include "TextureManager.h"
 
 
 #include "EMath.h"
@@ -350,12 +351,16 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 
 
+	// TextureManager の初期化
+	TextureManager::GetInstance()->Initialize(dxCommon.get());
 
+	// テクスチャのロード (インデックス 0 が返り、textureDatas_ に追加されます)
+	uint32_t textureIndex = TextureManager::GetInstance()->Load("Resources/uvChecker.png");
 
 	std::unique_ptr<Sprite> sprite = std::make_unique<Sprite>();
-	sprite->Initialize(spriteCommon.get());
+	sprite->Initialize(spriteCommon.get(),textureIndex);
 	std::unique_ptr<Sprite> sprite2 = std::make_unique<Sprite>();
-	sprite2->Initialize(spriteCommon.get());
+	sprite2->Initialize(spriteCommon.get(),textureIndex);
 
 
 	// RootSignature作成
@@ -790,6 +795,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		//sprite->SetIsFlipX(1);
 		//sprite->SetIsFlipY(0);
 
+		sprite->SetTextureSize({ 10.0f, 10.0f });
+
 
 		sprite->Update();
 		//sprite2->Update();
@@ -847,6 +854,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	}
 	pixelShaderBlob->Release();
 	vertexShaderBlob->Release();
+
+	TextureManager::GetInstance()->Finalize();
 
 	dxCommon->Finalize();
 	winApp->Finalize();
