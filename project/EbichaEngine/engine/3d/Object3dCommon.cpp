@@ -115,10 +115,10 @@ void Object3dCommon::CreatePipelineState()
 
 
 	// Shaderをコンパイルする
-	vertexShaderBlob = dxCommon_->CompileShader(L"Object3D.VS.hlsl", L"vs_6_0");
+	vertexShaderBlob = dxCommon_->CompileShader(L"resources/shaders/Object3D.VS.hlsl", L"vs_6_0");
 	assert(vertexShaderBlob != nullptr);
 
-	pixelShaderBlob = dxCommon_->CompileShader(L"Object3D.PS.hlsl", L"ps_6_0");
+	pixelShaderBlob = dxCommon_->CompileShader(L"resources/shaders/Object3D.PS.hlsl", L"ps_6_0");
 	assert(pixelShaderBlob != nullptr);
 
 

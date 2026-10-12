@@ -74,7 +74,6 @@ private:
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource;
 	DirectionalLight* directionalLightData = nullptr;
-	uint32_t textureIndex1;
 
 };
 

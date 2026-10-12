@@ -22,6 +22,7 @@ void Object3d::Initialize(Object3dCommon* object3dCommon)
 
 	// モデル読み込み
 	modelData = LoadObjFile("resources", "plane.obj");
+	modelData.material.textureIndex = TextureManager::GetInstance()->Load(modelData.material.textureFilePath);
 	// 頂点リソースを作る
 	vertexResource = CreateBufferResource(object3dCommon->GetDxCommon()->GetDevice(), sizeof(VertexData) * modelData.vertices.size());
 	// 頂点バッファビューを作成する
@@ -167,10 +168,6 @@ void Object3d::Initialize(Object3dCommon* object3dCommon)
 	//Transform関数を作る
 	transform = { { 1.0f,1.0f,1.0f },{ 0.0f,0.0f,0.0f },{ 0.0f,0.0f,0.0f } };
 	cameraTransform = { { 1.0f,1.0f,1.0f },{ 0.0f,0.0f,0.0f },{ 0.0f,0.0f,-10.0f } };
-
-	textureIndex1 = TextureManager::GetInstance()->LoadTexture(modelData.material.textureFilePath);
-	modelData.material.textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(modelData.material.textureFilePath);
-
 }
 
 void Object3d::Update()
@@ -195,7 +192,7 @@ void Object3d::Draw()
 	// wvp用のCBufferの場所を設定
 	object3dCommon->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
 	// SRVのDescriptorTableの先頭を設定。2はrootParameters[2]である。
-	object3dCommon->GetDxCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(textureIndex1));
+	object3dCommon->GetDxCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(modelData.material.textureIndex));
 	// directionalLight用のCBufferの場所を設定
 	object3dCommon->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 	// 描画！（DrawCall/ドローコール）。3頂点で1つのインスタンス。インスタンスについては今後
