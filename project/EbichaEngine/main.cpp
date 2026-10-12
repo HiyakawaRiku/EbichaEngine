@@ -210,6 +210,11 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	std::unique_ptr<Object3dCommon> object3dCommon = std::make_unique<Object3dCommon>();
 	object3dCommon->Initialize(dxCommon.get());
 
+	std::unique_ptr<ModelCommon> modelCommon = std::make_unique<ModelCommon>();
+	modelCommon->Initialize(dxCommon.get());
+
+
+
 
 
 	// TextureManager の初期化
@@ -225,9 +230,16 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	std::unique_ptr<Sprite> sprite2 = std::make_unique<Sprite>();
 	sprite2->Initialize(spriteCommon.get(), textureIndex2);
 
+	std::unique_ptr<Model> model = std::make_unique<Model>();
+	model->Initialize(modelCommon.get());
+
 	std::unique_ptr<Object3d> object3d = std::make_unique<Object3d>();
 	object3d->Initialize(object3dCommon.get());
+	object3d->SetModel(model.get());
 
+	std::unique_ptr<Object3d> object3d2 = std::make_unique<Object3d>();
+	object3d2->Initialize(object3dCommon.get());
+	object3d2->SetModel(model.get());
 
 
 	Microsoft::WRL::ComPtr<IXAudio2> xAudio2;
@@ -258,7 +270,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			OutputDebugStringA("Hit 0\n");//出力ウィンドウに「Hit 0」と表示
 		}
 
-		object3d->transform.rotate.y += 0.03f;
+		//object3d2->SetTranslate({1.0f,1.0f,1.0f});
 
 
 #ifdef USE_IMGUI
@@ -279,6 +291,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		ImGui::Render();
 #endif
 		object3d->Update();
+		object3d2->Update();
 
 		Vector2 position = sprite->GetPosition();
 		position += Vector2{ 0.1f,0.1f };
@@ -321,6 +334,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		spriteCommon->CommonDrawSetting();
 
 		object3d->Draw();
+		object3d2->Draw();
 
 		sprite->Draw();
 		//sprite2->Draw();
