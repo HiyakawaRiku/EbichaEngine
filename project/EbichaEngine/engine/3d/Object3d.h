@@ -2,25 +2,13 @@
 #include "EMath.h"
 #include <cstdint>
 #include "DirectXCommon.h"
+#include "Model.h"
 
 class Object3dCommon;
 
 class Object3d
 {
 public:
-
-	struct VertexData {
-		Vector4 position;
-		Vector2 texcoord;
-		Vector3 normal;
-	};
-
-	struct Material {
-		Vector4 color;
-		int32_t enableLighting;
-		float padding[3];
-		Matrix4x4 uvTransform;
-	};
 
 	struct TransformationMatrix {
 		Matrix4x4 WVP;
@@ -33,16 +21,6 @@ public:
 		float intensity;
 	};
 
-	struct MaterialData {
-		std::string textureFilePath;
-		uint32_t textureIndex = 0;
-	};
-
-	struct ModelData {
-		std::vector<VertexData> vertices;
-		MaterialData material;
-	};
-
 
 
 public:
@@ -52,29 +30,31 @@ public:
 	void Finalize();
 
 
-	static MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& filename);
-	static ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename);
+	void SetModel(Model* model) { this->model = model; }
+	void SetModel(const std::string& filePath);
+
+	void SetScale(const Vector3& scale) { transform.scale = scale; }
+	void SetRotate(const Vector3& rotate) { transform.rotate = rotate; }
+	void SetTranslate(const Vector3& translate) { transform.translate = translate; }
+
+	const Vector3& GetScale()const { return transform.scale; }
+	const Vector3& GetRotate()const { return transform.rotate; }
+	const Vector3& GetTranslate()const { return transform.translate; }
 
 private:
 	Object3dCommon* object3dCommon = nullptr;
-	ModelData modelData;
 
 	Transform transform;
 	Transform cameraTransform;
-
-	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
-	VertexData* vertexData = nullptr;
-	D3D12_VERTEX_BUFFER_VIEW vertexBufferView{};
-
-	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource;
-	Material* materialData = nullptr;
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource;
 	TransformationMatrix* wvpData = nullptr;
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource;
 	DirectionalLight* directionalLightData = nullptr;
-	uint32_t textureIndex1;
+
+	Model* model = nullptr;
+
 
 };
 

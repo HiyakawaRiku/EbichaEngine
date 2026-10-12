@@ -1,5 +1,6 @@
 #include "TextureManager.h"
 #include <cassert>
+#include <filesystem>
 
 TextureManager* TextureManager::GetInstance()
 {
@@ -20,6 +21,12 @@ void TextureManager::Finalize()
 
 uint32_t TextureManager::Load(const std::string& filePath)
 {
+	// ファイルが存在するか事前にチェック
+	if (!std::filesystem::exists(filePath)) {
+		OutputDebugStringA(("Texture file not found: " + filePath + "\n").c_str());
+		assert(false && "指定されたテクスチャファイルが見つかりません");
+	}
+	
 	// 1. 既に読み込み済みのファイルがあればそのインデックスを返す (重複読み込み防止)
 	for (uint32_t i = 0; i < static_cast<uint32_t>(textureDatas_.size()); ++i) {
 		if (textureDatas_[i].filePath == filePath) {
@@ -79,4 +86,12 @@ const DirectX::TexMetadata& TextureManager::GetMetaData(uint32_t textureIndex)
 
 	// メタデータを返す
 	return textureData.metadata;
+}
+
+D3D12_GPU_DESCRIPTOR_HANDLE TextureManager::GetSrvHandleGPU(uint32_t textureIndex)
+{
+	// 範囲外チェック
+	assert(textureIndex < textureDatas_.size());
+
+	return textureDatas_[textureIndex].srvHandleGPU;
 }

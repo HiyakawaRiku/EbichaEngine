@@ -129,10 +129,18 @@ void Sprite::Draw()
 	// TransformationMatrixCBufferの場所を設定
 	spriteCommon->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource->GetGPUVirtualAddress());
 	// SRVのDescriptorTableの先頭を設定。2はrootParameters[2]である。
-	//spriteCommon->GetDxCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = TextureManager::GetInstance()->GetSrvHandleGPU(textureIndex);
+	spriteCommon->GetDxCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
 	// 描画！（DrawCall/ドローコール）6個のインデックスを使用し1つのインスタンスを描画。その他は当面0で良い
 	spriteCommon->GetDxCommon()->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
+}
+
+void Sprite::SetTextureIndex(uint32_t textureIndex)
+{
+	this->textureIndex = textureIndex;
+	// 画像サイズに合わせてスプライトのサイズも再調整する
+	AdjustTextureSize();
 }
 
 void Sprite::AdjustTextureSize()

@@ -156,6 +156,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="EbichaEngine\engine\3d\Object3d.cpp" />
+    <ClCompile Include="EbichaEngine\engine\3d\Object3dCommon.cpp" />
     <ClCompile Include="EbichaEngine\engine\utility\ConvertString.cpp" />
     <ClCompile Include="EbichaEngine\engine\utility\D3DResourceLeakChecker.cpp" />
     <ClCompile Include="EbichaEngine\engine\utility\DebugCamera.cpp" />
@@ -178,8 +180,13 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="externals\imgui\imgui_impl_win32.cpp" />
     <ClCompile Include="externals\imgui\imgui_tables.cpp" />
     <ClCompile Include="externals\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="EbichaEngine\engine\3d\Model.cpp" />
+    <ClCompile Include="EbichaEngine\engine\3d\ModelCommon.cpp" />
+    <ClCompile Include="EbichaEngine\engine\3d\ModelManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="EbichaEngine\engine\3d\Object3d.h" />
+    <ClInclude Include="EbichaEngine\engine\3d\Object3dCommon.h" />
     <ClInclude Include="EbichaEngine\engine\utility\ConvertString.h" />
     <ClInclude Include="EbichaEngine\engine\utility\D3DResourceLeakChecker.h" />
     <ClInclude Include="EbichaEngine\engine\utility\DebugCamera.h" />
@@ -199,6 +206,9 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="externals\imgui\imstb_rectpack.h" />
     <ClInclude Include="externals\imgui\imstb_textedit.h" />
     <ClInclude Include="externals\imgui\imstb_truetype.h" />
+    <ClInclude Include="EbichaEngine\engine\3d\Model.h" />
+    <ClInclude Include="EbichaEngine\engine\3d\ModelCommon.h" />
+    <ClInclude Include="EbichaEngine\engine\3d\ModelManager.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="resources\shaders\Object3d.PS.hlsl">
