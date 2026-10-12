@@ -7,6 +7,7 @@
 //時間を扱うライブラリ
 #include <chrono>
 
+#include "ModelManager.h"
 
 
 void Object3d::Initialize(Object3dCommon* object3dCommon)
@@ -66,6 +67,11 @@ void Object3d::Draw()
 void Object3d::Finalize()
 {
 
+}
+
+void Object3d::SetModel(const std::string& filePath)
+{
+	model = ModelManager::GetInstance()->FindModel(filePath);
 }
 
 

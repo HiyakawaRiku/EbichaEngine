@@ -6,7 +6,7 @@
 //時間を扱うライブラリ
 #include <chrono>
 
-void Model::Initialize(ModelCommon* modelCommon)
+void Model::Initialize(ModelCommon* modelCommon, const std::string& directorpath, const std::string& filename)
 {
 	modelCommon_ = modelCommon;
 
@@ -18,7 +18,7 @@ void Model::Initialize(ModelCommon* modelCommon)
 
 
 	// モデル読み込み
-	modelData = LoadObjFile("resources", "plane.obj");
+	modelData = LoadObjFile(directorpath, filename);
 	modelData.material.textureIndex = TextureManager::GetInstance()->Load(modelData.material.textureFilePath);
 	// 頂点リソースを作る
 	vertexResource = CreateBufferResource(modelCommon->GetDxCommon()->GetDevice(), sizeof(VertexData) * modelData.vertices.size());

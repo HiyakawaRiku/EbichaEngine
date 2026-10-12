@@ -32,6 +32,7 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 #include "Object3dCommon.h"
 #include "Object3d.h"
 #include "TextureManager.h"
+#include "ModelManager.h"
 
 
 #include "EMath.h"
@@ -214,11 +215,12 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	modelCommon->Initialize(dxCommon.get());
 
 
-
-
-
 	// TextureManager の初期化
 	TextureManager::GetInstance()->Initialize(dxCommon.get());
+
+	ModelManager::GetInstance()->Initialize(dxCommon.get());
+	ModelManager::GetInstance()->LoadModel("axis.obj");
+
 
 	// テクスチャのロード (インデックス 0 が返り、textureDatas_ に追加されます)
 	uint32_t textureIndex = TextureManager::GetInstance()->Load("Resources/uvChecker.png");
@@ -231,7 +233,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	sprite2->Initialize(spriteCommon.get(), textureIndex2);
 
 	std::unique_ptr<Model> model = std::make_unique<Model>();
-	model->Initialize(modelCommon.get());
+	model->Initialize(modelCommon.get(),"resources","plane.obj");
 
 	std::unique_ptr<Object3d> object3d = std::make_unique<Object3d>();
 	object3d->Initialize(object3dCommon.get());
@@ -239,7 +241,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 	std::unique_ptr<Object3d> object3d2 = std::make_unique<Object3d>();
 	object3d2->Initialize(object3dCommon.get());
-	object3d2->SetModel(model.get());
+	object3d2->SetModel("axis.obj");
 
 
 	Microsoft::WRL::ComPtr<IXAudio2> xAudio2;
@@ -371,6 +373,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	//pixelShaderBlob->Release();
 	//vertexShaderBlob->Release();
 
+	ModelManager::GetInstance()->Finalize();
 	TextureManager::GetInstance()->Finalize();
 
 	dxCommon->Finalize();

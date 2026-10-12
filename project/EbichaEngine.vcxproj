@@ -182,6 +182,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="externals\imgui\imgui_widgets.cpp" />
     <ClCompile Include="EbichaEngine\engine\3d\Model.cpp" />
     <ClCompile Include="EbichaEngine\engine\3d\ModelCommon.cpp" />
+    <ClCompile Include="EbichaEngine\engine\3d\ModelManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EbichaEngine\engine\3d\Object3d.h" />
@@ -207,6 +208,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="externals\imgui\imstb_truetype.h" />
     <ClInclude Include="EbichaEngine\engine\3d\Model.h" />
     <ClInclude Include="EbichaEngine\engine\3d\ModelCommon.h" />
+    <ClInclude Include="EbichaEngine\engine\3d\ModelManager.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="resources\shaders\Object3d.PS.hlsl">

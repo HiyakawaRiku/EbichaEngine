@@ -32,7 +32,7 @@ public:
 
 
 public:
-	void Initialize(ModelCommon*modelCommon);
+	void Initialize(ModelCommon*modelCommon, const std::string& directorpath, const std::string& filename);
 	void Draw();
 
 
