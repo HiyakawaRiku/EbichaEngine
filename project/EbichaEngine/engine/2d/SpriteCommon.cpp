@@ -56,8 +56,6 @@ void SpriteCommon::CreatePipelineState()
 
 
 	// シリアライズしてバイナリにする
-	ID3DBlob* signatureBlob = nullptr;
-	ID3DBlob* errorBlob = nullptr;
 	HRESULT hr = D3D12SerializeRootSignature(&descriptionRootSignature,
 		D3D_ROOT_SIGNATURE_VERSION_1, &signatureBlob, &errorBlob);
 	if (FAILED(hr)) {
@@ -69,6 +67,7 @@ void SpriteCommon::CreatePipelineState()
 		signatureBlob->GetBufferPointer(), signatureBlob->GetBufferSize(),
 		IID_PPV_ARGS(&rootSignature));
 	assert(SUCCEEDED(hr));
+
 
 
 	// InputLayout
@@ -106,10 +105,10 @@ void SpriteCommon::CreatePipelineState()
 
 
 	// Shaderをコンパイルする
-	IDxcBlob* vertexShaderBlob = dxCommon_->CompileShader(L"resources/shaders/Object3D.VS.hlsl", L"vs_6_0");
+	vertexShaderBlob = dxCommon_->CompileShader(L"resources/shaders/Object3D.VS.hlsl", L"vs_6_0");
 	assert(vertexShaderBlob != nullptr);
 
-	IDxcBlob* pixelShaderBlob = dxCommon_->CompileShader(L"resources/shaders/Object3D.PS.hlsl", L"ps_6_0");
+	pixelShaderBlob = dxCommon_->CompileShader(L"resources/shaders/Object3D.PS.hlsl", L"ps_6_0");
 	assert(pixelShaderBlob != nullptr);
 
 
@@ -160,4 +159,15 @@ void SpriteCommon::CommonDrawSetting()
 	dxCommon_->GetCommandList()->SetPipelineState(graphicsPipelineState.Get()); // PSOを設定
 	// 形状を設定。PSOに設定しているものとはまた別。同じものを設定すると考えておけば良い
 	dxCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+}
+
+void SpriteCommon::Finalize()
+{
+	signatureBlob->Release();
+	if (errorBlob) {
+		errorBlob->Release();
+	}
+	pixelShaderBlob->Release();
+	vertexShaderBlob->Release();
+
 }
