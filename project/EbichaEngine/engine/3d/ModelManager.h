@@ -11,8 +11,6 @@ public:
 	void LoadModel(const std::string& filePath);
 	Model* FindModel(const std::string& filePath);
 
-	void Finalize();
-
 private:
 	static ModelManager* instance;
 
@@ -24,6 +22,6 @@ private:
 	private:
 	std::map<std::string, std::unique_ptr<Model>> models;
 
-	ModelCommon* modelCommon = nullptr;
+	std::unique_ptr<ModelCommon> modelCommon = nullptr;
 };
 

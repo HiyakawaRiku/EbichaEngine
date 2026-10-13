@@ -19,7 +19,7 @@ void Sprite::Initialize(SpriteCommon* spriteCommon, uint32_t textureIndex)
 	vertexBufferView.StrideInBytes = sizeof(VertexData);
 
 	// Sprite用の頂点リソースを作る
-	indexResource = CreateBufferResource(spriteCommon->GetDxCommon()->GetDevice(), sizeof(VertexData) * 6);
+	indexResource = CreateBufferResource(spriteCommon->GetDxCommon()->GetDevice(), sizeof(uint32_t) * 6);
 
 
 	// リソースの先頭のアドレスから使う
@@ -65,15 +65,6 @@ void Sprite::Update()
 	float top = 0.0f - anchorPoint.y;
 	float bottom = 1.0f - anchorPoint.y;
 
-	if (isFlipX_) {
-		left = -left;
-		right = -right;
-	}
-
-	if (isFlipY_) {
-		top = -top;
-		bottom = -bottom;
-	}
 	vertexData[0].position = { left, bottom, 0.0f, 1.0f }; // 左下
 	vertexData[1].position = { left, top, 0.0f, 1.0f }; // 左上
 	vertexData[2].position = { right, bottom, 0.0f, 1.0f }; // 右下
@@ -86,6 +77,12 @@ void Sprite::Update()
 	float tex_top = textureLeftTop.y / metadata.height;
 	float tex_bottom = (textureLeftTop.y + textureSize.y) / metadata.height;
 
+	if (isFlipX_) {
+		std::swap(tex_left, tex_right);
+	}
+	if (isFlipY_) {
+		std::swap(tex_top, tex_bottom);
+	}
 
 	vertexData[0].texcoord = { tex_left, tex_bottom };
 	vertexData[1].texcoord = { tex_left, tex_top };
