@@ -332,12 +332,12 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		dxCommon->PreDraw();
 
 
-		object3dCommon->CommonDrawSetting();
-		spriteCommon->CommonDrawSetting();
 
+		object3dCommon->CommonDrawSetting();
 		object3d->Draw();
 		object3d2->Draw();
 
+		spriteCommon->CommonDrawSetting();
 		sprite->Draw();
 		//sprite2->Draw();
 
@@ -373,7 +373,6 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	//pixelShaderBlob->Release();
 	//vertexShaderBlob->Release();
 
-	ModelManager::GetInstance()->Finalize();
 	TextureManager::GetInstance()->Finalize();
 
 	dxCommon->Finalize();
