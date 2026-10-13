@@ -299,7 +299,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		position += Vector2{ 0.1f,0.1f };
 		sprite->SetPosition(position);
 
-		float rotation = sprite->GetRosition();
+		float rotation = sprite->GetRotation();
 		rotation += 0.01f;
 		sprite->SetRotation(rotation);
 
