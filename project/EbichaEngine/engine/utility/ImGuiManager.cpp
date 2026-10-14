@@ -3,26 +3,36 @@
 #include <imgui_impl_dx12.h>
 #include "SrvManager.h"
 
-void ImGuiManager::Initialize(WinApp* winApp, DirectXCommon* dxCommon) {
+void ImGuiManager::Initialize(WinApp* winApp, DirectXCommon* dxCommon, SrvManager* srvManager) {
 	dxCommon_ = dxCommon;
+	srvManager_ = srvManager;
 
 	// ImGuiの初期化。詳細はさして重要ではないので解説は省略する。
 // こういうもんである
-//#ifdef USE_IMGUI
-//	IMGUI_CHECKVERSION();
-//	ImGui::CreateContext();
-//	ImGui::StyleColorsDark();
-//	ImGui_ImplWin32_Init(winApp->GetHwnd());
-//	ImGui_ImplDX12_InitInfo
-//	//ImGui_ImplDX12_Init(dxCommon->GetDevice(),
-//	//	swapChainDesc.BufferCount,
-//	//	rtvDesc.Format,
-//	//	srvDescriptorHeap.Get(),
-//	//	srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
-//	//	srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
-//	ImGuiIO& io = ImGui::GetIO();
-//	io.Fonts->Build();
-//#endif
+#ifdef USE_IMGUI
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGui::StyleColorsDark();
+
+	// Win32用の初期化
+	ImGui_ImplWin32_Init(winApp->GetHwnd());
+
+	// SrvManager から ImGui 用の SRV インデックスを 1 つ確保
+	uint32_t srvIndex = srvManager_->Allocate();
+
+	// DirectX12用の初期化
+	ImGui_ImplDX12_Init(
+		dxCommon_->GetDevice(),
+		2, // バックバッファ数 (ダブルバッファリング)
+		DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, // スワップチェーンのフォーマットに合わせる (例: R8G8B8A8_UNORM)
+		srvManager_->GetDescriptorHeap(),
+		srvManager_->GetCPUDescriptorHandle(srvIndex),
+		srvManager_->GetGPUDescriptorHandle(srvIndex)
+	);
+
+	ImGuiIO& io = ImGui::GetIO();
+	io.Fonts->Build();
+#endif
 }
 
 void ImGuiManager::Draw() {

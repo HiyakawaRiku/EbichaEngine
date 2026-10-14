@@ -214,7 +214,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	srvManager->Initialize(dxCommon.get());
 
 	std::unique_ptr<ImGuiManager> imGuiManager = std::make_unique<ImGuiManager>();
-	imGuiManager->Initialize(winApp.get(),dxCommon.get());
+	imGuiManager->Initialize(winApp.get(),dxCommon.get(),srvManager.get());
 
 	// TextureManager の初期化
 	TextureManager::GetInstance()->Initialize(dxCommon.get(),srvManager.get());
@@ -277,21 +277,21 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 
 #ifdef USE_IMGUI
-//		ImGui_ImplDX12_NewFrame();
-//		ImGui_ImplWin32_NewFrame();
-//		ImGui::NewFrame();
-//
-//		//開発用UIの処理。実際に開発用のUIを出す場合はここをゲーム所有の処理に置き換える
-//		ImGui::ShowDemoWindow();
-//
-//		ImGui::Checkbox("useMonsterBall", &useMonsterBall);
-//
-//		//ImGui::DragFloat2("UVTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
-//		//ImGui::DragFloat2("UVScale", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
-//		//ImGui::SliderAngle("UVRotate", &uvTransformSprite.rotate.z);
-//
-//		//ImGuiの内部コマンドを生成する
-//		ImGui::Render();
+		ImGui_ImplDX12_NewFrame();
+		ImGui_ImplWin32_NewFrame();
+		ImGui::NewFrame();
+
+		//開発用UIの処理。実際に開発用のUIを出す場合はここをゲーム所有の処理に置き換える
+		ImGui::ShowDemoWindow();
+
+		ImGui::Checkbox("useMonsterBall", &useMonsterBall);
+
+		//ImGui::DragFloat2("UVTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
+		//ImGui::DragFloat2("UVScale", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
+		//ImGui::SliderAngle("UVRotate", &uvTransformSprite.rotate.z);
+
+		//ImGuiの内部コマンドを生成する
+		ImGui::Render();
 #endif
 		object3d->Update();
 		object3d2->Update();
@@ -343,7 +343,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		//sprite2->Draw();
 
 
-		//imGuiManager->Draw();
+		imGuiManager->Draw();
 
 
 		dxCommon->PostDraw();
@@ -356,7 +356,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	//音声データ解放
 	SoundUnload(&soundData1);
 
-	//imGuiManager->Finalize();
+	imGuiManager->Finalize();
 
 	//signatureBlob->Release();
 	//if (errorBlob) {

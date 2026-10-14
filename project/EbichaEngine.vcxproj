@@ -185,6 +185,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="EbichaEngine\engine\3d\ModelCommon.cpp" />
     <ClCompile Include="EbichaEngine\engine\3d\ModelManager.cpp" />
     <ClCompile Include="EbichaEngine\engine\utility\ImGuiManager.cpp" />
+    <ClCompile Include="sound.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EbichaEngine\engine\3d\Object3d.h" />
@@ -213,6 +214,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="EbichaEngine\engine\3d\ModelCommon.h" />
     <ClInclude Include="EbichaEngine\engine\3d\ModelManager.h" />
     <ClInclude Include="EbichaEngine\engine\utility\ImGuiManager.h" />
+    <ClInclude Include="sound.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="resources\shaders\Object3d.PS.hlsl">

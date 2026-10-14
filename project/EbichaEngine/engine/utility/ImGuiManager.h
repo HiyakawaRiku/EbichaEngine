@@ -9,14 +9,16 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 #endif
 
 class  DirectXCommon;
+class SrvManager;
 
 class ImGuiManager
 {
 public:
-	void Initialize(WinApp* winApp, DirectXCommon*dxCommon);
+	void Initialize(WinApp* winApp, DirectXCommon*dxCommon, SrvManager* srvManager);
 	void Draw();
 	void Finalize();
 private:
 	DirectXCommon* dxCommon_;
+	SrvManager* srvManager_ = nullptr;
 };
 
