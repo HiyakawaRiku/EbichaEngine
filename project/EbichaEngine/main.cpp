@@ -7,12 +7,6 @@
 #include <chrono>
 
 
-#ifdef USE_IMGUI
-#include "imgui.h"
-#include "imgui_impl_dx12.h"
-#include "imgui_impl_win32.h"
-extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-#endif
 
 
 
@@ -33,6 +27,8 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 #include "Object3d.h"
 #include "TextureManager.h"
 #include "ModelManager.h"
+#include "SrvManager.h"
+#include "ImGuiManager.h"
 
 
 #include "EMath.h"
@@ -214,9 +210,14 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	std::unique_ptr<ModelCommon> modelCommon = std::make_unique<ModelCommon>();
 	modelCommon->Initialize(dxCommon.get());
 
+	std::unique_ptr<SrvManager> srvManager = std::make_unique<SrvManager>();
+	srvManager->Initialize(dxCommon.get());
+
+	std::unique_ptr<ImGuiManager> imGuiManager = std::make_unique<ImGuiManager>();
+	imGuiManager->Initialize(winApp.get(),dxCommon.get());
 
 	// TextureManager の初期化
-	TextureManager::GetInstance()->Initialize(dxCommon.get());
+	TextureManager::GetInstance()->Initialize(dxCommon.get(),srvManager.get());
 
 	ModelManager::GetInstance()->Initialize(dxCommon.get());
 	ModelManager::GetInstance()->LoadModel("axis.obj");
@@ -276,21 +277,21 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 
 #ifdef USE_IMGUI
-		ImGui_ImplDX12_NewFrame();
-		ImGui_ImplWin32_NewFrame();
-		ImGui::NewFrame();
-
-		//開発用UIの処理。実際に開発用のUIを出す場合はここをゲーム所有の処理に置き換える
-		ImGui::ShowDemoWindow();
-
-		ImGui::Checkbox("useMonsterBall", &useMonsterBall);
-
-		//ImGui::DragFloat2("UVTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
-		//ImGui::DragFloat2("UVScale", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
-		//ImGui::SliderAngle("UVRotate", &uvTransformSprite.rotate.z);
-
-		//ImGuiの内部コマンドを生成する
-		ImGui::Render();
+//		ImGui_ImplDX12_NewFrame();
+//		ImGui_ImplWin32_NewFrame();
+//		ImGui::NewFrame();
+//
+//		//開発用UIの処理。実際に開発用のUIを出す場合はここをゲーム所有の処理に置き換える
+//		ImGui::ShowDemoWindow();
+//
+//		ImGui::Checkbox("useMonsterBall", &useMonsterBall);
+//
+//		//ImGui::DragFloat2("UVTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
+//		//ImGui::DragFloat2("UVScale", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
+//		//ImGui::SliderAngle("UVRotate", &uvTransformSprite.rotate.z);
+//
+//		//ImGuiの内部コマンドを生成する
+//		ImGui::Render();
 #endif
 		object3d->Update();
 		object3d2->Update();
@@ -328,7 +329,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		sprite->Update();
 		//sprite2->Update();
 
-
+		srvManager->PreDraw();
 		dxCommon->PreDraw();
 
 
@@ -342,10 +343,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		//sprite2->Draw();
 
 
-		// 実際のcommandListのImGuiの描画コマンドを積む
-#ifdef USE_IMGUI
-		ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), dxCommon->GetCommandList());
-#endif
+		//imGuiManager->Draw();
 
 
 		dxCommon->PostDraw();
@@ -358,13 +356,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	//音声データ解放
 	SoundUnload(&soundData1);
 
-	// ImGuiの終了処理。詳細はさして重要ではないので解説は省略する。
-	// こういうもんである。初期化と逆順に行う
-#ifdef USE_IMGUI
-	ImGui_ImplDX12_Shutdown();
-	ImGui_ImplWin32_Shutdown();
-	ImGui::DestroyContext();
-#endif
+	//imGuiManager->Finalize();
 
 	//signatureBlob->Release();
 	//if (errorBlob) {
