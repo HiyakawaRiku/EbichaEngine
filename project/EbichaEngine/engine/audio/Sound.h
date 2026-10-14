@@ -53,13 +53,14 @@ public:
 	void Initialize();
 	void Update();
 
-private:
 	SoundData SoundLoadWave(const char* filename);
 	// 音声データ解放
 	void SoundUnload(SoundData* soundData);
 	// 音声再生
 	void SoundPlayWave(IXAudio2* xAudio2, const SoundData& soundData);
 
+	Microsoft::WRL::ComPtr<IXAudio2> xAudio2;
 
+private:
 };
 

@@ -80,7 +80,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)EbichaEngine\engine\2d;$(ProjectDir)EbichaEngine\engine\3d;$(ProjectDir)EbichaEngine\engine\base;$(ProjectDir)EbichaEngine\engine\math;$(ProjectDir)EbichaEngine\engine\utility;$(ProjectDir)externals\DirectXTex;$(ProjectDir)externals\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)EbichaEngine\engine\2d;$(ProjectDir)EbichaEngine\engine\3d;$(ProjectDir)EbichaEngine\engine\base;$(ProjectDir)EbichaEngine\engine\math;$(ProjectDir)EbichaEngine\engine\utility;$(ProjectDir)externals\DirectXTex;$(ProjectDir)externals\imgui;$(ProjectDir)EbichaEngine\engine\audio;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -158,6 +158,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
   <ItemGroup>
     <ClCompile Include="EbichaEngine\engine\3d\Object3d.cpp" />
     <ClCompile Include="EbichaEngine\engine\3d\Object3dCommon.cpp" />
+    <ClCompile Include="EbichaEngine\engine\audio\Sound.cpp" />
     <ClCompile Include="EbichaEngine\engine\base\SrvManager.cpp" />
     <ClCompile Include="EbichaEngine\engine\utility\ConvertString.cpp" />
     <ClCompile Include="EbichaEngine\engine\utility\D3DResourceLeakChecker.cpp" />
@@ -185,11 +186,11 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="EbichaEngine\engine\3d\ModelCommon.cpp" />
     <ClCompile Include="EbichaEngine\engine\3d\ModelManager.cpp" />
     <ClCompile Include="EbichaEngine\engine\utility\ImGuiManager.cpp" />
-    <ClCompile Include="sound.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EbichaEngine\engine\3d\Object3d.h" />
     <ClInclude Include="EbichaEngine\engine\3d\Object3dCommon.h" />
+    <ClInclude Include="EbichaEngine\engine\audio\Sound.h" />
     <ClInclude Include="EbichaEngine\engine\base\SrvManager.h" />
     <ClInclude Include="EbichaEngine\engine\utility\ConvertString.h" />
     <ClInclude Include="EbichaEngine\engine\utility\D3DResourceLeakChecker.h" />
@@ -214,7 +215,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="EbichaEngine\engine\3d\ModelCommon.h" />
     <ClInclude Include="EbichaEngine\engine\3d\ModelManager.h" />
     <ClInclude Include="EbichaEngine\engine\utility\ImGuiManager.h" />
-    <ClInclude Include="sound.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="resources\shaders\Object3d.PS.hlsl">

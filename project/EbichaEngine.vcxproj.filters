@@ -147,7 +147,7 @@
     <ClCompile Include="EbichaEngine\engine\utility\ImGuiManager.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="sound.cpp">
+    <ClCompile Include="EbichaEngine\engine\audio\Sound.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
@@ -238,7 +238,7 @@
     <ClInclude Include="EbichaEngine\engine\utility\ImGuiManager.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="sound.h">
+    <ClInclude Include="EbichaEngine\engine\audio\Sound.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>

@@ -4,7 +4,6 @@
 void Sound::Initialize()
 {
 
-	Microsoft::WRL::ComPtr<IXAudio2> xAudio2;
 	IXAudio2MasteringVoice* masterVoice;
 
 	//XAudioエンジンのインスタンスを生成
