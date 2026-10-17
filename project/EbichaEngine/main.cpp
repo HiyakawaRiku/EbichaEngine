@@ -30,6 +30,9 @@
 #include "SrvManager.h"
 #include "ImGuiManager.h"
 #include "Sound.h"
+#include "Camera.h"
+#include "ParticleManager.h"
+#include "ParticleEmitter.h"
 
 
 #include "EMath.h"
@@ -103,6 +106,12 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	std::unique_ptr<Model> model = std::make_unique<Model>();
 	model->Initialize(modelCommon.get(),"resources","plane.obj");
 
+	std::unique_ptr<Camera> camera = std::make_unique<Camera>();
+	camera->SetRotate({ 0.0f,0.0f,0.0f });
+	camera->SetTranslate({ 0.0f,0.0f,-100.0f });
+	object3dCommon->SetDefaultCamera(camera.get());
+
+
 	std::unique_ptr<Object3d> object3d = std::make_unique<Object3d>();
 	object3d->Initialize(object3dCommon.get());
 	object3d->SetModel(model.get());
@@ -111,9 +120,20 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	object3d2->Initialize(object3dCommon.get());
 	object3d2->SetModel("axis.obj");
 
+
+	// 2. ParticleManager の初期化 (ここで内部の乱数エンジンも自動初期化されます)
+	ParticleManager::GetInstance()->Initialize(dxCommon.get(), srvManager.get());
+
+	// 3. パーティクルグループの登録 (テクスチャ読み込み)[cite: 10]
+	ParticleManager::GetInstance()->CreateParticleGroup("smoke", "Resources/monsterBall.png");
+
+	// 4. エミッターの生成 (名前: "smoke", 位置: 原点{0,0,0}, 1回に10個放出, 0.2秒間隔)
+	std::unique_ptr<ParticleEmitter> emitter =
+		std::make_unique<ParticleEmitter>("smoke", Vector3{ 0.0f, 0.0f, 0.0f }, 10, 0.2f);
+
+
 	std::unique_ptr<Sound> sound= std::make_unique<Sound>();
 	sound->Initialize();
-
 	//音声読み込み
 	SoundData soundData1 = sound->SoundLoadWave("Resources/fanfare.wav");
 
@@ -154,6 +174,12 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		//ImGuiの内部コマンドを生成する
 		ImGui::Render();
 #endif
+
+		// 5. 更新処理
+		emitter->Update();                                    // エミッターのタイマー更新＆Emit発火
+		ParticleManager::GetInstance()->Update(); // パーティクルの移動・寿命更新
+
+		camera->Update();
 		object3d->Update();
 		object3d2->Update();
 
@@ -186,7 +212,6 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		useMonsterBall ? sprite->SetTextureIndex(textureIndex2) : sprite->SetTextureIndex(textureIndex);
 
 
-
 		sprite->Update();
 		//sprite2->Update();
 
@@ -198,6 +223,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		object3dCommon->CommonDrawSetting();
 		object3d->Draw();
 		object3d2->Draw();
+
+		ParticleManager::GetInstance()->Draw();
 
 		spriteCommon->CommonDrawSetting();
 		sprite->Draw();

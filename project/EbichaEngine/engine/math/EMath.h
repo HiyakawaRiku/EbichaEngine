@@ -34,7 +34,49 @@ struct Transform {
 	Vector3 translate;
 };
 
+// 1. Vector3 + Vector3 (加算)
+inline Vector3 operator+(const Vector3& v1, const Vector3& v2) {
+	return Vector3{ v1.x + v2.x, v1.y + v2.y, v1.z + v2.z };
+}
 
+// 2. Vector3 += Vector3 (複合加算)
+inline Vector3& operator+=(Vector3& v1, const Vector3& v2) {
+	v1.x += v2.x;
+	v1.y += v2.y;
+	v1.z += v2.z;
+	return v1;
+}
+
+// 3. Vector3 * Vector3 (要素ごとの乗算)
+inline Vector3 operator*(const Vector3& v1, const Vector3& v2) {
+	return Vector3{ v1.x * v2.x, v1.y * v2.y, v1.z * v2.z };
+}
+
+// 4. Vector3 * float (スカラー倍: 例 Vector3 * kDeltaTime)
+inline Vector3 operator*(const Vector3& v, float s) {
+	return Vector3{ v.x * s, v.y * s, v.z * s };
+}
+
+// 5. float * Vector3 (スカラー倍: 例 kDeltaTime * Vector3)
+inline Vector3 operator*(float s, const Vector3& v) {
+	return Vector3{ v.x * s, v.y * s, v.z * s };
+}
+
+// 6. Vector3 *= Vector3 (複合乗算)
+inline Vector3& operator*=(Vector3& v1, const Vector3& v2) {
+	v1.x *= v2.x;
+	v1.y *= v2.y;
+	v1.z *= v2.z;
+	return v1;
+}
+
+// 7. Vector3 *= float (スカラー倍複合)
+inline Vector3& operator*=(Vector3& v, float s) {
+	v.x *= s;
+	v.y *= s;
+	v.z *= s;
+	return v;
+}
 
 inline Matrix4x4 MakeIdentity4x4() {
 	Matrix4x4 identity{};

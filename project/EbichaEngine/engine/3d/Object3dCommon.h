@@ -1,6 +1,8 @@
 #pragma once
 #include "DirectXCommon.h"
 
+class Camera;
+
 class Object3dCommon
 {
 public:
@@ -12,6 +14,9 @@ public:
 
 	DirectXCommon* GetDxCommon()const { return dxCommon_; }
 
+	void SetDefaultCamera(Camera* camera) { this->defaultCamera = camera; }
+	Camera* GetDefaultCamera()const { return defaultCamera; }
+
 private:
 	DirectXCommon* dxCommon_;
 
@@ -22,4 +27,6 @@ private:
 	ID3DBlob* errorBlob = nullptr;
 	IDxcBlob* vertexShaderBlob;
 	IDxcBlob* pixelShaderBlob;
+
+	Camera* defaultCamera = nullptr;
 };
