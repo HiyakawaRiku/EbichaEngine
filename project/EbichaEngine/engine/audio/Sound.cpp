@@ -11,70 +11,116 @@ void Sound::Initialize()
 	//マスターボイスを生成
 	hr = xAudio2->CreateMasteringVoice(&masterVoice);
 
+	hr = MFStartup(MF_VERSION, MFSTARTUP_NOSOCKET);
+	assert(SUCCEEDED(hr));
+
 }
 
-SoundData Sound::SoundLoadWave(const char* filename)
+void Sound::Finalize()
 {
-	// ファイル入力ストリームのインスタンス
-	std::ifstream file;
-	// .wavファイルをバイナリモードで開く
-	file.open(filename, std::ios_base::binary);
-	// ファイルオープン失敗を検出する
-	assert(file.is_open());
 
+	xAudio2.Reset();
 
-	// RIFFヘッダーの読み込み
-	RiffHeader riff;
-	file.read((char*)&riff, sizeof(riff));
-	// ファイルがRIFFかチェック
-	if (strncmp(riff.chunk.id, "RIFF", 4) != 0) {
-		assert(0);
+	HRESULT hr = MFShutdown();
+	assert(SUCCEEDED(hr));
+}
+
+SoundData Sound::SoundLoadFile(const std::string& filename)
+{
+	HRESULT hr = S_OK;
+
+	// std::string (マルチバイト) から wchar_t* (ワイド文字列) への変換
+	wchar_t wfilename[512];
+	size_t convertedChars = 0;
+	mbstowcs_s(&convertedChars, wfilename, filename.c_str(), _countof(wfilename));
+
+	// SourceReader の作成
+	Microsoft::WRL::ComPtr<IMFSourceReader> pReader;
+	hr = MFCreateSourceReaderFromURL(wfilename, nullptr, &pReader);
+	assert(SUCCEEDED(hr));
+
+	// 出力メディアタイプを非圧縮 PCM に設定
+	Microsoft::WRL::ComPtr<IMFMediaType> pPartialType;
+	hr = MFCreateMediaType(&pPartialType);
+	assert(SUCCEEDED(hr));
+
+	hr = pPartialType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Audio);
+	assert(SUCCEEDED(hr));
+
+	hr = pPartialType->SetGUID(MF_MT_SUBTYPE, MFAudioFormat_PCM);
+	assert(SUCCEEDED(hr));
+
+	hr = pReader->SetCurrentMediaType((DWORD)MF_SOURCE_READER_FIRST_AUDIO_STREAM, nullptr, pPartialType.Get());
+	assert(SUCCEEDED(hr));
+
+	// 実際に設定された完全なメディアタイプを取得
+	Microsoft::WRL::ComPtr<IMFMediaType> pUncompressedAudioType;
+	hr = pReader->GetCurrentMediaType((DWORD)MF_SOURCE_READER_FIRST_AUDIO_STREAM, &pUncompressedAudioType);
+	assert(SUCCEEDED(hr));
+
+	// WAVEFORMATEX 構造体の取得
+	WAVEFORMATEX* pWfex = nullptr;
+	UINT32 cbFormat = 0;
+	hr = MFCreateWaveFormatExFromMFMediaType(pUncompressedAudioType.Get(), &pWfex, &cbFormat);
+	assert(SUCCEEDED(hr));
+
+	// オーディオデータの全サンプルを一時的に格納するバッファ
+	std::vector<BYTE> mediaBuffer;
+
+	while (true)
+	{
+		DWORD dwFlags = 0;
+		Microsoft::WRL::ComPtr<IMFSample> pSample;
+
+		hr = pReader->ReadSample(
+			(DWORD)MF_SOURCE_READER_FIRST_AUDIO_STREAM,
+			0,
+			nullptr,
+			&dwFlags,
+			nullptr,
+			&pSample
+		);
+		assert(SUCCEEDED(hr));
+
+		// ストリームの終わりに達したら読み込み完了
+		if (dwFlags & MF_SOURCE_READERF_ENDOFSTREAM)
+		{
+			break;
+		}
+
+		if (pSample)
+		{
+			Microsoft::WRL::ComPtr<IMFMediaBuffer> pBuffer;
+			hr = pSample->ConvertToContiguousBuffer(&pBuffer);
+			assert(SUCCEEDED(hr));
+
+			BYTE* pAudioData = nullptr;
+			DWORD cbCurrentLength = 0;
+
+			hr = pBuffer->Lock(&pAudioData, nullptr, &cbCurrentLength);
+			assert(SUCCEEDED(hr));
+
+			// 取得した波形データを追加
+			size_t currentSize = mediaBuffer.size();
+			mediaBuffer.resize(currentSize + cbCurrentLength);
+			memcpy(mediaBuffer.data() + currentSize, pAudioData, cbCurrentLength);
+
+			hr = pBuffer->Unlock();
+			assert(SUCCEEDED(hr));
+		}
 	}
-	// タイプがWAVEかチェック
-	if (strncmp(riff.type, "WAVE", 4) != 0) {
-		assert(0);
-	}
 
-	// Formatチャンクの読み込み
-	FormatChunk format = {};
-	// チャンクヘッダーの確認
-	file.read((char*)&format, sizeof(ChunkHeader));
-	if (strncmp(format.chunk.id, "fmt ", 4) != 0) {
-		assert(0);
-	}
-
-	// チャンク本体の読み込み
-	assert(format.chunk.size <= sizeof(format.fmt));
-	file.read((char*)&format.fmt, format.chunk.size);
-
-	// Dataチャンクの読み込み
-	ChunkHeader data;
-	file.read((char*)&data, sizeof(data));
-	// JUNKチャンクを検出した場合
-	if (strncmp(data.id, "JUNK", 4) == 0) {
-		// 読み取り位置をJUNKチャンクの終わりまで進める
-		file.seekg(data.size, std::ios_base::cur);
-		// 再読み込み
-		file.read((char*)&data, sizeof(data));
-	}
-
-	if (strncmp(data.id, "data", 4) != 0) {
-		assert(0);
-	}
-
-	// Dataチャンクのデータ部（波形データ）の読み込み
-	char* pBuffer = new char[data.size];
-	file.read(pBuffer, data.size);
-
-	// Waveファイルを閉じる
-	file.close();
-
-	// returnする為の音声データ
+	// 返却用 SoundData の作成
 	SoundData soundData = {};
+	soundData.wfex = *pWfex;
+	soundData.bufferSize = static_cast<unsigned int>(mediaBuffer.size());
 
-	soundData.wfex = format.fmt;
-	soundData.pBuffer = reinterpret_cast<BYTE*>(pBuffer);
-	soundData.bufferSize = data.size;
+	// ヒープメモリを確保してデータをコピー
+	soundData.pBuffer = new BYTE[soundData.bufferSize];
+	memcpy(soundData.pBuffer, mediaBuffer.data(), soundData.bufferSize);
+
+	// MFCreateWaveFormatExFromMFMediaType で割り当てられたメモリを解放
+	CoTaskMemFree(pWfex);
 
 	return soundData;
 }

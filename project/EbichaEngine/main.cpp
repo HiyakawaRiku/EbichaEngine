@@ -135,7 +135,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	std::unique_ptr<Sound> sound= std::make_unique<Sound>();
 	sound->Initialize();
 	//音声読み込み
-	SoundData soundData1 = sound->SoundLoadWave("Resources/fanfare.wav");
+	SoundData soundData1 = sound->SoundLoadFile("Resources/01 Zoo.mp3");
 
 	//音声再生
 	sound->SoundPlayWave(sound->xAudio2.Get(), soundData1);
@@ -203,7 +203,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		size.y += 0.1f;
 		sprite->SetSize(size);
 
-		//sprite->SetAnchorPoint({ 0.5f,0.5f });
+		sprite->SetAnchorPoint({ 0.5f,0.5f });
 		//sprite->SetIsFlipX(1);
 		//sprite->SetIsFlipY(0);
 
@@ -237,6 +237,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		dxCommon->PostDraw();
 
 	}
+
+	sound->Finalize();
 
 	//XAudio2解放
 	sound->xAudio2.Reset();
