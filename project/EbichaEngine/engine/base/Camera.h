@@ -18,7 +18,7 @@ public://setter getter
 	void SetFarClip(const float& farClip) { farClip_ = farClip; }
 
 	const Matrix4x4& GetWorldMatrix()const { return worldMatrix_; }
-	const Matrix4x4& GetViewMatix()const { return viewMatrix_; }
+	const Matrix4x4& GetViewMatrix()const { return viewMatrix_; }
 	const Matrix4x4& GetProjectionMatrix()const { return projectionMatrix_; }
 	const Matrix4x4& GetViewProjectionMatrix()const { return viewProjectionMatrix_; }
 	const Vector3& GetRotate()const { return transform_.rotate; }

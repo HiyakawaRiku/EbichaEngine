@@ -135,7 +135,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	std::unique_ptr<Sound> sound= std::make_unique<Sound>();
 	sound->Initialize();
 	//音声読み込み
-	SoundData soundData1 = sound->SoundLoadFile("Resources/01 Zoo.mp3");
+	SoundData soundData1 = sound->SoundLoadFile("Resources/fanfare.wav");
 
 	//音声再生
 	sound->SoundPlayWave(sound->xAudio2.Get(), soundData1);

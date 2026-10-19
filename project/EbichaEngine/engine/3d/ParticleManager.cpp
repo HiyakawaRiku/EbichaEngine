@@ -42,6 +42,25 @@ void ParticleManager::Update()
 {
     const float kDeltaTime = 1.0f / 60.0f;
 
+    // カメラが存在する場合、ビルボード用の行列を計算
+    Matrix4x4 backToFrontMatrix = MakeIdentity4x4();
+    Matrix4x4 billboardMatrix = MakeIdentity4x4();
+
+    if (camera_) {
+        // ビュー行列の取得
+        Matrix4x4 viewMatrix = camera_->GetViewMatrix();
+
+        // ビュー行列の逆行列（カメラのワールド行列）から回転成分を取り出す
+        // ビュー行列の平行移動部分をクリアして逆行列を取ることで、ビルボード行列を作成
+        backToFrontMatrix = viewMatrix;
+        backToFrontMatrix.m[3][0] = 0.0f;
+        backToFrontMatrix.m[3][1] = 0.0f;
+        backToFrontMatrix.m[3][2] = 0.0f;
+
+        // ビュー行列の回転成分の逆行列（転置）がビルボード行列となる
+        billboardMatrix = Inverse(backToFrontMatrix);
+    }
+
     for (auto& [name, group] : particleGroups) {
         uint32_t instanceIndex = 0;
 
@@ -58,7 +77,16 @@ void ParticleManager::Update()
             float alpha = 1.0f - (it->currentTime / it->lifeTime);
             it->color.w = alpha;
 
-            Matrix4x4 worldMatrix = MakeAffineMatrix(it->transform.scale, it->transform.rotate, it->transform.translate);
+            // 各変換行列を作成
+            Matrix4x4 scaleMatrix = MakeScaleMatrix(it->transform.scale);
+            Matrix4x4 rotateMatrix = MakeRotateXYZMatrix(it->transform.rotate);
+            Matrix4x4 translateMatrix = MakeTranslateMatrix(it->transform.translate);
+
+            // ビルボード行列を適用（Scale -> Rotate -> Billboard -> Translate）
+            Matrix4x4 worldMatrix = Multiply(scaleMatrix, rotateMatrix);
+            worldMatrix = Multiply(worldMatrix, billboardMatrix);
+            worldMatrix = Multiply(worldMatrix, translateMatrix);
+
             Matrix4x4 wvpMatrix = worldMatrix;
             if (camera_) {
                 wvpMatrix = Multiply(worldMatrix, camera_->GetViewProjectionMatrix());
@@ -66,7 +94,6 @@ void ParticleManager::Update()
 
             group.instancingData[instanceIndex].WVP = wvpMatrix;
             group.instancingData[instanceIndex].World = worldMatrix;
-            //group.instancingData[instanceIndex].color = it->color;
 
             ++instanceIndex;
             ++it;

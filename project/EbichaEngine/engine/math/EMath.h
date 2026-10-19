@@ -263,7 +263,37 @@ inline Matrix4x4 MakeScaleMatrix(const Vector3& scale) {
 	return result;
 }
 
-// Z軸回転行列の作成（UVの回転用）
+// X軸回転行列の作成
+inline Matrix4x4 MakeRotateXMatrix(float angle) {
+	Matrix4x4 result = { 0 };
+	float c = std::cos(angle);
+	float s = std::sin(angle);
+
+	result.m[0][0] = 1.0f;
+	result.m[1][1] = c;
+	result.m[1][2] = s;
+	result.m[2][1] = -s;
+	result.m[2][2] = c;
+	result.m[3][3] = 1.0f;
+	return result;
+}
+
+// Y軸回転行列の作成
+inline Matrix4x4 MakeRotateYMatrix(float angle) {
+	Matrix4x4 result = { 0 };
+	float c = std::cos(angle);
+	float s = std::sin(angle);
+
+	result.m[0][0] = c;
+	result.m[0][2] = -s;
+	result.m[1][1] = 1.0f;
+	result.m[2][0] = s;
+	result.m[2][2] = c;
+	result.m[3][3] = 1.0f;
+	return result;
+}
+
+// Z軸回転行列の作成
 inline Matrix4x4 MakeRotateZMatrix(float angle) {
 	Matrix4x4 result = { 0 };
 	float c = std::cos(angle);
@@ -276,6 +306,15 @@ inline Matrix4x4 MakeRotateZMatrix(float angle) {
 	result.m[2][2] = 1.0f;
 	result.m[3][3] = 1.0f;
 	return result;
+}
+
+// XYZ合成回転行列の作成 (X -> Y -> Z 順)
+inline Matrix4x4 MakeRotateXYZMatrix(const Vector3& rotate) {
+	Matrix4x4 rotateX = MakeRotateXMatrix(rotate.x);
+	Matrix4x4 rotateY = MakeRotateYMatrix(rotate.y);
+	Matrix4x4 rotateZ = MakeRotateZMatrix(rotate.z);
+
+	return Multiply(rotateX, Multiply(rotateY, rotateZ));
 }
 
 // 平行移動行列の作成（UVのオフセット用）
