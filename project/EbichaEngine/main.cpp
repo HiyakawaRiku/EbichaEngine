@@ -180,6 +180,10 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		ParticleManager::GetInstance()->Update(); // パーティクルの移動・寿命更新
 
 		camera->Update();
+
+		Vector3 a = object3d->GetTranslate();
+		a -= {0, 0, 1};
+		object3d->SetTranslate(a);
 		object3d->Update();
 		object3d2->Update();
 
