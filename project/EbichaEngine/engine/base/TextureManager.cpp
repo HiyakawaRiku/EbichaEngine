@@ -20,6 +20,11 @@ void TextureManager::Finalize()
 	// 保持しているテクスチャデータを全てクリアして ComPtr の参照を外す
 	textureDatas.clear();
 	textureKeys.clear();
+
+	intermediateResources_.clear();
+
+	dxCommon_ = nullptr;
+	srvManager = nullptr;
 }
 
 uint32_t TextureManager::Load(const std::string& filePath)

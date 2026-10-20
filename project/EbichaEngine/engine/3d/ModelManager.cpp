@@ -32,3 +32,10 @@ Model* ModelManager::FindModel(const std::string& filePath)
 
 	return nullptr;
 }
+
+void ModelManager::Finalize()
+{
+	// 保持しているモデルデータをすべて解放
+	models.clear();
+	modelCommon.reset();
+}

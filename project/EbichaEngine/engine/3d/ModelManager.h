@@ -8,6 +8,7 @@ class ModelManager final
 public:
 	static ModelManager* GetInstance();
 	void Initialize(DirectXCommon* dxCommon);
+	void Finalize();
 	void LoadModel(const std::string& filePath);
 	Model* FindModel(const std::string& filePath);
 

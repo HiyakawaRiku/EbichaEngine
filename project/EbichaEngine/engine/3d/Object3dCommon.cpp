@@ -17,14 +17,16 @@ void Object3dCommon::Initialize(DirectXCommon* dxCommon)
 }
 void Object3dCommon::Finalize()
 {
+	if (signatureBlob) { signatureBlob->Release(); signatureBlob = nullptr; }
+	if (errorBlob) { errorBlob->Release(); errorBlob = nullptr; }
+	if (pixelShaderBlob) { pixelShaderBlob->Release(); pixelShaderBlob = nullptr; }
+	if (vertexShaderBlob) { vertexShaderBlob->Release(); vertexShaderBlob = nullptr; }
 
-	signatureBlob->Release();
-	if (errorBlob) {
-		errorBlob->Release();
-	}
-	pixelShaderBlob->Release();
-	vertexShaderBlob->Release();
+	rootSignature.Reset();
+	graphicsPipelineState.Reset();
 
+	defaultCamera = nullptr;
+	dxCommon_ = nullptr;
 }
 void Object3dCommon::CreatePipelineState()
 {

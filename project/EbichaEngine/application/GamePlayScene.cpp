@@ -66,8 +66,8 @@ void GamePlayScene::Initialize() {
     emitter_ = std::make_unique<ParticleEmitter>("smoke", Vector3{ 0.0f, 0.0f, 0.0f }, 10, 0.2f);
 
     // サウンド再生
-    soundData1_ = sound->SoundLoadFile("Resources/420_long_BPM108.mp3");
-    sound->SoundPlayWave(sound->xAudio2.Get(), soundData1_);
+    soundData1_ = Sound::GetInstance()->SoundLoadFile("Resources/420_long_BPM108.mp3");
+    pSourceVoice_ = Sound::GetInstance()->SoundPlayWave(Sound::GetInstance()->xAudio2.Get(), soundData1_);
 }
 
 void GamePlayScene::Update(Input* input) {
@@ -134,4 +134,28 @@ void GamePlayScene::Draw() {
     // スプライト描画
     SpriteCommon::GetInstance()->CommonDrawSetting();
     sprite_->Draw();
+}
+
+void GamePlayScene::Finalize() {
+    
+    if (pSourceVoice_) {
+        pSourceVoice_->Stop(0);
+        pSourceVoice_->DestroyVoice();
+        pSourceVoice_ = nullptr;
+    }
+
+    if (soundData1_.pBuffer) {
+        Sound::GetInstance()->SoundUnload(&soundData1_);
+        soundData1_.pBuffer = nullptr;
+    }
+    
+    // 保持しているスマートポインタや ComPtr を明示的に解放
+    sprite_.reset();
+    sprite2_.reset();
+    object3d_.reset();
+    object3d2_.reset();
+    model_.reset();
+    emitter_.reset();
+    camera_.reset();
+
 }

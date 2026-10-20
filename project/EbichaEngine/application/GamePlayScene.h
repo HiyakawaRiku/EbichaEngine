@@ -29,6 +29,8 @@ public:
     // 描画
     void Draw();
 
+    void Finalize();
+
 private:
     // 依存参照ポインタ（所有権はエンジン側）
     SpriteCommon* spriteCommon_ = nullptr;
@@ -49,4 +51,5 @@ private:
     uint32_t textureIndex2_ = 0;
     bool useMonsterBall_ = true;
     SoundData soundData1_{};
+    IXAudio2SourceVoice* pSourceVoice_ = nullptr;
 };

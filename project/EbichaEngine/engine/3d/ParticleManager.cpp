@@ -36,6 +36,20 @@ void ParticleManager::Finalize()
     if (errorBlob) errorBlob->Release();
     if (pixelShaderBlob) pixelShaderBlob->Release();
     if (vertexShaderBlob) vertexShaderBlob->Release();
+
+    for (auto& [name, group] : particleGroups) {
+        group.instancingResource.Reset();
+    }
+    particleGroups.clear();
+
+    rootSignature.Reset();
+    graphicsPipelineState.Reset();
+    vertexResource.Reset();
+    materialResource.Reset();
+
+    camera_ = nullptr;
+    dxCommon_ = nullptr;
+    srvManager_ = nullptr;
 }
 
 void ParticleManager::Update()

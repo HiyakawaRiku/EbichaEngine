@@ -88,14 +88,20 @@ void EbichaEngine::Draw() {
 }
 
 void EbichaEngine::Finalize() {
+
+    GamePlayScene::GetInstance()->Finalize();
+
     Sound::GetInstance()->Finalize();
 
     imGuiManager_->Finalize();
 
+    ParticleManager::GetInstance()->Finalize();
+    ModelManager::GetInstance()->Finalize();
     TextureManager::GetInstance()->Finalize();
 
     Object3dCommon::GetInstance()->Finalize();
     SpriteCommon::GetInstance()->Finalize();
+    srvManager_->Finalize();
 
     dxCommon_->Finalize();
     winApp_->Finalize();

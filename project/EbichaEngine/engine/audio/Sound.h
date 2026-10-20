@@ -52,9 +52,6 @@ struct SoundData
 };
 
 
-
-
-
 class Sound
 {
 public:
@@ -67,7 +64,7 @@ public:
 	// 音声データ解放
 	void SoundUnload(SoundData* soundData);
 	// 音声再生
-	void SoundPlayWave(IXAudio2* xAudio2, const SoundData& soundData);
+	IXAudio2SourceVoice* SoundPlayWave(IXAudio2* xAudio2, const SoundData& soundData);
 
 	Microsoft::WRL::ComPtr<IXAudio2> xAudio2;
 

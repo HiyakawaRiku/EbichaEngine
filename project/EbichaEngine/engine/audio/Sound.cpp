@@ -145,25 +145,22 @@ void Sound::SoundUnload(SoundData* soundData)
 
 
 // 音声再生
-void Sound::SoundPlayWave(IXAudio2* xAudio2, const SoundData& soundData) {
-
+IXAudio2SourceVoice* Sound::SoundPlayWave(IXAudio2* xAudio2, const SoundData& soundData) {
 	HRESULT hr;
 
-	// 波形フォーマットを元にSourceVoiceの生成
 	IXAudio2SourceVoice* pSourceVoice = nullptr;
 	hr = xAudio2->CreateSourceVoice(&pSourceVoice, &soundData.wfex);
 	assert(SUCCEEDED(hr));
 
-	// 再生する波形データの設定
 	XAUDIO2_BUFFER buf{};
 	buf.pAudioData = soundData.pBuffer;
 	buf.AudioBytes = soundData.bufferSize;
 	buf.Flags = XAUDIO2_END_OF_STREAM;
 
-	// 波形データの再生
 	hr = pSourceVoice->SubmitSourceBuffer(&buf);
+	assert(SUCCEEDED(hr));
 	hr = pSourceVoice->Start();
+	assert(SUCCEEDED(hr));
+
+	return pSourceVoice; // ★ 生成した SourceVoice を返す
 }
-
-
-
