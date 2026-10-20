@@ -94,10 +94,6 @@ void GamePlayScene::Update(Input* input) {
     position += Vector2{ 0.1f, 0.1f };
     sprite_->SetPosition(position);
 
-    float rotation = sprite_->GetRotation();
-    rotation += 0.01f;
-    sprite_->SetRotation(rotation);
-
     Vector4 color = sprite_->GetColor();
     color.x += 0.01f;
     if (color.x > 1.0f) {
