@@ -3,6 +3,12 @@
 
 using namespace Logger;
 
+Object3dCommon* Object3dCommon::GetInstance()
+{
+	static Object3dCommon instance;
+	return &instance;
+}
+
 void Object3dCommon::Initialize(DirectXCommon* dxCommon)
 {
 	dxCommon_ = dxCommon;

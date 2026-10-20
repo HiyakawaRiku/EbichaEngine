@@ -4,6 +4,7 @@
 class ModelCommon
 {
 public:
+	static ModelCommon* GetInstance();
 	void Initialize(DirectXCommon*dxCommon);
 
 	DirectXCommon* GetDxCommon()const { return dxCommon_; }

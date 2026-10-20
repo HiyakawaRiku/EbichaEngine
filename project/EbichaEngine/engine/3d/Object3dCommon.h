@@ -6,6 +6,8 @@ class Camera;
 class Object3dCommon
 {
 public:
+
+	static Object3dCommon* GetInstance();
 	void Initialize(DirectXCommon* dxCommon);
 	void Finalize();
 

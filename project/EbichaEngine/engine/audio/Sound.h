@@ -58,6 +58,7 @@ struct SoundData
 class Sound
 {
 public:
+	static Sound* GetInstance();
 	void Initialize();
 	void Update();
 	void Finalize();

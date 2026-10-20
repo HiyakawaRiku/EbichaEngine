@@ -1,6 +1,12 @@
 #include "Sound.h"
 
 
+Sound* Sound::GetInstance()
+{
+	static Sound instance;
+	return &instance;
+}
+
 void Sound::Initialize()
 {
 
