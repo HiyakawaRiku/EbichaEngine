@@ -1,4 +1,5 @@
 #include "EbichaEngine.h"
+#include "GamePlayScene.h"
 #include "Logger.h"
 #include <format>
 
@@ -44,7 +45,8 @@ void EbichaEngine::Initialize() {
     Sound::GetInstance()->Initialize();
 
     // GamePlayScene の初期化
-    GamePlayScene::GetInstance()->Initialize();
+    SceneManager::GetInstance()->Initialize();
+    SceneManager::GetInstance()->ChangeScene(std::make_unique<GamePlayScene>());
 }
 
 void EbichaEngine::Run() {
@@ -69,7 +71,7 @@ void EbichaEngine::Update() {
     ImGui::ShowDemoWindow();
 #endif
 
-    GamePlayScene::GetInstance()->Update(input_.get());
+    SceneManager::GetInstance()->Update(input_.get());
 
 #ifdef USE_IMGUI
     ImGui::Render();
@@ -80,7 +82,7 @@ void EbichaEngine::Draw() {
     srvManager_->PreDraw();
     dxCommon_->PreDraw();
 
-    GamePlayScene::GetInstance()->Draw();
+    SceneManager::GetInstance()->Draw();
 
     imGuiManager_->Draw();
 
@@ -89,7 +91,7 @@ void EbichaEngine::Draw() {
 
 void EbichaEngine::Finalize() {
 
-    GamePlayScene::GetInstance()->Finalize();
+    SceneManager::GetInstance()->Finalize();
 
     Sound::GetInstance()->Finalize();
 

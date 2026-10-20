@@ -7,15 +7,11 @@
 #include "ModelCommon.h"
 #include "Sound.h"
 #include "EMath.h"
+#include "Input.h"
 
 #ifdef USE_IMGUI
 #include "ImGuiManager.h"
 #endif
-
-GamePlayScene* GamePlayScene::GetInstance() {
-    static GamePlayScene instance;
-    return &instance;
-}
 
 GamePlayScene::~GamePlayScene() {
     if (soundData1_.pBuffer) {

@@ -19,7 +19,7 @@
 #include "ParticleManager.h"
 #include "D3DResourceLeakChecker.h"
 
-#include "GamePlayScene.h"
+#include "SceneManager.h"
 
 class EbichaEngine {
 public:
@@ -49,8 +49,7 @@ private:
     std::unique_ptr<ImGuiManager> imGuiManager_;
     std::unique_ptr<Sound> sound_;
 
-    // シーン
-    std::unique_ptr<GamePlayScene> gamePlayScene_;
+    
 
     std::ofstream logStream_;
 };

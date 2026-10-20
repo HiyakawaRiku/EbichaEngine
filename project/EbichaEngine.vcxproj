@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64">
@@ -80,7 +80,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)EbichaEngine\engine\2d;$(ProjectDir)EbichaEngine\engine\3d;$(ProjectDir)EbichaEngine\engine\base;$(ProjectDir)EbichaEngine\engine\math;$(ProjectDir)EbichaEngine\engine\utility;$(ProjectDir)externals\DirectXTex;$(ProjectDir)externals\imgui;$(ProjectDir)EbichaEngine\engine\audio;$(ProjectDir)EbichaEngine\application</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)EbichaEngine\engine\2d;$(ProjectDir)EbichaEngine\engine\3d;$(ProjectDir)EbichaEngine\engine\base;$(ProjectDir)EbichaEngine\engine\math;$(ProjectDir)EbichaEngine\engine\utility;$(ProjectDir)externals\DirectXTex;$(ProjectDir)externals\imgui;$(ProjectDir)EbichaEngine\engine\scene;$(ProjectDir)EbichaEngine\engine\audio;$(ProjectDir)EbichaEngine\application</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -110,7 +110,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <Optimization>MinSpace</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)EbichaEngine\engine\2d;$(ProjectDir)EbichaEngine\engine\3d;$(ProjectDir)EbichaEngine\engine\base;$(ProjectDir)EbichaEngine\engine\math;$(ProjectDir)EbichaEngine\engine\utility;$(ProjectDir)externals\DirectXTex;$(ProjectDir)externals\imgui;$(ProjectDir)EbichaEngine\engine\audio;$(ProjectDir)EbichaEngine\application</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)EbichaEngine\engine\2d;$(ProjectDir)EbichaEngine\engine\3d;$(ProjectDir)EbichaEngine\engine\base;$(ProjectDir)EbichaEngine\engine\math;$(ProjectDir)EbichaEngine\engine\utility;$(ProjectDir)externals\DirectXTex;$(ProjectDir)externals\imgui;$(ProjectDir)EbichaEngine\engine\scene;$(ProjectDir)EbichaEngine\engine\audio;$(ProjectDir)EbichaEngine\application</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -138,7 +138,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)EbichaEngine\engine\2d;$(ProjectDir)EbichaEngine\engine\3d;$(ProjectDir)EbichaEngine\engine\base;$(ProjectDir)EbichaEngine\engine\math;$(ProjectDir)EbichaEngine\engine\utility;$(ProjectDir)externals\DirectXTex;$(ProjectDir)externals\imgui;$(ProjectDir)EbichaEngine\engine\audio;$(ProjectDir)EbichaEngine\application</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)EbichaEngine\engine\2d;$(ProjectDir)EbichaEngine\engine\3d;$(ProjectDir)EbichaEngine\engine\base;$(ProjectDir)EbichaEngine\engine\math;$(ProjectDir)EbichaEngine\engine\utility;$(ProjectDir)externals\DirectXTex;$(ProjectDir)externals\imgui;$(ProjectDir)EbichaEngine\engine\scene;$(ProjectDir)EbichaEngine\engine\audio;$(ProjectDir)EbichaEngine\application</AdditionalIncludeDirectories>
       <WholeProgramOptimization>false</WholeProgramOptimization>
     </ClCompile>
     <Link>
@@ -156,6 +156,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="EbichaEngine\engine\Scene\BaseScene.cpp" />
     <ClCompile Include="EbichaEngine\engine\base\EbichaEngine.cpp" />
     <ClCompile Include="EbichaEngine\engine\3d\Object3d.cpp" />
     <ClCompile Include="EbichaEngine\engine\3d\Object3dCommon.cpp" />
@@ -191,8 +192,10 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="EbichaEngine\engine\3d\ParticleEmitter.cpp" />
     <ClCompile Include="EbichaEngine\engine\3d\ParticleManager.cpp" />
     <ClCompile Include="EbichaEngine\application\GamePlayScene.cpp" />
+    <ClCompile Include="EbichaEngine\engine\Scene\SceneManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="EbichaEngine\engine\Scene\BaseScene.h" />
     <ClInclude Include="EbichaEngine\engine\3d\Object3d.h" />
     <ClInclude Include="EbichaEngine\engine\3d\Object3dCommon.h" />
     <ClInclude Include="EbichaEngine\engine\audio\Sound.h" />
@@ -225,6 +228,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="EbichaEngine\engine\3d\ParticleEmitter.h" />
     <ClInclude Include="EbichaEngine\engine\3d\ParticleManager.h" />
     <ClInclude Include="EbichaEngine\application\GamePlayScene.h" />
+    <ClInclude Include="EbichaEngine\engine\Scene\SceneManager.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="resources\shaders\Particle.PS.hlsl">

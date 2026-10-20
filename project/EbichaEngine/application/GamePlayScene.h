@@ -3,6 +3,7 @@
 #include <memory>
 #include <cstdint>
 
+#include "BaseScene.h"
 #include "SpriteCommon.h"
 #include "Object3dCommon.h"
 #include "ModelCommon.h"
@@ -11,33 +12,18 @@
 #include "Camera.h"
 #include "Sound.h"
 #include "ParticleEmitter.h"
-#include "Input.h"
 
-class GamePlayScene {
+class GamePlayScene : public BaseScene {
 public:
-
-    static GamePlayScene* GetInstance();
     GamePlayScene() = default;
-    ~GamePlayScene();
+    ~GamePlayScene() override;
 
-    // 初期化
-    void Initialize();
-
-    // 更新
-    void Update(Input* input);
-
-    // 描画
-    void Draw();
-
-    void Finalize();
+    void Initialize() override;
+    void Update(Input* input) override;
+    void Draw() override;
+    void Finalize() override;
 
 private:
-    // 依存参照ポインタ（所有権はエンジン側）
-    SpriteCommon* spriteCommon_ = nullptr;
-    Object3dCommon* object3dCommon_ = nullptr;
-    ModelCommon* modelCommon_ = nullptr;
-    Sound* sound_ = nullptr;
-
     // シーン所有のリソース・オブジェクト
     std::unique_ptr<Camera> camera_;
     std::unique_ptr<Sprite> sprite_;
