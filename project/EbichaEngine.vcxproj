@@ -157,7 +157,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="EbichaEngine\engine\Scene\BaseScene.cpp" />
-    <ClCompile Include="EbichaEngine\engine\base\EbichaEngine.cpp" />
+    <ClCompile Include="EbichaEngine\application\EbichaEngine.cpp" />
     <ClCompile Include="EbichaEngine\engine\3d\Object3d.cpp" />
     <ClCompile Include="EbichaEngine\engine\3d\Object3dCommon.cpp" />
     <ClCompile Include="EbichaEngine\engine\audio\Sound.cpp" />
@@ -193,6 +193,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="EbichaEngine\engine\3d\ParticleManager.cpp" />
     <ClCompile Include="EbichaEngine\application\GamePlayScene.cpp" />
     <ClCompile Include="EbichaEngine\engine\Scene\SceneManager.cpp" />
+    <ClCompile Include="EbichaEngine\application\TitleScene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EbichaEngine\engine\Scene\BaseScene.h" />
@@ -200,7 +201,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="EbichaEngine\engine\3d\Object3dCommon.h" />
     <ClInclude Include="EbichaEngine\engine\audio\Sound.h" />
     <ClInclude Include="EbichaEngine\engine\base\Camera.h" />
-    <ClInclude Include="EbichaEngine\engine\base\EbichaEngine.h" />
+    <ClInclude Include="EbichaEngine\application\EbichaEngine.h" />
     <ClInclude Include="EbichaEngine\engine\base\SrvManager.h" />
     <ClInclude Include="EbichaEngine\engine\utility\ConvertString.h" />
     <ClInclude Include="EbichaEngine\engine\utility\D3DResourceLeakChecker.h" />
@@ -229,6 +230,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="EbichaEngine\engine\3d\ParticleManager.h" />
     <ClInclude Include="EbichaEngine\application\GamePlayScene.h" />
     <ClInclude Include="EbichaEngine\engine\Scene\SceneManager.h" />
+    <ClInclude Include="EbichaEngine\application\TitleScene.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="resources\shaders\Particle.PS.hlsl">
