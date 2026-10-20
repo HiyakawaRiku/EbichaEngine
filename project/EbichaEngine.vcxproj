@@ -80,7 +80,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)EbichaEngine\engine\2d;$(ProjectDir)EbichaEngine\engine\3d;$(ProjectDir)EbichaEngine\engine\base;$(ProjectDir)EbichaEngine\engine\math;$(ProjectDir)EbichaEngine\engine\utility;$(ProjectDir)externals\DirectXTex;$(ProjectDir)externals\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)EbichaEngine\engine\2d;$(ProjectDir)EbichaEngine\engine\3d;$(ProjectDir)EbichaEngine\engine\base;$(ProjectDir)EbichaEngine\engine\math;$(ProjectDir)EbichaEngine\engine\utility;$(ProjectDir)externals\DirectXTex;$(ProjectDir)externals\imgui;$(ProjectDir)EbichaEngine\engine\audio;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -158,6 +158,9 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
   <ItemGroup>
     <ClCompile Include="EbichaEngine\engine\3d\Object3d.cpp" />
     <ClCompile Include="EbichaEngine\engine\3d\Object3dCommon.cpp" />
+    <ClCompile Include="EbichaEngine\engine\audio\Sound.cpp" />
+    <ClCompile Include="EbichaEngine\engine\base\Camera.cpp" />
+    <ClCompile Include="EbichaEngine\engine\base\SrvManager.cpp" />
     <ClCompile Include="EbichaEngine\engine\utility\ConvertString.cpp" />
     <ClCompile Include="EbichaEngine\engine\utility\D3DResourceLeakChecker.cpp" />
     <ClCompile Include="EbichaEngine\engine\utility\DebugCamera.cpp" />
@@ -183,10 +186,16 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="EbichaEngine\engine\3d\Model.cpp" />
     <ClCompile Include="EbichaEngine\engine\3d\ModelCommon.cpp" />
     <ClCompile Include="EbichaEngine\engine\3d\ModelManager.cpp" />
+    <ClCompile Include="EbichaEngine\engine\utility\ImGuiManager.cpp" />
+    <ClCompile Include="EbichaEngine\engine\3d\ParticleEmitter.cpp" />
+    <ClCompile Include="EbichaEngine\engine\3d\ParticleManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EbichaEngine\engine\3d\Object3d.h" />
     <ClInclude Include="EbichaEngine\engine\3d\Object3dCommon.h" />
+    <ClInclude Include="EbichaEngine\engine\audio\Sound.h" />
+    <ClInclude Include="EbichaEngine\engine\base\Camera.h" />
+    <ClInclude Include="EbichaEngine\engine\base\SrvManager.h" />
     <ClInclude Include="EbichaEngine\engine\utility\ConvertString.h" />
     <ClInclude Include="EbichaEngine\engine\utility\D3DResourceLeakChecker.h" />
     <ClInclude Include="EbichaEngine\engine\utility\DebugCamera.h" />
@@ -209,8 +218,27 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="EbichaEngine\engine\3d\Model.h" />
     <ClInclude Include="EbichaEngine\engine\3d\ModelCommon.h" />
     <ClInclude Include="EbichaEngine\engine\3d\ModelManager.h" />
+    <ClInclude Include="EbichaEngine\engine\utility\ImGuiManager.h" />
+    <ClInclude Include="EbichaEngine\engine\3d\ParticleEmitter.h" />
+    <ClInclude Include="EbichaEngine\engine\3d\ParticleManager.h" />
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="resources\shaders\Particle.PS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Development|x64'">Pixel</ShaderType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
+    <FxCompile Include="resources\shaders\Particle.VS.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Development|x64'">Vertex</ShaderType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Development|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
     <FxCompile Include="resources\shaders\Object3d.PS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
@@ -234,6 +262,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="resources\shaders\Particle.hlsli" />
     <None Include="resources\shaders\Object3d.hlsli" />
   </ItemGroup>
   <ItemGroup>

@@ -7,12 +7,6 @@
 #include <chrono>
 
 
-#ifdef USE_IMGUI
-#include "imgui.h"
-#include "imgui_impl_dx12.h"
-#include "imgui_impl_win32.h"
-extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-#endif
 
 
 
@@ -33,145 +27,17 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 #include "Object3d.h"
 #include "TextureManager.h"
 #include "ModelManager.h"
+#include "SrvManager.h"
+#include "ImGuiManager.h"
+#include "Sound.h"
+#include "Camera.h"
+#include "ParticleManager.h"
+#include "ParticleEmitter.h"
 
 
 #include "EMath.h"
 
 using namespace Logger;
-
-// チャンクヘッダ
-struct ChunkHeader
-{
-	char id[4]; // チャンク毎のID
-	int32_t size; // チャンクサイズ
-};
-
-// RIFFヘッダチャンク
-struct RiffHeader
-{
-	ChunkHeader chunk; // "RIFF"
-	char type[4]; // "WAVE"
-};
-
-// FMTチャンク
-struct FormatChunk
-{
-	ChunkHeader chunk; // "fmt "
-	WAVEFORMATEX fmt; // 波形フォーマット
-};
-
-// 音声データ
-struct SoundData
-{
-	// 波形フォーマット
-	WAVEFORMATEX wfex;
-	// バッファの先頭アドレス
-	BYTE* pBuffer;
-	// バッファのサイズ
-	unsigned int bufferSize;
-};
-
-SoundData SoundLoadWave(const char* filename)
-{
-	// ファイル入力ストリームのインスタンス
-	std::ifstream file;
-	// .wavファイルをバイナリモードで開く
-	file.open(filename, std::ios_base::binary);
-	// ファイルオープン失敗を検出する
-	assert(file.is_open());
-
-
-	// RIFFヘッダーの読み込み
-	RiffHeader riff;
-	file.read((char*)&riff, sizeof(riff));
-	// ファイルがRIFFかチェック
-	if (strncmp(riff.chunk.id, "RIFF", 4) != 0) {
-		assert(0);
-	}
-	// タイプがWAVEかチェック
-	if (strncmp(riff.type, "WAVE", 4) != 0) {
-		assert(0);
-	}
-
-	// Formatチャンクの読み込み
-	FormatChunk format = {};
-	// チャンクヘッダーの確認
-	file.read((char*)&format, sizeof(ChunkHeader));
-	if (strncmp(format.chunk.id, "fmt ", 4) != 0) {
-		assert(0);
-	}
-
-	// チャンク本体の読み込み
-	assert(format.chunk.size <= sizeof(format.fmt));
-	file.read((char*)&format.fmt, format.chunk.size);
-
-	// Dataチャンクの読み込み
-	ChunkHeader data;
-	file.read((char*)&data, sizeof(data));
-	// JUNKチャンクを検出した場合
-	if (strncmp(data.id, "JUNK", 4) == 0) {
-		// 読み取り位置をJUNKチャンクの終わりまで進める
-		file.seekg(data.size, std::ios_base::cur);
-		// 再読み込み
-		file.read((char*)&data, sizeof(data));
-	}
-
-	if (strncmp(data.id, "data", 4) != 0) {
-		assert(0);
-	}
-
-	// Dataチャンクのデータ部（波形データ）の読み込み
-	char* pBuffer = new char[data.size];
-	file.read(pBuffer, data.size);
-
-	// Waveファイルを閉じる
-	file.close();
-
-	// returnする為の音声データ
-	SoundData soundData = {};
-
-	soundData.wfex = format.fmt;
-	soundData.pBuffer = reinterpret_cast<BYTE*>(pBuffer);
-	soundData.bufferSize = data.size;
-
-	return soundData;
-}
-
-
-// 音声データ解放
-void SoundUnload(SoundData* soundData)
-{
-	// バッファのメモリを解放
-	delete[] soundData->pBuffer;
-
-	soundData->pBuffer = 0;
-	soundData->bufferSize = 0;
-	soundData->wfex = {};
-}
-
-
-// 音声再生
-void SoundPlayWave(IXAudio2* xAudio2, const SoundData& soundData) {
-
-	HRESULT hr;
-
-	// 波形フォーマットを元にSourceVoiceの生成
-	IXAudio2SourceVoice* pSourceVoice = nullptr;
-	hr = xAudio2->CreateSourceVoice(&pSourceVoice, &soundData.wfex);
-	assert(SUCCEEDED(hr));
-
-	// 再生する波形データの設定
-	XAUDIO2_BUFFER buf{};
-	buf.pAudioData = soundData.pBuffer;
-	buf.AudioBytes = soundData.bufferSize;
-	buf.Flags = XAUDIO2_END_OF_STREAM;
-
-	// 波形データの再生
-	hr = pSourceVoice->SubmitSourceBuffer(&buf);
-	hr = pSourceVoice->Start();
-}
-
-
 
 //Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
@@ -214,9 +80,14 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	std::unique_ptr<ModelCommon> modelCommon = std::make_unique<ModelCommon>();
 	modelCommon->Initialize(dxCommon.get());
 
+	std::unique_ptr<SrvManager> srvManager = std::make_unique<SrvManager>();
+	srvManager->Initialize(dxCommon.get());
+
+	std::unique_ptr<ImGuiManager> imGuiManager = std::make_unique<ImGuiManager>();
+	imGuiManager->Initialize(winApp.get(),dxCommon.get(),srvManager.get());
 
 	// TextureManager の初期化
-	TextureManager::GetInstance()->Initialize(dxCommon.get());
+	TextureManager::GetInstance()->Initialize(dxCommon.get(),srvManager.get());
 
 	ModelManager::GetInstance()->Initialize(dxCommon.get());
 	ModelManager::GetInstance()->LoadModel("axis.obj");
@@ -235,6 +106,12 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	std::unique_ptr<Model> model = std::make_unique<Model>();
 	model->Initialize(modelCommon.get(),"resources","plane.obj");
 
+	std::unique_ptr<Camera> camera = std::make_unique<Camera>();
+	camera->SetRotate({ 0.0f,0.0f,0.0f });
+	camera->SetTranslate({ 0.0f,0.0f,-100.0f });
+	object3dCommon->SetDefaultCamera(camera.get());
+
+
 	std::unique_ptr<Object3d> object3d = std::make_unique<Object3d>();
 	object3d->Initialize(object3dCommon.get());
 	object3d->SetModel(model.get());
@@ -244,19 +121,24 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	object3d2->SetModel("axis.obj");
 
 
-	Microsoft::WRL::ComPtr<IXAudio2> xAudio2;
-	IXAudio2MasteringVoice* masterVoice;
+	// 2. ParticleManager の初期化 (ここで内部の乱数エンジンも自動初期化されます)
+	ParticleManager::GetInstance()->Initialize(dxCommon.get(), srvManager.get());
 
-	//XAudioエンジンのインスタンスを生成
-	HRESULT hr = XAudio2Create(&xAudio2, 0, XAUDIO2_DEFAULT_PROCESSOR);
-	//マスターボイスを生成
-	hr = xAudio2->CreateMasteringVoice(&masterVoice);
+	// 3. パーティクルグループの登録 (テクスチャ読み込み)[cite: 10]
+	ParticleManager::GetInstance()->CreateParticleGroup("smoke", "Resources/monsterBall.png");
 
+	// 4. エミッターの生成 (名前: "smoke", 位置: 原点{0,0,0}, 1回に10個放出, 0.2秒間隔)
+	std::unique_ptr<ParticleEmitter> emitter =
+		std::make_unique<ParticleEmitter>("smoke", Vector3{ 0.0f, 0.0f, 0.0f }, 10, 0.2f);
+
+
+	std::unique_ptr<Sound> sound= std::make_unique<Sound>();
+	sound->Initialize();
 	//音声読み込み
-	SoundData soundData1 = SoundLoadWave("Resources/fanfare.wav");
+	SoundData soundData1 = sound->SoundLoadFile("Resources/420_long_BPM108.mp3");
 
 	//音声再生
-	SoundPlayWave(xAudio2.Get(), soundData1);
+	sound->SoundPlayWave(sound->xAudio2.Get(), soundData1);
 
 
 	// ウィンドウの×ボタンが押されるまでループ
@@ -292,6 +174,16 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		//ImGuiの内部コマンドを生成する
 		ImGui::Render();
 #endif
+
+		// 5. 更新処理
+		emitter->Update();                                    // エミッターのタイマー更新＆Emit発火
+		ParticleManager::GetInstance()->Update(); // パーティクルの移動・寿命更新
+
+		camera->Update();
+
+		Vector3 a = object3d->GetTranslate();
+		a -= {0, 0, 1};
+		object3d->SetTranslate(a);
 		object3d->Update();
 		object3d2->Update();
 
@@ -315,7 +207,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		size.y += 0.1f;
 		sprite->SetSize(size);
 
-		//sprite->SetAnchorPoint({ 0.5f,0.5f });
+		sprite->SetAnchorPoint({ 0.5f,0.5f });
 		//sprite->SetIsFlipX(1);
 		//sprite->SetIsFlipY(0);
 
@@ -324,11 +216,10 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		useMonsterBall ? sprite->SetTextureIndex(textureIndex2) : sprite->SetTextureIndex(textureIndex);
 
 
-
 		sprite->Update();
 		//sprite2->Update();
 
-
+		srvManager->PreDraw();
 		dxCommon->PreDraw();
 
 
@@ -337,34 +228,29 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		object3d->Draw();
 		object3d2->Draw();
 
+		ParticleManager::GetInstance()->Draw();
+
 		spriteCommon->CommonDrawSetting();
 		sprite->Draw();
 		//sprite2->Draw();
 
 
-		// 実際のcommandListのImGuiの描画コマンドを積む
-#ifdef USE_IMGUI
-		ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), dxCommon->GetCommandList());
-#endif
+		imGuiManager->Draw();
 
 
 		dxCommon->PostDraw();
 
 	}
 
+	sound->Finalize();
+
 	//XAudio2解放
-	xAudio2.Reset();
+	sound->xAudio2.Reset();
 
 	//音声データ解放
-	SoundUnload(&soundData1);
+	sound->SoundUnload(&soundData1);
 
-	// ImGuiの終了処理。詳細はさして重要ではないので解説は省略する。
-	// こういうもんである。初期化と逆順に行う
-#ifdef USE_IMGUI
-	ImGui_ImplDX12_Shutdown();
-	ImGui_ImplWin32_Shutdown();
-	ImGui::DestroyContext();
-#endif
+	imGuiManager->Finalize();
 
 	//signatureBlob->Release();
 	//if (errorBlob) {
@@ -374,6 +260,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 	//vertexShaderBlob->Release();
 
 	TextureManager::GetInstance()->Finalize();
+
+	object3dCommon->Finalize();
+	spriteCommon->Finalize();
 
 	dxCommon->Finalize();
 	winApp->Finalize();

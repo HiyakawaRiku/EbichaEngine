@@ -4,7 +4,9 @@
 #include "DirectXCommon.h"
 #include "Model.h"
 
+
 class Object3dCommon;
+class Camera;
 
 class Object3d
 {
@@ -41,6 +43,8 @@ public:
 	const Vector3& GetRotate()const { return transform.rotate; }
 	const Vector3& GetTranslate()const { return transform.translate; }
 
+	void SetCamera(Camera* camera){ camera_ = camera; }
+
 private:
 	Object3dCommon* object3dCommon = nullptr;
 
@@ -54,7 +58,7 @@ private:
 	DirectionalLight* directionalLightData = nullptr;
 
 	Model* model = nullptr;
-
+	Camera* camera_ = nullptr;
 
 };
 

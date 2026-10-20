@@ -11,6 +11,14 @@
 
 #include <wrl.h>
 
+#include <mfapi.h>
+#include <mfidl.h>
+#include <mfreadwrite.h>
+
+#pragma comment(lib, "mfplat.lib")
+#pragma comment(lib, "mfreadwrite.lib")
+#pragma comment(lib, "mfuuid.lib")
+
 // チャンクヘッダ
 struct ChunkHeader
 {
@@ -52,14 +60,16 @@ class Sound
 public:
 	void Initialize();
 	void Update();
+	void Finalize();
 
-private:
-	SoundData SoundLoadWave(const char* filename);
+	SoundData SoundLoadFile(const std::string& filename);
 	// 音声データ解放
 	void SoundUnload(SoundData* soundData);
 	// 音声再生
 	void SoundPlayWave(IXAudio2* xAudio2, const SoundData& soundData);
 
+	Microsoft::WRL::ComPtr<IXAudio2> xAudio2;
 
+private:
 };
 

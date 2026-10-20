@@ -34,7 +34,56 @@ struct Transform {
 	Vector3 translate;
 };
 
+// 1. Vector3 + Vector3 (加算)
+inline Vector3 operator+(const Vector3& v1, const Vector3& v2) {
+	return Vector3{ v1.x + v2.x, v1.y + v2.y, v1.z + v2.z };
+}
 
+// 2. Vector3 += Vector3 (複合加算)
+inline Vector3& operator+=(Vector3& v1, const Vector3& v2) {
+	v1.x += v2.x;
+	v1.y += v2.y;
+	v1.z += v2.z;
+	return v1;
+}
+
+inline Vector3& operator-=(Vector3& v1, const Vector3& v2) {
+	v1.x -= v2.x;
+	v1.y -= v2.y;
+	v1.z -= v2.z;
+	return v1;
+}
+
+// 3. Vector3 * Vector3 (要素ごとの乗算)
+inline Vector3 operator*(const Vector3& v1, const Vector3& v2) {
+	return Vector3{ v1.x * v2.x, v1.y * v2.y, v1.z * v2.z };
+}
+
+// 4. Vector3 * float (スカラー倍: 例 Vector3 * kDeltaTime)
+inline Vector3 operator*(const Vector3& v, float s) {
+	return Vector3{ v.x * s, v.y * s, v.z * s };
+}
+
+// 5. float * Vector3 (スカラー倍: 例 kDeltaTime * Vector3)
+inline Vector3 operator*(float s, const Vector3& v) {
+	return Vector3{ v.x * s, v.y * s, v.z * s };
+}
+
+// 6. Vector3 *= Vector3 (複合乗算)
+inline Vector3& operator*=(Vector3& v1, const Vector3& v2) {
+	v1.x *= v2.x;
+	v1.y *= v2.y;
+	v1.z *= v2.z;
+	return v1;
+}
+
+// 7. Vector3 *= float (スカラー倍複合)
+inline Vector3& operator*=(Vector3& v, float s) {
+	v.x *= s;
+	v.y *= s;
+	v.z *= s;
+	return v;
+}
 
 inline Matrix4x4 MakeIdentity4x4() {
 	Matrix4x4 identity{};
@@ -221,7 +270,37 @@ inline Matrix4x4 MakeScaleMatrix(const Vector3& scale) {
 	return result;
 }
 
-// Z軸回転行列の作成（UVの回転用）
+// X軸回転行列の作成
+inline Matrix4x4 MakeRotateXMatrix(float angle) {
+	Matrix4x4 result = { 0 };
+	float c = std::cos(angle);
+	float s = std::sin(angle);
+
+	result.m[0][0] = 1.0f;
+	result.m[1][1] = c;
+	result.m[1][2] = s;
+	result.m[2][1] = -s;
+	result.m[2][2] = c;
+	result.m[3][3] = 1.0f;
+	return result;
+}
+
+// Y軸回転行列の作成
+inline Matrix4x4 MakeRotateYMatrix(float angle) {
+	Matrix4x4 result = { 0 };
+	float c = std::cos(angle);
+	float s = std::sin(angle);
+
+	result.m[0][0] = c;
+	result.m[0][2] = -s;
+	result.m[1][1] = 1.0f;
+	result.m[2][0] = s;
+	result.m[2][2] = c;
+	result.m[3][3] = 1.0f;
+	return result;
+}
+
+// Z軸回転行列の作成
 inline Matrix4x4 MakeRotateZMatrix(float angle) {
 	Matrix4x4 result = { 0 };
 	float c = std::cos(angle);
@@ -234,6 +313,15 @@ inline Matrix4x4 MakeRotateZMatrix(float angle) {
 	result.m[2][2] = 1.0f;
 	result.m[3][3] = 1.0f;
 	return result;
+}
+
+// XYZ合成回転行列の作成 (X -> Y -> Z 順)
+inline Matrix4x4 MakeRotateXYZMatrix(const Vector3& rotate) {
+	Matrix4x4 rotateX = MakeRotateXMatrix(rotate.x);
+	Matrix4x4 rotateY = MakeRotateYMatrix(rotate.y);
+	Matrix4x4 rotateZ = MakeRotateZMatrix(rotate.z);
+
+	return Multiply(rotateX, Multiply(rotateY, rotateZ));
 }
 
 // 平行移動行列の作成（UVのオフセット用）

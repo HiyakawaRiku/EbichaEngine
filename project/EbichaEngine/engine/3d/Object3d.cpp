@@ -8,11 +8,13 @@
 #include <chrono>
 
 #include "ModelManager.h"
+#include "Camera.h"
 
 
 void Object3d::Initialize(Object3dCommon* object3dCommon)
 {
 	this->object3dCommon = object3dCommon;
+	this->camera_ = object3dCommon->GetDefaultCamera();
 
 
 	// WVP用のリソースを作る。Matrix4x4 1つ分のサイズを用意する
@@ -44,10 +46,16 @@ void Object3d::Update()
 {
 
 	Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
-	Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
-	Matrix4x4 viewMatrix = Inverse(cameraMatrix);
-	Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(WinApp::kClientWidth) / float(WinApp::kClientHeight), 0.1f, 100.0f);
-	Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
+	Matrix4x4 worldViewProjectionMatrix;
+	
+	if (camera_) {
+		const Matrix4x4& viewProjectionMatrix = camera_->GetViewProjectionMatrix();
+		worldViewProjectionMatrix = Multiply(worldMatrix, viewProjectionMatrix);
+	}
+	else {
+		worldViewProjectionMatrix = worldMatrix;
+	}
+	
 	wvpData->World = worldMatrix;
 	wvpData->WVP = worldViewProjectionMatrix;
 
