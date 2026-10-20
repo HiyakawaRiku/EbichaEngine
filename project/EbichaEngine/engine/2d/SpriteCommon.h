@@ -4,6 +4,8 @@
 class SpriteCommon
 {
 public:
+
+	static SpriteCommon* GetInstance();
 	void Initialize(DirectXCommon*dxCommon);
 
 	void CreatePipelineState();

@@ -3,6 +3,12 @@
 
 using namespace Logger;
 
+SpriteCommon* SpriteCommon::GetInstance()
+{
+	static SpriteCommon instance;
+	return &instance;
+}
+
 void SpriteCommon::Initialize(DirectXCommon* dxCommon)
 {
 	dxCommon_ = dxCommon;
@@ -163,11 +169,13 @@ void SpriteCommon::CommonDrawSetting()
 
 void SpriteCommon::Finalize()
 {
-	signatureBlob->Release();
-	if (errorBlob) {
-		errorBlob->Release();
-	}
-	pixelShaderBlob->Release();
-	vertexShaderBlob->Release();
+	if (signatureBlob) { signatureBlob->Release(); signatureBlob = nullptr; }
+	if (errorBlob) { errorBlob->Release(); errorBlob = nullptr; }
+	if (pixelShaderBlob) { pixelShaderBlob->Release(); pixelShaderBlob = nullptr; }
+	if (vertexShaderBlob) { vertexShaderBlob->Release(); vertexShaderBlob = nullptr; }
 
+	rootSignature.Reset();
+	graphicsPipelineState.Reset();
+
+	dxCommon_ = nullptr;
 }

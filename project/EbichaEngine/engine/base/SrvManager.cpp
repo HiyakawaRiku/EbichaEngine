@@ -74,4 +74,10 @@ D3D12_GPU_DESCRIPTOR_HANDLE SrvManager::GetGPUDescriptorHandle(uint32_t index)
 	return handleGPU;
 }
 
-
+void SrvManager::Finalize()
+{
+	// SRV用デスクリプタヒープのComPtrを解放
+	descriptorHeap.Reset();
+	useIndex = 0;
+	dxCommon = nullptr;
+}

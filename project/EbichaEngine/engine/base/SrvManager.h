@@ -5,6 +5,7 @@ class SrvManager
 {
 public:
 	void Initialize(DirectXCommon* dxCommon);
+	void Finalize();
 	uint32_t Allocate();
 
 	void CreateSRVforTexture2D(uint32_t srvIndex, ID3D12Resource* pResource, DXGI_FORMAT Format, UINT MipLevels);
