@@ -40,7 +40,7 @@ public:
 	static ModelData LoadObjFile(const std::string& directoryPath, const std::string& filename);
 
 private:
-	ModelCommon* modelCommon_;
+	ModelCommon* modelCommon_=nullptr;
 
 
 	ModelData modelData;

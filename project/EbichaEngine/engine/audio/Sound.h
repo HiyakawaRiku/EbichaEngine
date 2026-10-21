@@ -64,10 +64,10 @@ public:
 	// 音声データ解放
 	void SoundUnload(SoundData* soundData);
 	// 音声再生
-	IXAudio2SourceVoice* SoundPlayWave(IXAudio2* xAudio2, const SoundData& soundData);
+	IXAudio2SourceVoice* SoundPlayWave(const SoundData& soundData);
 
-	Microsoft::WRL::ComPtr<IXAudio2> xAudio2;
 
 private:
+	Microsoft::WRL::ComPtr<IXAudio2> xAudio2;
 };
 

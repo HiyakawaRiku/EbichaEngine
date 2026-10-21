@@ -63,7 +63,7 @@ void GamePlayScene::Initialize() {
 
     // サウンド再生
     soundData1_ = Sound::GetInstance()->SoundLoadFile("Resources/420_long_BPM108.mp3");
-    pSourceVoice_ = Sound::GetInstance()->SoundPlayWave(Sound::GetInstance()->xAudio2.Get(), soundData1_);
+    pSourceVoice_ = Sound::GetInstance()->SoundPlayWave(soundData1_);
 }
 
 void GamePlayScene::Update(Input* input) {
