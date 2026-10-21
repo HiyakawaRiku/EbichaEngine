@@ -48,6 +48,7 @@ void GamePlayScene::Initialize() {
     camera_->SetRotate({ 0.0f, 0.0f, 0.0f });
     camera_->SetTranslate({ 0.0f, 0.0f, -100.0f });
     object3dCommon->SetDefaultCamera(camera_.get());
+    ParticleManager::GetInstance()->SetCamera(camera_.get());
 
     object3d_ = std::make_unique<Object3d>();
     object3d_->Initialize(object3dCommon);
@@ -63,7 +64,7 @@ void GamePlayScene::Initialize() {
 
     // サウンド再生
     soundData1_ = Sound::GetInstance()->SoundLoadFile("Resources/420_long_BPM108.mp3");
-    pSourceVoice_ = Sound::GetInstance()->SoundPlayWave(Sound::GetInstance()->xAudio2.Get(), soundData1_);
+    pSourceVoice_ = Sound::GetInstance()->SoundPlayWave(soundData1_);
 }
 
 void GamePlayScene::Update(Input* input) {

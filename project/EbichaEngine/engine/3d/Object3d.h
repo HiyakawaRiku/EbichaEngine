@@ -43,13 +43,12 @@ public:
 	const Vector3& GetRotate()const { return transform.rotate; }
 	const Vector3& GetTranslate()const { return transform.translate; }
 
-	void SetCamera(Camera* camera){ camera_ = camera; }
+	void SetCamera(Camera* camera) { camera_ = camera; }
 
 private:
 	Object3dCommon* object3dCommon = nullptr;
 
-	Transform transform;
-	Transform cameraTransform;
+	Transform transform = { { 1.0f,1.0f,1.0f },{ 0.0f,0.0f,0.0f },{ 0.0f,0.0f,0.0f } };
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource;
 	TransformationMatrix* wvpData = nullptr;

@@ -145,7 +145,7 @@ void Sound::SoundUnload(SoundData* soundData)
 
 
 // 音声再生
-IXAudio2SourceVoice* Sound::SoundPlayWave(IXAudio2* xAudio2, const SoundData& soundData) {
+IXAudio2SourceVoice* Sound::SoundPlayWave(const SoundData& soundData) {
 	HRESULT hr;
 
 	IXAudio2SourceVoice* pSourceVoice = nullptr;

@@ -61,18 +61,14 @@ void ParticleManager::Update()
     Matrix4x4 billboardMatrix = MakeIdentity4x4();
 
     if (camera_) {
-        // ビュー行列の取得
-        Matrix4x4 viewMatrix = camera_->GetViewMatrix();
+        // カメラのワールド行列（姿勢行列）を取得
+        Matrix4x4 cameraWorldMatrix = camera_->GetWorldMatrix();
 
-        // ビュー行列の逆行列（カメラのワールド行列）から回転成分を取り出す
-        // ビュー行列の平行移動部分をクリアして逆行列を取ることで、ビルボード行列を作成
-        backToFrontMatrix = viewMatrix;
-        backToFrontMatrix.m[3][0] = 0.0f;
-        backToFrontMatrix.m[3][1] = 0.0f;
-        backToFrontMatrix.m[3][2] = 0.0f;
-
-        // ビュー行列の回転成分の逆行列（転置）がビルボード行列となる
-        billboardMatrix = Inverse(backToFrontMatrix);
+        // 平行移動成分をクリアして回転部分のみ取り出す
+        billboardMatrix = cameraWorldMatrix;
+        billboardMatrix.m[3][0] = 0.0f;
+        billboardMatrix.m[3][1] = 0.0f;
+        billboardMatrix.m[3][2] = 0.0f;
     }
 
     for (auto& [name, group] : particleGroups) {
@@ -83,6 +79,11 @@ void ParticleManager::Update()
 
             if (it->currentTime >= it->lifeTime) {
                 it = group.particles.erase(it);
+                continue;
+            }
+
+            if (instanceIndex >= ParticleGroup::kMaxInstance) {
+                ++it;
                 continue;
             }
 
@@ -279,9 +280,6 @@ void ParticleManager::CreateVertexResource()
 
 void ParticleManager::Draw()
 {
-    // ヒープの事前準備[cite: 1]
-    srvManager_->PreDraw();
-
     auto commandList = dxCommon_->GetCommandList();
 
     // 1. パイプライン設定
@@ -342,6 +340,12 @@ void ParticleManager::Emit(const std::string& name, const Vector3& position, uin
     if (it == particleGroups.end()) return;
 
     ParticleGroup& group = it->second;
+
+    size_t currentCount = group.particles.size();
+    if (currentCount >= ParticleGroup::kMaxInstance) {
+        return;
+    }
+    uint32_t emitCount = (std::min)(count, static_cast<uint32_t>(ParticleGroup::kMaxInstance - currentCount));
 
     for (uint32_t i = 0; i < count; ++i) {
         Particle p{};
