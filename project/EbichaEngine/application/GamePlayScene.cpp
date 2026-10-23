@@ -14,7 +14,7 @@
 #endif
 
 GamePlayScene::~GamePlayScene() {
-    if (soundData1_.pBuffer) {
+    if (!soundData1_.buffer.empty()) {
         Sound::GetInstance()->SoundUnload(&soundData1_);
     }
 }
@@ -24,7 +24,6 @@ void GamePlayScene::Initialize() {
     SpriteCommon* spriteCommon = SpriteCommon::GetInstance();
     Object3dCommon* object3dCommon = Object3dCommon::GetInstance();
     ModelCommon* modelCommon = ModelCommon::GetInstance();
-    Sound* sound = Sound::GetInstance();
 
     // モデル読み込み
     ModelManager::GetInstance()->LoadModel("axis.obj");
@@ -137,11 +136,10 @@ void GamePlayScene::Finalize() {
         pSourceVoice_ = nullptr;
     }
 
-    if (soundData1_.pBuffer) {
+    if (!soundData1_.buffer.empty()) {
         Sound::GetInstance()->SoundUnload(&soundData1_);
-        soundData1_.pBuffer = nullptr;
     }
-    
+
     // 保持しているスマートポインタや ComPtr を明示的に解放
     sprite_.reset();
     sprite2_.reset();
