@@ -14,8 +14,11 @@ void Sound::Initialize()
 
 	//XAudioエンジンのインスタンスを生成
 	HRESULT hr = XAudio2Create(&xAudio2, 0, XAUDIO2_DEFAULT_PROCESSOR);
+	assert(SUCCEEDED(hr));
+	
 	//マスターボイスを生成
 	hr = xAudio2->CreateMasteringVoice(&masterVoice);
+	assert(SUCCEEDED(hr));
 
 	hr = MFStartup(MF_VERSION, MFSTARTUP_NOSOCKET);
 	assert(SUCCEEDED(hr));
@@ -70,8 +73,12 @@ SoundData Sound::SoundLoadFile(const std::string& filename)
 	hr = MFCreateWaveFormatExFromMFMediaType(pUncompressedAudioType.Get(), &pWfex, &cbFormat);
 	assert(SUCCEEDED(hr));
 
-	// オーディオデータの全サンプルを一時的に格納するバッファ
-	std::vector<BYTE> mediaBuffer;
+	// 返却用 SoundData の作成
+	SoundData soundData = {};
+	soundData.wfex = *pWfex;
+
+	// MFCreateWaveFormatExFromMFMediaType で割り当てられたメモリを解放
+	CoTaskMemFree(pWfex);
 
 	while (true)
 	{
@@ -107,26 +114,14 @@ SoundData Sound::SoundLoadFile(const std::string& filename)
 			assert(SUCCEEDED(hr));
 
 			// 取得した波形データを追加
-			size_t currentSize = mediaBuffer.size();
-			mediaBuffer.resize(currentSize + cbCurrentLength);
-			memcpy(mediaBuffer.data() + currentSize, pAudioData, cbCurrentLength);
+			size_t currentSize = soundData.buffer.size();
+			soundData.buffer.resize(currentSize + cbCurrentLength);
+			memcpy(soundData.buffer.data() + currentSize, pAudioData, cbCurrentLength);
 
 			hr = pBuffer->Unlock();
 			assert(SUCCEEDED(hr));
 		}
 	}
-
-	// 返却用 SoundData の作成
-	SoundData soundData = {};
-	soundData.wfex = *pWfex;
-	soundData.bufferSize = static_cast<unsigned int>(mediaBuffer.size());
-
-	// ヒープメモリを確保してデータをコピー
-	soundData.pBuffer = new BYTE[soundData.bufferSize];
-	memcpy(soundData.pBuffer, mediaBuffer.data(), soundData.bufferSize);
-
-	// MFCreateWaveFormatExFromMFMediaType で割り当てられたメモリを解放
-	CoTaskMemFree(pWfex);
 
 	return soundData;
 }
@@ -135,12 +130,12 @@ SoundData Sound::SoundLoadFile(const std::string& filename)
 // 音声データ解放
 void Sound::SoundUnload(SoundData* soundData)
 {
-	// バッファのメモリを解放
-	delete[] soundData->pBuffer;
-
-	soundData->pBuffer = 0;
-	soundData->bufferSize = 0;
-	soundData->wfex = {};
+	if (soundData)
+	{
+		soundData->buffer.clear();
+		soundData->buffer.shrink_to_fit(); // メモリ確保分も解放
+		soundData->wfex = {};
+	}
 }
 
 
@@ -153,8 +148,8 @@ IXAudio2SourceVoice* Sound::SoundPlayWave(const SoundData& soundData) {
 	assert(SUCCEEDED(hr));
 
 	XAUDIO2_BUFFER buf{};
-	buf.pAudioData = soundData.pBuffer;
-	buf.AudioBytes = soundData.bufferSize;
+	buf.pAudioData = soundData.buffer.data();
+	buf.AudioBytes = static_cast<UINT32>(soundData.buffer.size());
 	buf.Flags = XAUDIO2_END_OF_STREAM;
 
 	hr = pSourceVoice->SubmitSourceBuffer(&buf);

@@ -25,10 +25,10 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState = nullptr;
 
-	ID3DBlob* signatureBlob = nullptr;
-	ID3DBlob* errorBlob = nullptr;
-	IDxcBlob* vertexShaderBlob;
-	IDxcBlob* pixelShaderBlob;
+	Microsoft::WRL::ComPtr<ID3DBlob> signatureBlob = nullptr;
+	Microsoft::WRL::ComPtr<ID3DBlob> errorBlob = nullptr;
+	Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = nullptr;
+	Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = nullptr;
 
 	Camera* defaultCamera = nullptr;
 };
