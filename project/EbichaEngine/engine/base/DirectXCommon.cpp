@@ -461,7 +461,7 @@ IDxcBlob* DirectXCommon::CompileShader(
 	// これからシェーダーをコンパイルする旨をログに出す
 	Log(std::format(L"Begin CompileShader, path:{}, profile:{}\n", filePath, profile));
 	// hlslファイルを読む
-	IDxcBlobEncoding* shaderSource = nullptr;
+	ComPtr<IDxcBlobEncoding> shaderSource = nullptr;
 	HRESULT hr = dxcUtils->LoadFile(filePath.c_str(), nullptr, &shaderSource);
 	// 読めなかったら止める
 	assert(SUCCEEDED(hr));
@@ -481,12 +481,12 @@ IDxcBlob* DirectXCommon::CompileShader(
 	L"-Zpr", // メモリレイアウトは行優先
 	};
 	// 実際にShaderをコンパイルする
-	IDxcResult* shaderResult = nullptr;
+	ComPtr<IDxcResult> shaderResult = nullptr;
 	hr = dxcCompiler->Compile(
 		&shaderSourceBuffer, // 読み込んだファイル
 		arguments, // コンパイルオプション
 		_countof(arguments), // コンパイルオプションの数
-		includeHandler, // includeが含まれた諸々
+		includeHandler.Get(), // includeが含まれた諸々
 		IID_PPV_ARGS(&shaderResult) // コンパイル結果
 	);
 	// コンパイルエラーではなくdxcが起動できないなど致命的な状況
@@ -509,9 +509,6 @@ IDxcBlob* DirectXCommon::CompileShader(
 	assert(SUCCEEDED(hr));
 	// 成功したログを出す
 	Log(ConvertString(std::format(L"Compile Succeeded, path:{}, profile:{}\n", filePath, profile)));
-	// もう使わないリソースを解放
-	shaderSource->Release();
-	shaderResult->Release();
 	// 実行用のバイナリを返却
 	return shaderBlob;
 }

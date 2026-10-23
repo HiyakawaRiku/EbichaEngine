@@ -17,10 +17,10 @@ void Object3dCommon::Initialize(DirectXCommon* dxCommon)
 }
 void Object3dCommon::Finalize()
 {
-	if (signatureBlob) { signatureBlob->Release(); signatureBlob = nullptr; }
-	if (errorBlob) { errorBlob->Release(); errorBlob = nullptr; }
-	if (pixelShaderBlob) { pixelShaderBlob->Release(); pixelShaderBlob = nullptr; }
-	if (vertexShaderBlob) { vertexShaderBlob->Release(); vertexShaderBlob = nullptr; }
+	signatureBlob.Reset();
+	errorBlob.Reset();
+	pixelShaderBlob.Reset();
+	vertexShaderBlob.Reset();
 
 	rootSignature.Reset();
 	graphicsPipelineState.Reset();

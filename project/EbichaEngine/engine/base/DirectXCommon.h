@@ -98,7 +98,7 @@ inline Microsoft::WRL::ComPtr<ID3D12Resource> UploadTextureData(const Microsoft:
 class DirectXCommon
 {
 public:
-	void Initialize(WinApp*winApp);
+	void Initialize(WinApp* winApp);
 	void Update();
 	void Finalize();
 
@@ -118,7 +118,7 @@ public:
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateDepthStencilTextureResource(int32_t width, int32_t height);
 
-	Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource( const DirectX::TexMetadata& metadata);
+	Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource(const DirectX::TexMetadata& metadata);
 
 	DirectX::ScratchImage LoadTexture(const std::string& filePath);
 
@@ -149,9 +149,11 @@ private:
 	uint64_t fenceValue = 0;
 	D3D12_VIEWPORT viewport{};
 	D3D12_RECT scissorRect{};
-	IDxcUtils* dxcUtils = nullptr;
-	IDxcCompiler3* dxcCompiler = nullptr;
-	IDxcIncludeHandler* includeHandler = nullptr;
+
+	Microsoft::WRL::ComPtr<IDxcUtils> dxcUtils = nullptr;
+	Microsoft::WRL::ComPtr<IDxcCompiler3> dxcCompiler = nullptr;
+	Microsoft::WRL::ComPtr<IDxcIncludeHandler> includeHandler = nullptr;
+
 	HANDLE fenceEvent;
 	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource;
 

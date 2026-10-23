@@ -32,10 +32,10 @@ void ParticleManager::Initialize(DirectXCommon* dxCommon, SrvManager* srvManager
 
 void ParticleManager::Finalize()
 {
-    if (signatureBlob) signatureBlob->Release();
-    if (errorBlob) errorBlob->Release();
-    if (pixelShaderBlob) pixelShaderBlob->Release();
-    if (vertexShaderBlob) vertexShaderBlob->Release();
+    signatureBlob.Reset();
+    errorBlob.Reset();
+    pixelShaderBlob.Reset();
+    vertexShaderBlob.Reset();
 
     for (auto& [name, group] : particleGroups) {
         group.instancingResource.Reset();
