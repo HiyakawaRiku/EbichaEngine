@@ -43,7 +43,7 @@ void ParticleManager::Finalize()
     particleGroups.clear();
 
     rootSignature.Reset();
-    graphicsPipelineState.Reset();
+    pipelineSet_.Reset();
     vertexResource.Reset();
     materialResource.Reset();
 
@@ -208,16 +208,7 @@ void ParticleManager::CreatePipelineState()
     inputLayoutDesc.pInputElementDescs = inputElementDescs;
     inputLayoutDesc.NumElements = _countof(inputElementDescs);
 
-    // BlendState
-    D3D12_BLEND_DESC blendDesc{};
-    blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
-    blendDesc.RenderTarget[0].BlendEnable = TRUE;
-    blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
-    blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
-    blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
-    blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
-    blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ZERO;
-    blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+    
 
     // RasterizerState
     D3D12_RASTERIZER_DESC rasterizerDesc{};
@@ -243,7 +234,6 @@ void ParticleManager::CreatePipelineState()
     graphicsPipelineStateDesc.InputLayout = inputLayoutDesc;
     graphicsPipelineStateDesc.VS = { vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize() };
     graphicsPipelineStateDesc.PS = { pixelShaderBlob->GetBufferPointer(), pixelShaderBlob->GetBufferSize() };
-    graphicsPipelineStateDesc.BlendState = blendDesc;
     graphicsPipelineStateDesc.RasterizerState = rasterizerDesc;
     graphicsPipelineStateDesc.NumRenderTargets = 1;
     graphicsPipelineStateDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
@@ -253,8 +243,8 @@ void ParticleManager::CreatePipelineState()
     graphicsPipelineStateDesc.DepthStencilState = depthStencilDesc;
     graphicsPipelineStateDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 
-    hr = dxCommon_->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc, IID_PPV_ARGS(&graphicsPipelineState));
-    assert(SUCCEEDED(hr));
+    // 全ブレンドモード分のPSOをまとめて作る
+    pipelineSet_.Create(dxCommon_->GetDevice(), graphicsPipelineStateDesc);
 }
 
 void ParticleManager::CreateVertexResource()
@@ -284,7 +274,7 @@ void ParticleManager::Draw()
 
     // 1. パイプライン設定
     commandList->SetGraphicsRootSignature(rootSignature.Get());
-    commandList->SetPipelineState(graphicsPipelineState.Get());
+    commandList->SetPipelineState(pipelineSet_.Get(blendMode));
     commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
 

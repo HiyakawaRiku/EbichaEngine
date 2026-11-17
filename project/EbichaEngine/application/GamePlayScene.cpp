@@ -73,6 +73,11 @@ void GamePlayScene::Update(Input* input) {
 
 #ifdef USE_IMGUI
     ImGui::Checkbox("useMonsterBall", &useMonsterBall_);
+    static int mode = (int)BlendMode::kNormal;
+    const char* names[] = { "None", "Normal", "Add", "Subtract", "Multiply", "Screen" };
+    if (ImGui::Combo("BlendMode", &mode, names, IM_ARRAYSIZE(names))) {
+        ParticleManager::GetInstance()->SetBlendMode((BlendMode)mode);
+    }
 #endif
 
     // エミッター・パーティクル更新

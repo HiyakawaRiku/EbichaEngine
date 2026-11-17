@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <vector>
 #include <wrl.h>
+#include "PipelineSet.h"
 
 class Camera;
 
@@ -69,6 +70,7 @@ public:
     float RandomFloat(float min, float max);
 
     void SetCamera(Camera* camera) { camera_ = camera; }
+    void SetBlendMode(BlendMode mode) { blendMode = mode; }
 
 private:
     ParticleManager() = default;
@@ -86,7 +88,11 @@ private:
 
     // PSO & RootSignature
     Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;
-    Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState;
+   
+    PipelineSet pipelineSet_;
+
+    // 今どのモードで描くか（最初は「通常」）
+    BlendMode blendMode = BlendMode::kNormal;
 
     Microsoft::WRL::ComPtr<ID3DBlob> signatureBlob = nullptr;
     Microsoft::WRL::ComPtr<ID3DBlob> errorBlob = nullptr;
