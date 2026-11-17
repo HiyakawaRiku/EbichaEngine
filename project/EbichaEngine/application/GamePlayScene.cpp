@@ -13,6 +13,24 @@
 #include "ImGuiManager.h"
 #endif
 
+#ifdef USE_IMGUI
+// BlendMode を選ぶ Combo。変更されたら true を返す
+static bool BlendModeCombo(const char* label, BlendMode& mode) {
+    bool changed = false;
+    if (ImGui::BeginCombo(label, GetBlendModeName(mode))) {
+        for (int i = 0; i < (int)BlendMode::kCount; i++) {
+            bool isSelected = (i == (int)mode);
+            if (ImGui::Selectable(GetBlendModeName((BlendMode)i), isSelected)) {
+                mode = (BlendMode)i;
+                changed = true;
+            }
+        }
+        ImGui::EndCombo();
+    }
+    return changed;
+}
+#endif
+
 GamePlayScene::~GamePlayScene() {
     if (!soundData1_.buffer.empty()) {
         Sound::GetInstance()->SoundUnload(&soundData1_);
@@ -73,10 +91,18 @@ void GamePlayScene::Update(Input* input) {
 
 #ifdef USE_IMGUI
     ImGui::Checkbox("useMonsterBall", &useMonsterBall_);
-    static int mode = (int)BlendMode::kNormal;
-    const char* names[] = { "None", "Normal", "Add", "Subtract", "Multiply", "Screen" };
-    if (ImGui::Combo("BlendMode", &mode, names, IM_ARRAYSIZE(names))) {
-        ParticleManager::GetInstance()->SetBlendMode((BlendMode)mode);
+    static BlendMode particleMode = BlendMode::kNormal;
+    static BlendMode spriteMode = BlendMode::kNone;
+    static BlendMode objectMode = BlendMode::kNone;
+
+    if (BlendModeCombo("Particle Blend", particleMode)) {
+        ParticleManager::GetInstance()->SetBlendMode(particleMode);
+    }
+    if (BlendModeCombo("Sprite Blend", spriteMode)) {
+        SpriteCommon::GetInstance()->SetBlendMode(spriteMode);
+    }
+    if (BlendModeCombo("Object3d Blend", objectMode)) {
+        Object3dCommon::GetInstance()->SetBlendMode(objectMode);
     }
 #endif
 

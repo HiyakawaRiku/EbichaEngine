@@ -22,8 +22,9 @@ void Object3dCommon::Finalize()
 	pixelShaderBlob.Reset();
 	vertexShaderBlob.Reset();
 
+	pipelineSet_.Reset();
+
 	rootSignature.Reset();
-	graphicsPipelineState.Reset();
 
 	defaultCamera = nullptr;
 	dxCommon_ = nullptr;
@@ -107,13 +108,6 @@ void Object3dCommon::CreatePipelineState()
 	inputLayoutDesc.NumElements = _countof(inputElementDescs);
 
 
-	// BlendStateの設定
-	D3D12_BLEND_DESC blendDesc{};
-	// すべての色要素を書き込む
-	blendDesc.RenderTarget[0].RenderTargetWriteMask =
-		D3D12_COLOR_WRITE_ENABLE_ALL;
-
-
 	// RasterizerStateの設定
 	D3D12_RASTERIZER_DESC rasterizerDesc{};
 	// 裏面（時計回り）を表示しない
@@ -147,7 +141,6 @@ void Object3dCommon::CreatePipelineState()
 		vertexShaderBlob->GetBufferSize() }; // VertexShader
 	graphicsPipelineStateDesc.PS = { pixelShaderBlob->GetBufferPointer(),
 		pixelShaderBlob->GetBufferSize() }; // Pixel Shader
-	graphicsPipelineStateDesc.BlendState = blendDesc; // BlendState
 	graphicsPipelineStateDesc.RasterizerState = rasterizerDesc; // RasterizerState
 	// 書き込むRTVの情報
 	graphicsPipelineStateDesc.NumRenderTargets = 1;
@@ -162,19 +155,14 @@ void Object3dCommon::CreatePipelineState()
 	graphicsPipelineStateDesc.DepthStencilState = depthStencilDesc;
 	graphicsPipelineStateDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	// 実際に生成
-
-	hr = dxCommon_->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc,
-		IID_PPV_ARGS(&graphicsPipelineState));
-	assert(SUCCEEDED(hr));
-
-
+	pipelineSet_.Create(dxCommon_->GetDevice(), graphicsPipelineStateDesc);
 }
 
 void Object3dCommon::CommonDrawSetting()
 {
 	// RootSignatureを設定。PSOに設定しているけど別途設定が必要
 	dxCommon_->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
-	dxCommon_->GetCommandList()->SetPipelineState(graphicsPipelineState.Get()); // PSOを設定
+	dxCommon_->GetCommandList()->SetPipelineState(pipelineSet_.Get(blendMode)); // PSOを設定
 	// 形状を設定。PSOに設定しているものとはまた別。同じものを設定すると考えておけば良い
 	dxCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
