@@ -162,7 +162,17 @@ void Object3dCommon::CommonDrawSetting()
 {
 	// RootSignatureを設定。PSOに設定しているけど別途設定が必要
 	dxCommon_->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
-	dxCommon_->GetCommandList()->SetPipelineState(pipelineSet_.Get(blendMode)); // PSOを設定
+	currentMode_ = BlendMode::kCount;
+	SetPipeline(BlendMode::kNone);
 	// 形状を設定。PSOに設定しているものとはまた別。同じものを設定すると考えておけば良い
 	dxCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+}
+
+void Object3dCommon::SetPipeline(BlendMode mode)
+{
+	if (mode == currentMode_) {
+		return;
+	}
+	currentMode_ = mode;
+	dxCommon_->GetCommandList()->SetPipelineState(pipelineSet_.Get(mode));
 }

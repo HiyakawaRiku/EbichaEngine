@@ -49,6 +49,7 @@ public:
         std::string textureFilePath;
         uint32_t srvIndex = 0;
         std::vector<Particle> particles;
+		BlendMode blendMode = BlendMode::kNormal;
 
         Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource;
         uint32_t instancingSrvIndex = 0;
@@ -70,7 +71,7 @@ public:
     float RandomFloat(float min, float max);
 
     void SetCamera(Camera* camera) { camera_ = camera; }
-    void SetBlendMode(BlendMode mode) { blendMode = mode; }
+	void SetBlendMode(const std::string& name, BlendMode mode);
 
 private:
     ParticleManager() = default;
@@ -90,9 +91,6 @@ private:
     Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;
    
     PipelineSet pipelineSet_;
-
-    // 今どのモードで描くか（最初は「通常」）
-    BlendMode blendMode = BlendMode::kNormal;
 
     Microsoft::WRL::ComPtr<ID3DBlob> signatureBlob = nullptr;
     Microsoft::WRL::ComPtr<ID3DBlob> errorBlob = nullptr;

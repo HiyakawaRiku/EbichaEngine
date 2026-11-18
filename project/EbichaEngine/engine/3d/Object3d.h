@@ -3,6 +3,7 @@
 #include <cstdint>
 #include "DirectXCommon.h"
 #include "Model.h"
+#include "PipelineSet.h"
 
 
 class Object3dCommon;
@@ -45,6 +46,9 @@ public:
 
 	void SetCamera(Camera* camera) { camera_ = camera; }
 
+	void SetBlendMode(BlendMode mode) { blendMode_ = mode; }
+	BlendMode GetBlendMode()const { return blendMode_; }
+
 private:
 	Object3dCommon* object3dCommon = nullptr;
 
@@ -58,6 +62,8 @@ private:
 
 	Model* model = nullptr;
 	Camera* camera_ = nullptr;
+
+	BlendMode blendMode_ = BlendMode::kNone;
 
 };
 

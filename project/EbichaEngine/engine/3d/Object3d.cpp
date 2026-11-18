@@ -63,6 +63,8 @@ void Object3d::Update()
 void Object3d::Draw()
 {
 
+	object3dCommon->SetPipeline(blendMode_); // PSOを設定
+
 	// wvp用のCBufferの場所を設定
 	object3dCommon->GetDxCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
 	// directionalLight用のCBufferの場所を設定

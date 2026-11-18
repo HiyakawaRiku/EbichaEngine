@@ -93,16 +93,20 @@ void GamePlayScene::Update(Input* input) {
     ImGui::Checkbox("useMonsterBall", &useMonsterBall_);
     static BlendMode particleMode = BlendMode::kNormal;
     static BlendMode spriteMode = BlendMode::kNone;
-    static BlendMode objectMode = BlendMode::kNone;
+    static BlendMode object1Mode = BlendMode::kNone;
+    static BlendMode object2Mode = BlendMode::kNone;
 
-    if (BlendModeCombo("Particle Blend", particleMode)) {
-        ParticleManager::GetInstance()->SetBlendMode(particleMode);
+    if (BlendModeCombo("Particle(smoke) Blend", particleMode)) {
+        ParticleManager::GetInstance()->SetBlendMode("smoke", particleMode);
     }
     if (BlendModeCombo("Sprite Blend", spriteMode)) {
-        SpriteCommon::GetInstance()->SetBlendMode(spriteMode);
+        sprite_->SetBlendMode(spriteMode);
     }
-    if (BlendModeCombo("Object3d Blend", objectMode)) {
-        Object3dCommon::GetInstance()->SetBlendMode(objectMode);
+    if (BlendModeCombo("Object3d(1) Blend", object1Mode)) {
+        object3d_->SetBlendMode(object1Mode);
+    }
+    if (BlendModeCombo("Object3d(2) Blend", object2Mode)) {
+        object3d2_->SetBlendMode(object2Mode);
     }
 #endif
 

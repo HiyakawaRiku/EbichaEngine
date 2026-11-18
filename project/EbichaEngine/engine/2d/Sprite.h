@@ -2,12 +2,9 @@
 #include "EMath.h"
 #include <wrl.h>
 #include "DirectXCommon.h"
+#include "BlendMode.h"
 
 class SpriteCommon;
-
-
-
-
 
 class Sprite
 {
@@ -60,6 +57,9 @@ public:
 	void SetTextureLeftTop(const Vector2& textureLeftTop) { this->textureLeftTop = textureLeftTop; }
 	void SetTextureSize(const Vector2& textureSize) { this->textureSize = textureSize; }
 	void SetTextureIndex(uint32_t textureIndex);
+
+	void SetBlendMode(BlendMode mode) { blendMode_ = mode; }
+	BlendMode GetBlendMode()const { return blendMode_; }
 private:
 	void AdjustTextureSize();
 
@@ -92,5 +92,7 @@ private:
 	Vector2 textureSize = { 100.0f,100.0f };
 
 	uint32_t textureIndex = 0;
+
+	BlendMode blendMode_ = BlendMode::kNone;
 };
 

@@ -11,16 +11,16 @@ public:
 
 	void CreatePipelineState();
 	void CommonDrawSetting();
+	void SetPipeline(BlendMode mode);
 
 	void Finalize();
 
 	DirectXCommon* GetDxCommon()const { return dxCommon_; }
-	void SetBlendMode(BlendMode mode) { blendMode = mode;}
 
 private:
 	DirectXCommon* dxCommon_;
 	PipelineSet pipelineSet_;
-	BlendMode blendMode = BlendMode::kNone;
+	BlendMode currentMode_ = BlendMode::kCount;
 
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature = nullptr;
 
