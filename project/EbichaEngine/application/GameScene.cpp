@@ -1,4 +1,4 @@
-#include "GamePlayScene.h"
+#include "GameScene.h"
 #include "TextureManager.h"
 #include "ModelManager.h"
 #include "ParticleManager.h"
@@ -32,13 +32,13 @@ static bool BlendModeCombo(const char* label, BlendMode& mode) {
 }
 #endif
 
-GamePlayScene::~GamePlayScene() {
+GameScene::~GameScene() {
     if (!soundData1_.buffer.empty()) {
         Sound::GetInstance()->SoundUnload(&soundData1_);
     }
 }
 
-void GamePlayScene::Initialize() {
+void GameScene::Initialize() {
     // シングルトン経由で各種マネージャーの参照を取得して利用
     SpriteCommon* spriteCommon = SpriteCommon::GetInstance();
     Object3dCommon* object3dCommon = Object3dCommon::GetInstance();
@@ -87,10 +87,17 @@ void GamePlayScene::Initialize() {
     pSourceVoice_ = Sound::GetInstance()->SoundPlayWave(soundData1_);
 }
 
-void GamePlayScene::Update(Input* input) {
+void GameScene::Update(Input* input) {
     // Escキーでタイトルへ戻る
     if (input->TriggerKey(DIK_ESCAPE)) {
         SceneManager::GetInstance()->ChangeScene("TITLE");
+    }
+    // 【仮】ゲームの中身ができるまで、キーで遷移を確認する
+    else if (input->TriggerKey(DIK_C)) {
+        SceneManager::GetInstance()->ChangeScene("CLEAR");
+    }
+    else if (input->TriggerKey(DIK_O)) {
+        SceneManager::GetInstance()->ChangeScene("GAMEOVER");
     }
 
 #ifdef USE_IMGUI
@@ -153,7 +160,7 @@ void GamePlayScene::Update(Input* input) {
     sprite_->Update();
 }
 
-void GamePlayScene::Draw() {
+void GameScene::Draw() {
     // 3Dオブジェクト描画
     Object3dCommon::GetInstance()->CommonDrawSetting();
     object3d_->Draw();
@@ -167,7 +174,7 @@ void GamePlayScene::Draw() {
     sprite_->Draw();
 }
 
-void GamePlayScene::Finalize() {
+void GameScene::Finalize() {
     
     if (pSourceVoice_) {
         pSourceVoice_->Stop(0);

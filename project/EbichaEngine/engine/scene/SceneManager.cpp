@@ -1,5 +1,5 @@
 #include "SceneManager.h"
-#include  <cassert>
+#include <cassert>
 
 SceneManager* SceneManager::GetInstance() {
     static SceneManager instance;
@@ -41,7 +41,7 @@ void SceneManager::Finalize() {
         currentScene_.reset();
     }
     nextScene_.reset();
-	sceneFactory_.reset();
+    sceneFactory_.reset();
 }
 
 void SceneManager::ChangeScene(const std::string& sceneName) {

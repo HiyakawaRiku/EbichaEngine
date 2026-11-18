@@ -13,10 +13,10 @@
 #include "Sound.h"
 #include "ParticleEmitter.h"
 
-class GamePlayScene : public BaseScene {
+class GameScene : public BaseScene {
 public:
-    GamePlayScene() = default;
-    ~GamePlayScene() override;
+    GameScene() = default;
+    ~GameScene() override;
 
     void Initialize() override;
     void Update(Input* input) override;

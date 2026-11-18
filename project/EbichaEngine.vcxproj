@@ -156,9 +156,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="EbichaEngine\engine\scene\AbstractSceneFactory.cpp" />
+    <ClCompile Include="EbichaEngine\application\ClearScene.cpp" />
     <ClCompile Include="EbichaEngine\engine\base\BlendMode.cpp" />
-    <ClCompile Include="EbichaEngine\engine\Scene\BaseScene.cpp" />
     <ClCompile Include="EbichaEngine\application\EbichaEngine.cpp" />
     <ClCompile Include="EbichaEngine\engine\3d\Object3d.cpp" />
     <ClCompile Include="EbichaEngine\engine\3d\Object3dCommon.cpp" />
@@ -193,13 +192,15 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="EbichaEngine\engine\utility\ImGuiManager.cpp" />
     <ClCompile Include="EbichaEngine\engine\3d\ParticleEmitter.cpp" />
     <ClCompile Include="EbichaEngine\engine\3d\ParticleManager.cpp" />
-    <ClCompile Include="EbichaEngine\application\GamePlayScene.cpp" />
+    <ClCompile Include="EbichaEngine\application\GameScene.cpp" />
     <ClCompile Include="EbichaEngine\engine\Scene\SceneManager.cpp" />
     <ClCompile Include="EbichaEngine\application\TitleScene.cpp" />
     <ClCompile Include="EbichaEngine\engine\base\PipelineSet.cpp" />
     <ClCompile Include="EbichaEngine\application\SceneFactory.cpp" />
+    <ClCompile Include="EbichaEngine\application\GameOverScene.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="EbichaEngine\application\ClearScene.h" />
     <ClInclude Include="EbichaEngine\engine\scene\AbstractSceneFactory.h" />
     <ClInclude Include="EbichaEngine\engine\base\BlendMode.h" />
     <ClInclude Include="EbichaEngine\engine\Scene\BaseScene.h" />
@@ -234,11 +235,12 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="EbichaEngine\engine\utility\ImGuiManager.h" />
     <ClInclude Include="EbichaEngine\engine\3d\ParticleEmitter.h" />
     <ClInclude Include="EbichaEngine\engine\3d\ParticleManager.h" />
-    <ClInclude Include="EbichaEngine\application\GamePlayScene.h" />
+    <ClInclude Include="EbichaEngine\application\GameScene.h" />
     <ClInclude Include="EbichaEngine\engine\Scene\SceneManager.h" />
     <ClInclude Include="EbichaEngine\application\TitleScene.h" />
     <ClInclude Include="EbichaEngine\engine\base\PipelineSet.h" />
     <ClInclude Include="EbichaEngine\application\SceneFactory.h" />
+    <ClInclude Include="EbichaEngine\application\GameOverScene.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="resources\shaders\Particle.PS.hlsl">
