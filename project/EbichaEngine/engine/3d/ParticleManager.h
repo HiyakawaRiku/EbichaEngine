@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <vector>
 #include <wrl.h>
+#include "PipelineSet.h"
 
 class Camera;
 
@@ -48,6 +49,7 @@ public:
         std::string textureFilePath;
         uint32_t srvIndex = 0;
         std::vector<Particle> particles;
+		BlendMode blendMode = BlendMode::kNormal;
 
         Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource;
         uint32_t instancingSrvIndex = 0;
@@ -69,6 +71,7 @@ public:
     float RandomFloat(float min, float max);
 
     void SetCamera(Camera* camera) { camera_ = camera; }
+	void SetBlendMode(const std::string& name, BlendMode mode);
 
 private:
     ParticleManager() = default;
@@ -86,7 +89,8 @@ private:
 
     // PSO & RootSignature
     Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature;
-    Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState;
+   
+    PipelineSet pipelineSet_;
 
     Microsoft::WRL::ComPtr<ID3DBlob> signatureBlob = nullptr;
     Microsoft::WRL::ComPtr<ID3DBlob> errorBlob = nullptr;

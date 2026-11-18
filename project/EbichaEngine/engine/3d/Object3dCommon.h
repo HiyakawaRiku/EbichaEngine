@@ -1,5 +1,6 @@
 #pragma once
 #include "DirectXCommon.h"
+#include "PipelineSet.h"
 
 class Camera;
 
@@ -13,6 +14,7 @@ public:
 
 	void CreatePipelineState();
 	void CommonDrawSetting();
+	void SetPipeline(BlendMode mode);
 
 	DirectXCommon* GetDxCommon()const { return dxCommon_; }
 
@@ -21,9 +23,9 @@ public:
 
 private:
 	DirectXCommon* dxCommon_;
+	PipelineSet pipelineSet_;
 
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature = nullptr;
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState = nullptr;
 
 	Microsoft::WRL::ComPtr<ID3DBlob> signatureBlob = nullptr;
 	Microsoft::WRL::ComPtr<ID3DBlob> errorBlob = nullptr;

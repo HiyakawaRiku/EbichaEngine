@@ -117,7 +117,7 @@ void Sprite::Update()
 
 void Sprite::Draw()
 {
-
+	spriteCommon->SetPipeline(blendMode_); // PSOを設定
 	// Spriteの描画。変更が必要なものだけ変更する
 	spriteCommon->GetDxCommon()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView); // VBVを設定
 	spriteCommon->GetDxCommon()->GetCommandList()->IASetIndexBuffer(&indexBufferView); // IBVを設定
