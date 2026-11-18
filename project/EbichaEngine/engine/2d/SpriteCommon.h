@@ -20,7 +20,6 @@ public:
 private:
 	DirectXCommon* dxCommon_;
 	PipelineSet pipelineSet_;
-	BlendMode currentMode_ = BlendMode::kCount;
 
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature = nullptr;
 

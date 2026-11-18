@@ -289,7 +289,7 @@ void ParticleManager::Draw()
 	// 2. RootParameter 0: Material 用 ConstantBuffer (b0)[cite: 10]
 	commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
 
-	BlendMode currentBlendMode = BlendMode::kCount;
+	pipelineSet_.ResetCurrent();
 
 	// 3. グループごとに描画
 	for (const auto& [name, group] : particleGroups) {
@@ -297,10 +297,8 @@ void ParticleManager::Draw()
 			continue;
 		}
 
-		if (group.blendMode != currentBlendMode) {
-			currentBlendMode = group.blendMode;
-		commandList->SetPipelineState(pipelineSet_.Get(group.blendMode)); // PSOを設定
-		}
+		pipelineSet_.Apply(commandList, group.blendMode);
+
 		// RootParameter 1: インスタンシングバッファ (VS用 t0)[cite: 11]
 		srvManager_->SetGraphicsRootDescriptorTable(1, group.instancingSrvIndex);
 

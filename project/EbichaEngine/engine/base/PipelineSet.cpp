@@ -23,12 +23,18 @@ void PipelineSet::Create(ID3D12Device* device, D3D12_GRAPHICS_PIPELINE_STATE_DES
     }
 }
 
-ID3D12PipelineState* PipelineSet::Get(BlendMode mode) const {
-    return psos_[(int)mode].Get();
-}
-
 void PipelineSet::Reset() {
     for (auto& pso : psos_) {
         pso.Reset();
     }
+	currentMode_ = BlendMode::kCount;
+}
+
+void PipelineSet::Apply(ID3D12GraphicsCommandList* commandList, BlendMode mode) {
+    // 前回と同じモードなら、セットし直さない
+    if (mode == currentMode_) {
+        return;
+    }
+    currentMode_ = mode;
+    commandList->SetPipelineState(psos_[(int)mode].Get());
 }
