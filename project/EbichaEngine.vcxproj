@@ -156,6 +156,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="EbichaEngine\engine\scene\AbstractSceneFactory.cpp" />
     <ClCompile Include="EbichaEngine\engine\base\BlendMode.cpp" />
     <ClCompile Include="EbichaEngine\engine\Scene\BaseScene.cpp" />
     <ClCompile Include="EbichaEngine\application\EbichaEngine.cpp" />
@@ -196,8 +197,10 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="EbichaEngine\engine\Scene\SceneManager.cpp" />
     <ClCompile Include="EbichaEngine\application\TitleScene.cpp" />
     <ClCompile Include="EbichaEngine\engine\base\PipelineSet.cpp" />
+    <ClCompile Include="EbichaEngine\application\SceneFactory.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="EbichaEngine\engine\scene\AbstractSceneFactory.h" />
     <ClInclude Include="EbichaEngine\engine\base\BlendMode.h" />
     <ClInclude Include="EbichaEngine\engine\Scene\BaseScene.h" />
     <ClInclude Include="EbichaEngine\engine\3d\Object3d.h" />
@@ -235,6 +238,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="EbichaEngine\engine\Scene\SceneManager.h" />
     <ClInclude Include="EbichaEngine\application\TitleScene.h" />
     <ClInclude Include="EbichaEngine\engine\base\PipelineSet.h" />
+    <ClInclude Include="EbichaEngine\application\SceneFactory.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="resources\shaders\Particle.PS.hlsl">

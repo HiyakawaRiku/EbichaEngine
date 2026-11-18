@@ -49,7 +49,5 @@ private:
     std::unique_ptr<ImGuiManager> imGuiManager_;
     std::unique_ptr<Sound> sound_;
 
-    
-
     std::ofstream logStream_;
 };

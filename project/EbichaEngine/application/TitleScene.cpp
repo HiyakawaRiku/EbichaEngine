@@ -1,5 +1,4 @@
 #include "TitleScene.h"
-#include "GamePlayScene.h"
 #include "SceneManager.h"
 #include "Input.h"
 
@@ -21,7 +20,7 @@ void TitleScene::Update(Input* input) {
 
     // ENTERキーまたはSPACEキーを押したら GamePlayScene へ遷移
     if (input->TriggerKey(DIK_RETURN) || input->TriggerKey(DIK_SPACE)) {
-        SceneManager::GetInstance()->ChangeScene(std::make_unique<GamePlayScene>());
+        SceneManager::GetInstance()->ChangeScene("GAMEPLAY");
     }
 }
 

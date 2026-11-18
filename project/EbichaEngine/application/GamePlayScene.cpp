@@ -8,6 +8,7 @@
 #include "Sound.h"
 #include "EMath.h"
 #include "Input.h"
+#include "SceneManager.h"
 
 #ifdef USE_IMGUI
 #include "ImGuiManager.h"
@@ -87,8 +88,9 @@ void GamePlayScene::Initialize() {
 }
 
 void GamePlayScene::Update(Input* input) {
-    if (input->TriggerKey(DIK_0)) {
-        OutputDebugStringA("Hit 0\n");
+    // Escキーでタイトルへ戻る
+    if (input->TriggerKey(DIK_ESCAPE)) {
+        SceneManager::GetInstance()->ChangeScene("TITLE");
     }
 
 #ifdef USE_IMGUI

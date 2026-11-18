@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include "BaseScene.h"
+#include "AbstractSceneFactory.h"
 
 class Input;
 
@@ -16,7 +17,8 @@ public:
     void Finalize();
 
     // 次のシーンへの遷移予約
-    void ChangeScene(std::unique_ptr<BaseScene> nextScene);
+    void ChangeScene(const std::string& sceneName);
+    void SetSceneFactory(std::unique_ptr<AbstractSceneFactory> factory);
 
 private:
     SceneManager() = default;
@@ -27,4 +29,6 @@ private:
 private:
     std::unique_ptr<BaseScene> currentScene_ = nullptr;
     std::unique_ptr<BaseScene> nextScene_ = nullptr;
+
+	std::unique_ptr<AbstractSceneFactory> sceneFactory_ = nullptr;
 };

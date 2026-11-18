@@ -1,4 +1,5 @@
 #include "SceneManager.h"
+#include  <cassert>
 
 SceneManager* SceneManager::GetInstance() {
     static SceneManager instance;
@@ -40,8 +41,19 @@ void SceneManager::Finalize() {
         currentScene_.reset();
     }
     nextScene_.reset();
+	sceneFactory_.reset();
 }
 
-void SceneManager::ChangeScene(std::unique_ptr<BaseScene> nextScene) {
-    nextScene_ = std::move(nextScene);
+void SceneManager::ChangeScene(const std::string& sceneName) {
+    assert(sceneFactory_ && "SetSceneFactory を先に呼んでください");
+
+    // 工場に作ってもらう
+    nextScene_ = sceneFactory_->CreateScene(sceneName);
+
+    // 名前が間違っていたら nullptr が返ってくるので、ここで気づけるようにする
+    assert(nextScene_ && "存在しないシーン名です");
+}
+
+void SceneManager::SetSceneFactory(std::unique_ptr<AbstractSceneFactory> factory) {
+    sceneFactory_ = std::move(factory);
 }

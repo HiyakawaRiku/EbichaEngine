@@ -1,8 +1,8 @@
 #include "EbichaEngine.h"
-#include "TitleScene.h"
-#include "GamePlayScene.h"
 #include "Logger.h"
 #include <format>
+
+#include "SceneFactory.h"
 
 using namespace Logger;
 
@@ -47,7 +47,8 @@ void EbichaEngine::Initialize() {
 
 	// GamePlayScene の初期化
 	SceneManager::GetInstance()->Initialize();
-	SceneManager::GetInstance()->ChangeScene(std::make_unique<TitleScene>());
+	SceneManager::GetInstance()->SetSceneFactory(std::make_unique<SceneFactory>());
+	SceneManager::GetInstance()->ChangeScene("TITLE");
 }
 
 void EbichaEngine::Run() {
