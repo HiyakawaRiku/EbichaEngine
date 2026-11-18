@@ -64,6 +64,8 @@ void GamePlayScene::Initialize() {
     camera_ = std::make_unique<Camera>();
     camera_->SetRotate({ 0.0f, 0.0f, 0.0f });
     camera_->SetTranslate({ 0.0f, 0.0f, -100.0f });
+  
+    // ※ シングルトンに渡したポインタは Finalize で必ず nullptr に戻すこと
     object3dCommon->SetDefaultCamera(camera_.get());
     ParticleManager::GetInstance()->SetCamera(camera_.get());
 
@@ -175,12 +177,17 @@ void GamePlayScene::Finalize() {
         Sound::GetInstance()->SoundUnload(&soundData1_);
     }
 
+    // シングルトンに渡したカメラを外す（カメラを消す前に必ず行う）
+    Object3dCommon::GetInstance()->SetDefaultCamera(nullptr);
+    ParticleManager::GetInstance()->SetCamera(nullptr);
+
     // 保持しているスマートポインタや ComPtr を明示的に解放
     sprite_.reset();
     sprite2_.reset();
     object3d_.reset();
     object3d2_.reset();
     model_.reset();
+    ParticleManager::GetInstance()->ClearParticleGroups();
     emitter_.reset();
     camera_.reset();
 

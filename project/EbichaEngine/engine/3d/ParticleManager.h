@@ -73,6 +73,8 @@ public:
     void SetCamera(Camera* camera) { camera_ = camera; }
 	void SetBlendMode(const std::string& name, BlendMode mode);
 
+    void ClearParticleGroups();
+
 private:
     ParticleManager() = default;
     ~ParticleManager() = default;
