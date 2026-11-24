@@ -9,27 +9,11 @@
 #include "EMath.h"
 #include "Input.h"
 #include "SceneManager.h"
+#include "EditorGui.h"
+#include "Editor.h"
 
 #ifdef USE_IMGUI
 #include "ImGuiManager.h"
-#endif
-
-#ifdef USE_IMGUI
-// BlendMode を選ぶ Combo。変更されたら true を返す
-static bool BlendModeCombo(const char* label, BlendMode& mode) {
-    bool changed = false;
-    if (ImGui::BeginCombo(label, GetBlendModeName(mode))) {
-        for (int i = 0; i < (int)BlendMode::kCount; i++) {
-            bool isSelected = (i == (int)mode);
-            if (ImGui::Selectable(GetBlendModeName((BlendMode)i), isSelected)) {
-                mode = (BlendMode)i;
-                changed = true;
-            }
-        }
-        ImGui::EndCombo();
-    }
-    return changed;
-}
 #endif
 
 GameScene::~GameScene() {
@@ -85,6 +69,12 @@ void GameScene::Initialize() {
     // サウンド再生
     soundData1_ = Sound::GetInstance()->SoundLoadFile("Resources/420_long_BPM108.mp3");
     pSourceVoice_ = Sound::GetInstance()->SoundPlayWave(soundData1_);
+
+    // エディタに登録（シーンが切り替わるときは、SceneManager が自動で外してくれる）
+    Editor* editor = Editor::GetInstance();
+    editor->Register("Sprite", sprite_.get());
+    editor->Register("Object3d (1)", object3d_.get());
+    editor->Register("Object3d (2)", object3d2_.get());
 }
 
 void GameScene::Update(Input* input) {
@@ -102,22 +92,11 @@ void GameScene::Update(Input* input) {
 
 #ifdef USE_IMGUI
     ImGui::Checkbox("useMonsterBall", &useMonsterBall_);
-    static BlendMode particleMode = BlendMode::kNormal;
-    static BlendMode spriteMode = BlendMode::kNone;
-    static BlendMode object1Mode = BlendMode::kNone;
-    static BlendMode object2Mode = BlendMode::kNone;
 
-    if (BlendModeCombo("Particle(smoke) Blend", particleMode)) {
+    // パーティクルにはまだインスペクターがないので、ここで切り替える
+    static BlendMode particleMode = BlendMode::kNormal;
+    if (EditorGui::BlendModeCombo("Particle(smoke) Blend", particleMode)) {
         ParticleManager::GetInstance()->SetBlendMode("smoke", particleMode);
-    }
-    if (BlendModeCombo("Sprite Blend", spriteMode)) {
-        sprite_->SetBlendMode(spriteMode);
-    }
-    if (BlendModeCombo("Object3d(1) Blend", object1Mode)) {
-        object3d_->SetBlendMode(object1Mode);
-    }
-    if (BlendModeCombo("Object3d(2) Blend", object2Mode)) {
-        object3d2_->SetBlendMode(object2Mode);
     }
 #endif
 

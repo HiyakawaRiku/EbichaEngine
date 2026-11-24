@@ -3,6 +3,7 @@
 #include "TextureManager.h"
 #include "SceneManager.h"
 #include "Input.h"
+#include "Editor.h"
 
 void GameOverScene::Initialize() {
     uint32_t textureIndex = TextureManager::GetInstance()->Load("Resources/uvChecker.png");
@@ -12,6 +13,8 @@ void GameOverScene::Initialize() {
     sprite_->SetAnchorPoint({ 0.5f, 0.5f });
     sprite_->SetPosition({ 640.0f, 360.0f });
     sprite_->SetColor({ 1.0f, 0.3f, 0.3f, 1.0f });   // 赤っぽくする
+
+    Editor::GetInstance()->Register("GameOver Sprite", sprite_.get());
 }
 
 void GameOverScene::Update(Input* input) {

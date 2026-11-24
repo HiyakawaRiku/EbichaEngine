@@ -21,3 +21,8 @@ std::unique_ptr<BaseScene> SceneFactory::CreateScene(const std::string& sceneNam
 	// 知らない名前が来たら nullptr を返す
 	return nullptr;
 }
+
+std::vector<std::string> SceneFactory::GetSceneNames() const
+{
+	return { "TITLE", "GAMEPLAY", "CLEAR", "GAMEOVER" };
+}

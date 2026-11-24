@@ -3,14 +3,14 @@
 #include "TextureManager.h"
 #include "SceneManager.h"
 #include "Input.h"
+#include "Editor.h"
 
 void ClearScene::Initialize() {
-    uint32_t textureIndex = TextureManager::GetInstance()->Load("Resources/monsterBall.png");
+    sprite_ = Sprite::Create("Resources/monsterBall.png");
+    sprite_->SetAnchorPoint({ 0.5f, 0.5f });
+    sprite_->SetPosition({ 640.0f, 360.0f });
 
-    sprite_ = std::make_unique<Sprite>();
-    sprite_->Initialize(SpriteCommon::GetInstance(), textureIndex);
-    sprite_->SetAnchorPoint({ 0.5f, 0.5f });   // 中心を基準にする
-    sprite_->SetPosition({ 640.0f, 360.0f });  // 画面の真ん中（1280x720 の半分）
+    Editor::GetInstance()->Register("Clear Sprite", sprite_.get());
 }
 
 void ClearScene::Update(Input* input) {

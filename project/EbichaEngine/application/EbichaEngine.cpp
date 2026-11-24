@@ -3,6 +3,7 @@
 #include <format>
 
 #include "SceneFactory.h"
+#include "Editor.h"
 
 using namespace Logger;
 
@@ -49,6 +50,8 @@ void EbichaEngine::Initialize() {
 	SceneManager::GetInstance()->Initialize();
 	SceneManager::GetInstance()->SetSceneFactory(std::make_unique<SceneFactory>());
 	SceneManager::GetInstance()->ChangeScene("TITLE");
+
+	Editor::GetInstance()->Initialize();
 }
 
 void EbichaEngine::Run() {
@@ -70,9 +73,10 @@ void EbichaEngine::Update() {
 	ImGui_ImplWin32_NewFrame();
 	ImGui::NewFrame();
 
-	ImGui::ShowDemoWindow();
 #endif
 
+
+	Editor::GetInstance()->Update();
 	SceneManager::GetInstance()->Update(input_.get());
 
 #ifdef USE_IMGUI
@@ -93,6 +97,7 @@ void EbichaEngine::Draw() {
 
 void EbichaEngine::Finalize() {
 
+	Editor::GetInstance()->Finalize();
 	SceneManager::GetInstance()->Finalize();
 
 	Sound::GetInstance()->Finalize();

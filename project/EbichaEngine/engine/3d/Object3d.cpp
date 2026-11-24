@@ -9,6 +9,11 @@
 
 #include "ModelManager.h"
 #include "Camera.h"
+#include "EditorGui.h"
+
+#ifdef USE_IMGUI
+#include "imgui.h"
+#endif
 
 
 void Object3d::Initialize(Object3dCommon* object3dCommon)
@@ -81,6 +86,21 @@ void Object3d::Finalize()
 void Object3d::SetModel(const std::string& filePath)
 {
 	model = ModelManager::GetInstance()->FindModel(filePath);
+}
+
+void Object3d::OnInspector()
+{
+#ifdef USE_IMGUI
+	// 同じ画面に Object3d が何体あっても、ID がぶつからないようにする
+	ImGui::PushID(this);
+
+	ImGui::DragFloat3("Translate", &transform.translate.x, 0.1f);
+	ImGui::DragFloat3("Rotate", &transform.rotate.x, 0.01f);   // ラジアン（1.0 ≒ 57°）
+	ImGui::DragFloat3("Scale", &transform.scale.x, 0.01f);
+	EditorGui::BlendModeCombo("Blend", blendMode_);
+
+	ImGui::PopID();
+#endif
 }
 
 

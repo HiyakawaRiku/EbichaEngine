@@ -80,7 +80,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>$(ProjectDir)EbichaEngine\engine\2d;$(ProjectDir)EbichaEngine\engine\3d;$(ProjectDir)EbichaEngine\engine\base;$(ProjectDir)EbichaEngine\engine\math;$(ProjectDir)EbichaEngine\engine\utility;$(ProjectDir)externals\DirectXTex;$(ProjectDir)externals\imgui;$(ProjectDir)EbichaEngine\engine\scene;$(ProjectDir)EbichaEngine\engine\audio;$(ProjectDir)EbichaEngine\application</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)EbichaEngine\engine\2d;$(ProjectDir)EbichaEngine\engine\3d;$(ProjectDir)EbichaEngine\engine\base;$(ProjectDir)EbichaEngine\engine\math;$(ProjectDir)EbichaEngine\engine\utility;$(ProjectDir)externals\DirectXTex;$(ProjectDir)externals\imgui;$(ProjectDir)EbichaEngine\engine\scene;$(ProjectDir)EbichaEngine\engine\audio;$(ProjectDir)EbichaEngine\application;$(ProjectDir)EbichaEngine\engine\editor</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -110,7 +110,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <Optimization>MinSpace</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)EbichaEngine\engine\2d;$(ProjectDir)EbichaEngine\engine\3d;$(ProjectDir)EbichaEngine\engine\base;$(ProjectDir)EbichaEngine\engine\math;$(ProjectDir)EbichaEngine\engine\utility;$(ProjectDir)externals\DirectXTex;$(ProjectDir)externals\imgui;$(ProjectDir)EbichaEngine\engine\scene;$(ProjectDir)EbichaEngine\engine\audio;$(ProjectDir)EbichaEngine\application</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)EbichaEngine\engine\2d;$(ProjectDir)EbichaEngine\engine\3d;$(ProjectDir)EbichaEngine\engine\base;$(ProjectDir)EbichaEngine\engine\math;$(ProjectDir)EbichaEngine\engine\utility;$(ProjectDir)externals\DirectXTex;$(ProjectDir)externals\imgui;$(ProjectDir)EbichaEngine\engine\scene;$(ProjectDir)EbichaEngine\engine\audio;$(ProjectDir)EbichaEngine\application;$(ProjectDir)EbichaEngine\engine\editor</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -138,7 +138,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)EbichaEngine\engine\2d;$(ProjectDir)EbichaEngine\engine\3d;$(ProjectDir)EbichaEngine\engine\base;$(ProjectDir)EbichaEngine\engine\math;$(ProjectDir)EbichaEngine\engine\utility;$(ProjectDir)externals\DirectXTex;$(ProjectDir)externals\imgui;$(ProjectDir)EbichaEngine\engine\scene;$(ProjectDir)EbichaEngine\engine\audio;$(ProjectDir)EbichaEngine\application</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)EbichaEngine\engine\2d;$(ProjectDir)EbichaEngine\engine\3d;$(ProjectDir)EbichaEngine\engine\base;$(ProjectDir)EbichaEngine\engine\math;$(ProjectDir)EbichaEngine\engine\utility;$(ProjectDir)externals\DirectXTex;$(ProjectDir)externals\imgui;$(ProjectDir)EbichaEngine\engine\scene;$(ProjectDir)EbichaEngine\engine\audio;$(ProjectDir)EbichaEngine\application;$(ProjectDir)EbichaEngine\engine\editor</AdditionalIncludeDirectories>
       <WholeProgramOptimization>false</WholeProgramOptimization>
     </ClCompile>
     <Link>
@@ -179,6 +179,8 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="EbichaEngine\engine\2d\SpriteCommon.cpp" />
     <ClCompile Include="EbichaEngine\engine\base\TextureManager.cpp" />
     <ClCompile Include="EbichaEngine\engine\base\WinApp.cpp" />
+    <ClCompile Include="EbichaEngine\engine\editor\Editor.cpp" />
+    <ClCompile Include="EbichaEngine\engine\editor\EditorGui.cpp" />
     <ClCompile Include="externals\imgui\imgui.cpp" />
     <ClCompile Include="externals\imgui\imgui_demo.cpp" />
     <ClCompile Include="externals\imgui\imgui_draw.cpp" />
@@ -221,6 +223,9 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="EbichaEngine\engine\2d\SpriteCommon.h" />
     <ClInclude Include="EbichaEngine\engine\base\TextureManager.h" />
     <ClInclude Include="EbichaEngine\engine\base\WinApp.h" />
+    <ClInclude Include="EbichaEngine\engine\editor\Editor.h" />
+    <ClInclude Include="EbichaEngine\engine\editor\EditorGui.h" />
+    <ClInclude Include="EbichaEngine\engine\editor\IEditorInspectable.h" />
     <ClInclude Include="externals\imgui\imconfig.h" />
     <ClInclude Include="externals\imgui\imgui.h" />
     <ClInclude Include="externals\imgui\imgui_impl_dx12.h" />

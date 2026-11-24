@@ -1,6 +1,26 @@
 #include "Sprite.h"
 #include "SpriteCommon.h"
 #include "TextureManager.h"
+#include "EditorGui.h"
+
+#ifdef USE_IMGUI
+#include "imgui.h"
+#endif
+
+std::unique_ptr<Sprite> Sprite::Create(const std::string& texturePath)
+{
+	// ① テクスチャを読み込む
+	uint32_t textureIndex = TextureManager::GetInstance()->Load(texturePath);
+
+	// ② スプライトを作る
+	std::unique_ptr<Sprite> sprite = std::make_unique<Sprite>();
+
+	// ③ 初期化する
+	sprite->Initialize(SpriteCommon::GetInstance(), textureIndex);
+
+	// ④ 作ったものを返す
+	return sprite;
+}
 
 void Sprite::Initialize(SpriteCommon* spriteCommon, uint32_t textureIndex)
 {
@@ -148,4 +168,20 @@ void Sprite::AdjustTextureSize()
 	textureSize.y = static_cast<float>(metadata.height);
 	size = textureSize;
 
+}
+
+void Sprite::OnInspector()
+{
+#ifdef USE_IMGUI
+	// 同じ画面に Sprite が何枚あっても、ID がぶつからないようにする
+	ImGui::PushID(this);
+
+	ImGui::DragFloat2("Position", &position.x, 1.0f);
+	ImGui::DragFloat2("Size", &size.x, 1.0f);
+	ImGui::SliderAngle("Rotation", &rotation);   // 中身はラジアン、表示は度
+	ImGui::ColorEdit4("Color", &materialData->color.x);
+	EditorGui::BlendModeCombo("Blend", blendMode_);
+
+	ImGui::PopID();
+#endif
 }
