@@ -31,6 +31,7 @@ void ImGuiManager::Initialize(WinApp* winApp, DirectXCommon* dxCommon, SrvManage
 	);
 
 	ImGuiIO& io = ImGui::GetIO();
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;   // ドッキング（ウィンドウ同士をくっつける）を有効にする
 	io.Fonts->Build();
 #endif
 }
