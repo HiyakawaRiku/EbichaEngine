@@ -1,12 +1,15 @@
 #pragma once
 #include "EMath.h"
 #include <wrl.h>
+#include <memory>
+#include <string>
 #include "DirectXCommon.h"
 #include "BlendMode.h"
+#include "IEditorInspectable.h"
 
 class SpriteCommon;
 
-class Sprite
+class Sprite : public IEditorInspectable
 {
 public:
 	struct VertexData {
@@ -28,6 +31,9 @@ public:
 	};
 
 public:
+	// スプライトを作って返す（GetInstance と同じ書き方）
+	static std::unique_ptr<Sprite> Create(const std::string& texturePath);
+
 	void Initialize(SpriteCommon* spriteCommon, uint32_t textureIndex);
 	void Update();
 	void Draw();
@@ -60,6 +66,11 @@ public:
 
 	void SetBlendMode(BlendMode mode) { blendMode_ = mode; }
 	BlendMode GetBlendMode()const { return blendMode_; }
+
+	// エディタ用：自分のパラメータを ImGui で表示・編集する
+	// （USE_IMGUI がない構成では何もしない）
+	void OnInspector() override;
+
 private:
 	void AdjustTextureSize();
 

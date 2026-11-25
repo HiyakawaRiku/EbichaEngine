@@ -1,7 +1,7 @@
 #include "TitleScene.h"
-#include "GamePlayScene.h"
 #include "SceneManager.h"
 #include "Input.h"
+#include "Editor.h"
 
 void TitleScene::Initialize() {
     SpriteCommon* spriteCommon = SpriteCommon::GetInstance();
@@ -14,6 +14,8 @@ void TitleScene::Initialize() {
     titleSprite_->Initialize(spriteCommon, textureIndex_);
     titleSprite_->SetPosition({ 400.0f, 300.0f });
     titleSprite_->SetAnchorPoint({ 0.5f, 0.5f });
+
+    Editor::GetInstance()->Register("Title Sprite", titleSprite_.get());
 }
 
 void TitleScene::Update(Input* input) {
@@ -21,7 +23,7 @@ void TitleScene::Update(Input* input) {
 
     // ENTERキーまたはSPACEキーを押したら GamePlayScene へ遷移
     if (input->TriggerKey(DIK_RETURN) || input->TriggerKey(DIK_SPACE)) {
-        SceneManager::GetInstance()->ChangeScene(std::make_unique<GamePlayScene>());
+        SceneManager::GetInstance()->ChangeScene("GAMEPLAY");
     }
 }
 

@@ -4,12 +4,13 @@
 #include "DirectXCommon.h"
 #include "Model.h"
 #include "PipelineSet.h"
+#include "IEditorInspectable.h"
 
 
 class Object3dCommon;
 class Camera;
 
-class Object3d
+class Object3d : public IEditorInspectable
 {
 public:
 
@@ -48,6 +49,10 @@ public:
 
 	void SetBlendMode(BlendMode mode) { blendMode_ = mode; }
 	BlendMode GetBlendMode()const { return blendMode_; }
+
+	// エディタ用：自分のパラメータを ImGui で表示・編集する
+	// （USE_IMGUI がない構成では何もしない）
+	void OnInspector() override;
 
 private:
 	Object3dCommon* object3dCommon = nullptr;

@@ -1,0 +1,48 @@
+{
+  "name": "test",
+  "objects": [
+    {
+      "type": "EMPTY",
+      "name": "PlayerSpawn",
+      "transform": {
+        "translation": [
+          0.0,
+          -5.0,
+          0.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          1.5707999467849731
+        ],
+        "scaling": [
+          1.0,
+          1.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "type": "MESH",
+      "name": "Axis",
+      "file_name": "axis.obj",
+      "transform": {
+        "translation": [
+          3.0,
+          0.0,
+          2.0
+        ],
+        "rotation": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "scaling": [
+          2.0,
+          2.0,
+          2.0
+        ]
+      }
+    }
+  ]
+}

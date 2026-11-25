@@ -37,10 +37,7 @@ void ParticleManager::Finalize()
 	pixelShaderBlob.Reset();
 	vertexShaderBlob.Reset();
 
-	for (auto& [name, group] : particleGroups) {
-		group.instancingResource.Reset();
-	}
-	particleGroups.clear();
+	ClearParticleGroups();
 
 	rootSignature.Reset();
 	pipelineSet_.Reset();
@@ -129,6 +126,14 @@ void ParticleManager::SetBlendMode(const std::string& name, BlendMode mode)
 		return;
 	}
 	it->second.blendMode = mode;
+}
+
+void ParticleManager::ClearParticleGroups()
+{
+	for (auto& [name, group] : particleGroups) {
+		group.instancingResource.Reset();
+	}
+	particleGroups.clear();
 }
 
 void ParticleManager::CreatePipelineState()

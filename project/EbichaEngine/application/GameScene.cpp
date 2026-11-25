@@ -1,4 +1,4 @@
-#include "GamePlayScene.h"
+#include "GameScene.h"
 #include "TextureManager.h"
 #include "ModelManager.h"
 #include "ParticleManager.h"
@@ -8,36 +8,21 @@
 #include "Sound.h"
 #include "EMath.h"
 #include "Input.h"
+#include "SceneManager.h"
+#include "EditorGui.h"
+#include "Editor.h"
 
 #ifdef USE_IMGUI
 #include "ImGuiManager.h"
 #endif
 
-#ifdef USE_IMGUI
-// BlendMode を選ぶ Combo。変更されたら true を返す
-static bool BlendModeCombo(const char* label, BlendMode& mode) {
-    bool changed = false;
-    if (ImGui::BeginCombo(label, GetBlendModeName(mode))) {
-        for (int i = 0; i < (int)BlendMode::kCount; i++) {
-            bool isSelected = (i == (int)mode);
-            if (ImGui::Selectable(GetBlendModeName((BlendMode)i), isSelected)) {
-                mode = (BlendMode)i;
-                changed = true;
-            }
-        }
-        ImGui::EndCombo();
-    }
-    return changed;
-}
-#endif
-
-GamePlayScene::~GamePlayScene() {
+GameScene::~GameScene() {
     if (!soundData1_.buffer.empty()) {
         Sound::GetInstance()->SoundUnload(&soundData1_);
     }
 }
 
-void GamePlayScene::Initialize() {
+void GameScene::Initialize() {
     // シングルトン経由で各種マネージャーの参照を取得して利用
     SpriteCommon* spriteCommon = SpriteCommon::GetInstance();
     Object3dCommon* object3dCommon = Object3dCommon::GetInstance();
@@ -64,6 +49,8 @@ void GamePlayScene::Initialize() {
     camera_ = std::make_unique<Camera>();
     camera_->SetRotate({ 0.0f, 0.0f, 0.0f });
     camera_->SetTranslate({ 0.0f, 0.0f, -100.0f });
+  
+    // ※ シングルトンに渡したポインタは Finalize で必ず nullptr に戻すこと
     object3dCommon->SetDefaultCamera(camera_.get());
     ParticleManager::GetInstance()->SetCamera(camera_.get());
 
@@ -82,31 +69,40 @@ void GamePlayScene::Initialize() {
     // サウンド再生
     soundData1_ = Sound::GetInstance()->SoundLoadFile("Resources/420_long_BPM108.mp3");
     pSourceVoice_ = Sound::GetInstance()->SoundPlayWave(soundData1_);
+
+    // エディタに登録（シーンが切り替わるときは、SceneManager が自動で外してくれる）
+    Editor* editor = Editor::GetInstance();
+    editor->Register("Sprite", sprite_.get());
+    editor->Register("Object3d (1)", object3d_.get());
+    editor->Register("Object3d (2)", object3d2_.get());
+
+    // レベル（JSON）を読み込む。Object3d がカメラを使うので、カメラをセットしたあとで読み込む
+    // 読み込んだオブジェクトは、Level が自動でエディタの Hierarchy に登録する
+    level_ = std::make_unique<Level>();
+    level_->Load("Resources/levels/test.json");
+    editor->SetLevel(level_.get());
 }
 
-void GamePlayScene::Update(Input* input) {
-    if (input->TriggerKey(DIK_0)) {
-        OutputDebugStringA("Hit 0\n");
+void GameScene::Update(Input* input) {
+    // Escキーでタイトルへ戻る
+    if (input->TriggerKey(DIK_ESCAPE)) {
+        SceneManager::GetInstance()->ChangeScene("TITLE");
+    }
+    // 【仮】ゲームの中身ができるまで、キーで遷移を確認する
+    else if (input->TriggerKey(DIK_C)) {
+        SceneManager::GetInstance()->ChangeScene("CLEAR");
+    }
+    else if (input->TriggerKey(DIK_O)) {
+        SceneManager::GetInstance()->ChangeScene("GAMEOVER");
     }
 
 #ifdef USE_IMGUI
     ImGui::Checkbox("useMonsterBall", &useMonsterBall_);
-    static BlendMode particleMode = BlendMode::kNormal;
-    static BlendMode spriteMode = BlendMode::kNone;
-    static BlendMode object1Mode = BlendMode::kNone;
-    static BlendMode object2Mode = BlendMode::kNone;
 
-    if (BlendModeCombo("Particle(smoke) Blend", particleMode)) {
+    // パーティクルにはまだインスペクターがないので、ここで切り替える
+    static BlendMode particleMode = BlendMode::kNormal;
+    if (EditorGui::BlendModeCombo("Particle(smoke) Blend", particleMode)) {
         ParticleManager::GetInstance()->SetBlendMode("smoke", particleMode);
-    }
-    if (BlendModeCombo("Sprite Blend", spriteMode)) {
-        sprite_->SetBlendMode(spriteMode);
-    }
-    if (BlendModeCombo("Object3d(1) Blend", object1Mode)) {
-        object3d_->SetBlendMode(object1Mode);
-    }
-    if (BlendModeCombo("Object3d(2) Blend", object2Mode)) {
-        object3d2_->SetBlendMode(object2Mode);
     }
 #endif
 
@@ -123,6 +119,7 @@ void GamePlayScene::Update(Input* input) {
     object3d_->SetTranslate(a);
     object3d_->Update();
     object3d2_->Update();
+    level_->Update();
 
     // スプライト更新
     Vector2 position = sprite_->GetPosition();
@@ -149,11 +146,12 @@ void GamePlayScene::Update(Input* input) {
     sprite_->Update();
 }
 
-void GamePlayScene::Draw() {
+void GameScene::Draw() {
     // 3Dオブジェクト描画
     Object3dCommon::GetInstance()->CommonDrawSetting();
     object3d_->Draw();
     object3d2_->Draw();
+    level_->Draw();
 
     // パーティクル描画
     ParticleManager::GetInstance()->Draw();
@@ -163,7 +161,7 @@ void GamePlayScene::Draw() {
     sprite_->Draw();
 }
 
-void GamePlayScene::Finalize() {
+void GameScene::Finalize() {
     
     if (pSourceVoice_) {
         pSourceVoice_->Stop(0);
@@ -175,12 +173,18 @@ void GamePlayScene::Finalize() {
         Sound::GetInstance()->SoundUnload(&soundData1_);
     }
 
+    // シングルトンに渡したカメラを外す（カメラを消す前に必ず行う）
+    Object3dCommon::GetInstance()->SetDefaultCamera(nullptr);
+    ParticleManager::GetInstance()->SetCamera(nullptr);
+
     // 保持しているスマートポインタや ComPtr を明示的に解放
     sprite_.reset();
     sprite2_.reset();
     object3d_.reset();
     object3d2_.reset();
+    level_.reset();
     model_.reset();
+    ParticleManager::GetInstance()->ClearParticleGroups();
     emitter_.reset();
     camera_.reset();
 
