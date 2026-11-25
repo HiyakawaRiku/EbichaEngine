@@ -18,6 +18,7 @@
 #include "Sound.h"
 #include "ParticleManager.h"
 #include "D3DResourceLeakChecker.h"
+#include "RenderTexture.h"
 
 #include "SceneManager.h"
 
@@ -48,6 +49,9 @@ private:
     std::unique_ptr<SrvManager> srvManager_;
     std::unique_ptr<ImGuiManager> imGuiManager_;
     std::unique_ptr<Sound> sound_;
+
+    // ゲーム画面を描く先（エディタの Game ウィンドウに表示する）
+    std::unique_ptr<RenderTexture> gameRenderTexture_;
 
     std::ofstream logStream_;
 };

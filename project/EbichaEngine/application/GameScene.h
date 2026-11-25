@@ -12,6 +12,7 @@
 #include "Camera.h"
 #include "Sound.h"
 #include "ParticleEmitter.h"
+#include "Level.h"
 
 class GameScene : public BaseScene {
 public:
@@ -32,6 +33,9 @@ private:
     std::unique_ptr<Object3d> object3d_;
     std::unique_ptr<Object3d> object3d2_;
     std::unique_ptr<ParticleEmitter> emitter_;
+
+    // JSON から読み込んだレベル（エディタの Save Level / Reload Level の対象）
+    std::unique_ptr<Level> level_;
 
     uint32_t textureIndex_ = 0;
     uint32_t textureIndex2_ = 0;

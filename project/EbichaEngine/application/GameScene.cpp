@@ -75,6 +75,12 @@ void GameScene::Initialize() {
     editor->Register("Sprite", sprite_.get());
     editor->Register("Object3d (1)", object3d_.get());
     editor->Register("Object3d (2)", object3d2_.get());
+
+    // レベル（JSON）を読み込む。Object3d がカメラを使うので、カメラをセットしたあとで読み込む
+    // 読み込んだオブジェクトは、Level が自動でエディタの Hierarchy に登録する
+    level_ = std::make_unique<Level>();
+    level_->Load("Resources/levels/test.json");
+    editor->SetLevel(level_.get());
 }
 
 void GameScene::Update(Input* input) {
@@ -113,6 +119,7 @@ void GameScene::Update(Input* input) {
     object3d_->SetTranslate(a);
     object3d_->Update();
     object3d2_->Update();
+    level_->Update();
 
     // スプライト更新
     Vector2 position = sprite_->GetPosition();
@@ -144,6 +151,7 @@ void GameScene::Draw() {
     Object3dCommon::GetInstance()->CommonDrawSetting();
     object3d_->Draw();
     object3d2_->Draw();
+    level_->Draw();
 
     // パーティクル描画
     ParticleManager::GetInstance()->Draw();
@@ -174,6 +182,7 @@ void GameScene::Finalize() {
     sprite2_.reset();
     object3d_.reset();
     object3d2_.reset();
+    level_.reset();
     model_.reset();
     ParticleManager::GetInstance()->ClearParticleGroups();
     emitter_.reset();

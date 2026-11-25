@@ -1,5 +1,7 @@
 #include "Editor.h"
 #include "SceneManager.h"
+#include "Level.h"
+#include <algorithm>
 #include <vector>
 
 #ifdef USE_IMGUI
@@ -16,6 +18,9 @@ void Editor::Initialize() {
 
 void Editor::Update() {
 #ifdef USE_IMGUI
+    // 画面全体を、ウィンドウをくっつけられる場所（ドックスペース）にする
+    ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
+
     ImGui::SetNextWindowPos(ImVec2(10.0f, 10.0f), ImGuiCond_FirstUseEver);
 
     ImGui::Begin("Editor");
@@ -47,6 +52,8 @@ void Editor::Update() {
 		sceneManager->ChangeScene(currentName);
     }
 
+    DrawLevelPanel();
+
     ImGui::End();
 
     // デモウィンドウ（チェックが入っているときだけ）
@@ -54,8 +61,72 @@ void Editor::Update() {
         ImGui::ShowDemoWindow(&showDemoWindow_);
     }
 
+    DrawGameView();
     DrawHierarchy();
     DrawInspector();
+#endif
+}
+
+void Editor::DrawLevelPanel() {
+#ifdef USE_IMGUI
+    ImGui::Separator();
+    ImGui::Text("Level");
+
+    if (!level_) {
+        ImGui::TextDisabled("(no level in this scene)");
+        return;
+    }
+
+    ImGui::Text("File : %s", level_->GetFilePath().c_str());
+    ImGui::Text("Objects : %zu", level_->GetObjectCount());
+
+    // 今の配置を JSON に上書き保存する
+    if (ImGui::Button("Save Level")) {
+        levelMessage_ = level_->Save() ? "Saved." : "Save failed. (see Output window)";
+    }
+    ImGui::SameLine();
+    // JSON を読み直す（Blender で編集したあとに使う）。選択中のオブジェクトは外れる
+    if (ImGui::Button("Reload Level")) {
+        levelMessage_ = level_->Reload() ? "Reloaded." : "Reload failed. (see Output window)";
+    }
+
+    if (!levelMessage_.empty()) {
+        ImGui::Text("%s", levelMessage_.c_str());
+    }
+#endif
+}
+
+void Editor::SetGameTexture(uint64_t textureId, float width, float height) {
+    gameTextureId_ = textureId;
+    gameWidth_ = width;
+    gameHeight_ = height;
+}
+
+void Editor::DrawGameView() {
+#ifdef USE_IMGUI
+    // ゲーム画面の周りに余白を作らない
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+    ImGui::SetNextWindowSize(ImVec2(640.0f, 360.0f), ImGuiCond_FirstUseEver);
+    ImGui::Begin("Game");
+
+    if (gameTextureId_ != 0 && gameWidth_ > 0.0f && gameHeight_ > 0.0f) {
+        // ウィンドウの大きさに合わせて、縦横比を保ったまま拡大・縮小する
+        ImVec2 avail = ImGui::GetContentRegionAvail();
+        float scale = (std::min)(avail.x / gameWidth_, avail.y / gameHeight_);
+        if (scale > 0.0f) {
+            ImVec2 size(gameWidth_ * scale, gameHeight_ * scale);
+
+            // 真ん中に表示する
+            ImVec2 cursor = ImGui::GetCursorPos();
+            ImGui::SetCursorPos(ImVec2(cursor.x + (avail.x - size.x) * 0.5f,
+                                       cursor.y + (avail.y - size.y) * 0.5f));
+
+            ImGui::Image(reinterpret_cast<ImTextureID>(gameTextureId_), size);
+        }
+    }
+
+    ImGui::End();
+    ImGui::PopStyleVar();
 #endif
 }
 
@@ -79,6 +150,8 @@ void Editor::Unregister(IEditorInspectable* object) {
 void Editor::Clear() {
     entries_.clear();
     selected_ = nullptr;
+    level_ = nullptr;        // レベルもシーンと一緒に消えるので、外しておく
+    levelMessage_.clear();
 }
 
 void Editor::DrawHierarchy() {

@@ -177,6 +177,18 @@
     <ClCompile Include="EbichaEngine\engine\base\PipelineSet.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="EbichaEngine\engine\base\RenderTexture.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="EbichaEngine\engine\level\LevelIO.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="EbichaEngine\engine\level\LevelObject.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="EbichaEngine\engine\level\Level.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
     <ClCompile Include="EbichaEngine\application\SceneFactory.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
@@ -313,6 +325,21 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="EbichaEngine\engine\base\PipelineSet.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="EbichaEngine\engine\base\RenderTexture.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="EbichaEngine\engine\level\LevelData.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="EbichaEngine\engine\level\LevelIO.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="EbichaEngine\engine\level\LevelObject.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="EbichaEngine\engine\level\Level.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="EbichaEngine\engine\scene\AbstractSceneFactory.h">

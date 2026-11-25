@@ -37,6 +37,10 @@ void EbichaEngine::Initialize() {
 	imGuiManager_ = std::make_unique<ImGuiManager>();
 	imGuiManager_->Initialize(winApp_.get(), dxCommon_.get(), srvManager_.get());
 
+	// ゲーム画面を描くテクスチャ（ウィンドウと同じ大きさ）。SRV を使うので SrvManager の後に作る
+	gameRenderTexture_ = std::make_unique<RenderTexture>();
+	gameRenderTexture_->Initialize(dxCommon_.get(), srvManager_.get(), WinApp::kClientWidth, WinApp::kClientHeight);
+
 	// 各種シングルトンの初期化
 	SpriteCommon::GetInstance()->Initialize(dxCommon_.get());
 	Object3dCommon::GetInstance()->Initialize(dxCommon_.get());
@@ -52,6 +56,11 @@ void EbichaEngine::Initialize() {
 	SceneManager::GetInstance()->ChangeScene("TITLE");
 
 	Editor::GetInstance()->Initialize();
+	// エディタの Game ウィンドウに、ゲーム画面のテクスチャを表示してもらう
+	Editor::GetInstance()->SetGameTexture(
+		gameRenderTexture_->GetSrvGpuHandle().ptr,
+		static_cast<float>(gameRenderTexture_->GetWidth()),
+		static_cast<float>(gameRenderTexture_->GetHeight()));
 }
 
 void EbichaEngine::Run() {
@@ -86,11 +95,21 @@ void EbichaEngine::Update() {
 
 void EbichaEngine::Draw() {
 	srvManager_->PreDraw();
-	dxCommon_->PreDraw();
 
+#ifdef USE_IMGUI
+	// ① ゲームを RenderTexture に描く
+	gameRenderTexture_->BeginRender();
 	SceneManager::GetInstance()->Draw();
+	gameRenderTexture_->EndRender();
 
+	// ② 本物の画面をクリアして、ImGui を描く（Game ウィンドウに①を貼る）
+	dxCommon_->PreDraw();
 	imGuiManager_->Draw();
+#else
+	// Release：今までどおり、画面に直接描く
+	dxCommon_->PreDraw();
+	SceneManager::GetInstance()->Draw();
+#endif
 
 	dxCommon_->PostDraw();
 }
@@ -110,6 +129,10 @@ void EbichaEngine::Finalize() {
 
 	Object3dCommon::GetInstance()->Finalize();
 	SpriteCommon::GetInstance()->Finalize();
+
+	gameRenderTexture_->Finalize();
+	gameRenderTexture_.reset();
+
 	srvManager_->Finalize();
 
 	dxCommon_->Finalize();

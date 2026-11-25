@@ -107,6 +107,8 @@ public:
 
 	ID3D12Device* GetDevice()const { return device.Get(); }
 	ID3D12GraphicsCommandList* GetCommandList()const { return commandList.Get(); }
+	// 深度バッファ（DSV）の場所を返す（RenderTexture に描くときに使い回す）
+	D3D12_CPU_DESCRIPTOR_HANDLE GetDsvHandle()const { return dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(); }
 private:
 	void InitializeFixFPS();
 	void UpdateFixFPS();
